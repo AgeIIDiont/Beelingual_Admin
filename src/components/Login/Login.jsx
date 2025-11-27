@@ -31,9 +31,14 @@ const Login = () => {
 
     try {
       const result = await login(formData.username, formData.password);
-      if (result.success) {
+      if (result && result.success) {
+        // Đảm bảo token và user đã được lưu trước khi redirect
         // Redirect về trang trước đó hoặc dashboard
-        navigate(from, { replace: true });
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 100); // Small delay để đảm bảo state đã được cập nhật
+      } else {
+        setError('Đăng nhập thất bại. Vui lòng thử lại.');
       }
     } catch (err) {
       setError(err.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
