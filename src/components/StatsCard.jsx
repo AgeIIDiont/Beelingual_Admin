@@ -1,23 +1,29 @@
-// components/StatsCard.jsx
 import React from 'react';
 
 const StatsCard = ({ title, number, subtitle, icon, iconBg }) => (
-  <div className="stats-card bg-white rounded-4 shadow-sm border-0 p-4 h-100 position-relative overflow-hidden">
-    <div className="position-absolute top-0 end-0 opacity-10" style={{ fontSize: '120px', right: '-20px', top: '-40px' }}>
-      <i className={`fas ${icon}`}></i>
-    </div>
-    
-    <div className="position-relative">
-      <div className="d-flex justify-content-between align-items-start mb-3">
+  <div className="stats-card h-100 p-4">
+    {/* Icon trang trí mờ làm nền */}
+    <i className={`fas ${icon} stats-decor-icon`}></i>
+
+    <div className="d-flex justify-content-between align-items-start position-relative">
+      {/* Phần Text bên trái */}
+      <div className="d-flex flex-column justify-content-between" style={{ minHeight: '100px' }}>
         <div>
-          <h6 className="text-secondary fw-semibold mb-2 text-uppercase small">{title}</h6>
-          <h2 className="display-4 fw-bold mb-0" style={{ color: '#2D3142' }}>{number.toLocaleString()}</h2>
+          <p className="stats-label mb-1">{title}</p>
+          <h2 className="stats-number mb-0">{number.toLocaleString()}</h2>
         </div>
-        <div className={`${iconBg} rounded-3 p-3 shadow-sm d-flex align-items-center justify-content-center`} style={{ width: '60px', height: '60px' }}>
-          <i className={`fas ${icon} fa-2x text-white`}></i>
+        
+        <div className="mt-3">
+          <span className="badge rounded-pill bg-light text-dark border px-3 py-2 fw-normal">
+            {subtitle}
+          </span>
         </div>
       </div>
-      <p className="mb-0 fw-semibold small" style={{ color: '#FDB913' }}>{subtitle}</p>
+
+      {/* Phần Icon Box bên phải */}
+      <div className={`stats-icon-box ${iconBg}`}>
+        <i className={`fas ${icon}`}></i>
+      </div>
     </div>
   </div>
 );
