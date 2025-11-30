@@ -48,7 +48,7 @@ const AppRoutes = () => {
       <Route path="/topics" element={<PrivateRoutes><Topics /></PrivateRoutes>} />
       <Route path="/exercises" element={<PrivateRoutes><Exercises /></PrivateRoutes>} />
       <Route path="/exercises/vocal" element={<PrivateRoutes><Exercises_Vocal /></PrivateRoutes>} />
-        <Route path="/exercises/gram" element={<PrivateRoutes><Exercises_Gram /></PrivateRoutes>} />
+      <Route path="/exercises/gram" element={<PrivateRoutes><Exercises_Gram /></PrivateRoutes>} />
       <Route path="/users" element={<PrivateRoutes><Users /></PrivateRoutes>} />
       <Route path="/stats" element={<PrivateRoutes><Stats /></PrivateRoutes>} />
       <Route path="/settings" element={<PrivateRoutes><Settings /></PrivateRoutes>} />

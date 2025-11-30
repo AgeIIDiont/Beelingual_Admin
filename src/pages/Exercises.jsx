@@ -11,17 +11,19 @@ const Exercises = () => {
       <div className="bg-white rounded-4 shadow p-4 mb-4">
         <Link
           to="/exercises/vocal"
-          className="text-decoration-none fst-italic fw-bold text-black"
+          className="text-decoration-none fst-italic fw-bold text-black fs-5"
         >
-          Vocabulary
+          <i class="fa-solid me-2 fa-book"></i> 
+          Vocabulary 
         </Link>
       </div>
 
       <div className="bg-white rounded-4 shadow p-4 mb-4">
         <Link
           to="/exercises/gram"
-          className="text-decoration-none fst-italic fw-bold text-black"
+          className="text-decoration-none fst-italic fw-bold text-black fs-5"
         >
+          <i class="fa-solid me-2 fa-book-tanakh"></i> 
           Grammar
         </Link>
       </div>
