@@ -8,6 +8,8 @@ import Vocabulary from '../pages/Vocabulary';
 import Grammar from '../pages/Grammar';
 import Topics from '../pages/Topics';
 import Exercises from '../pages/Exercises';
+import Exercises_Vocal from '../pages/Exercises_Vocal';
+import Exercises_Gram from '../pages/Exercises_Gram';
 import Users from '../pages/Users';
 import Stats from '../pages/Stats';
 import Settings from '../pages/Settings';
@@ -45,6 +47,8 @@ const AppRoutes = () => {
       <Route path="/grammar" element={<PrivateRoutes><Grammar /></PrivateRoutes>} />
       <Route path="/topics" element={<PrivateRoutes><Topics /></PrivateRoutes>} />
       <Route path="/exercises" element={<PrivateRoutes><Exercises /></PrivateRoutes>} />
+      <Route path="/exercises/vocal" element={<PrivateRoutes><Exercises_Vocal /></PrivateRoutes>} />
+        <Route path="/exercises/gram" element={<PrivateRoutes><Exercises_Gram /></PrivateRoutes>} />
       <Route path="/users" element={<PrivateRoutes><Users /></PrivateRoutes>} />
       <Route path="/stats" element={<PrivateRoutes><Stats /></PrivateRoutes>} />
       <Route path="/settings" element={<PrivateRoutes><Settings /></PrivateRoutes>} />
