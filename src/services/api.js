@@ -1,23 +1,23 @@
-// Axios instance configuration
 import axios from 'axios';
+import { getToken } from './authService'; // Import hàm lấy token
 
-// Create axios instance với base config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api', // TODO: Cập nhật khi có backend URL
-  timeout: 10000, // 10 seconds
+  // SỬA: Trỏ về server thật của bạn
+  baseURL: 'https://english-app-mupk.onrender.com/api', 
+  timeout: 20000, 
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor - thêm token nếu có
+// Request interceptor - Thêm token vào Header
 api.interceptors.request.use(
   (config) => {
-    // TODO: Thêm authentication token nếu có
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    // SỬA: Mở comment và lấy token thực tế
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -25,26 +25,19 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - xử lý lỗi chung
+// Response interceptor
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
-    // Xử lý lỗi chung ở đây
-    if (error.response) {
-      // Server responded with error status
-      console.error('API Error:', error.response.status, error.response.data);
-    } else if (error.request) {
-      // Request was made but no response received
-      console.error('Network Error:', error.request);
-    } else {
-      // Something else happened
-      console.error('Error:', error.message);
+    // Nếu token hết hạn (401), có thể xử lý logout tại đây
+    if (error.response && error.response.status === 401) {
+       console.error("Token hết hạn hoặc không hợp lệ");
+       // window.location.href = '/login'; // Tùy chọn: đá về trang login
     }
     return Promise.reject(error);
   }
 );
 
 export default api;
-

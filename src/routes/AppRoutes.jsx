@@ -6,7 +6,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from '../pages/Dashboard';
 import Vocabulary from '../pages/Vocabulary';
 import Grammar from '../pages/Grammar';
-import Topics from '../pages/Topics';
+import Topics from '../pages/TopicPage/Topics';
 import Exercises from '../pages/Exercises';
 import Users from '../pages/Users';
 import Stats from '../pages/Stats';

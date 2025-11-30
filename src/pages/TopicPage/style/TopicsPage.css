@@ -1,0 +1,141 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.bg-warning-honey {
+  background-color: #FDB913;
+}
+
+.bg-orange-honey {
+  background-color: #FF9F1C;
+}
+
+.bg-brown-honey {
+  background-color: #8B5A00;
+}
+
+.bg-dark-honey {
+  background-color: #2D3142;
+}
+
+.text-honey {
+  color: #FDB913;
+}
+
+.topic-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(253, 185, 19, 0.1);
+}
+
+.topic-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(253, 185, 19, 0.2);
+  border-color: rgba(253, 185, 19, 0.3);
+}
+
+.topic-icon {
+  transition: all 0.3s ease;
+}
+
+.topic-card:hover .topic-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.badge-active {
+  background: #4caf50;
+  color: white;
+}
+
+.stats-mini-card {
+  background: white;
+  border: 1px solid rgba(253, 185, 19, 0.1);
+  transition: all 0.3s ease;
+}
+
+.stats-mini-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(253, 185, 19, 0.15);
+}
+
+.search-input {
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.search-input:focus {
+  border-color: #FDB913;
+  box-shadow: 0 0 0 0.2rem rgba(253, 185, 19, 0.25);
+  outline: none;
+}
+
+.filter-select {
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.filter-select:focus {
+  border-color: #FDB913;
+  box-shadow: 0 0 0 0.2rem rgba(253, 185, 19, 0.25);
+  outline: none;
+}
+
+.btn-honey-primary {
+  background: linear-gradient(135deg, #FDB913 0%, #FF9F1C 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-honey-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(253, 185, 19, 0.4);
+}
+
+.btn-honey-outline {
+  background: white;
+  color: #2D3142;
+  border: 2px solid #FDB913;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-honey-outline:hover {
+  background: #FDB913;
+  color: white;
+  border-color: #FDB913;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #2D3142;
+}
+
+.dropdown-menu {
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+  padding: 0.6rem 1.2rem;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: #FFF8E7;
+  color: #2D3142;
+}
+
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ef9a9a;
+}
