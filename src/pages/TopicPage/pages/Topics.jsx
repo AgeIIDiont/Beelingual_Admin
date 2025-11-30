@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import TopicCard from './components/TopicCard';
-import * as TopicAPI from './service/topicApi';
+import TopicCard from '../components/TopicCard';
+import * as TopicAPI from '../service/topicApi';
 import './style/TopicsPage.css'; // Import file CSS
 
 const TopicsPage = () => {
