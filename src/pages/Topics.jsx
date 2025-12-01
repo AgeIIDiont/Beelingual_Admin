@@ -59,40 +59,42 @@ const Topics = () => {
       {
         key: 'imageUrl',
         label: 'Hình ảnh',
-        // Fix 1: Set chiều rộng cố định cho cột ảnh
-        minWidth: '100px', 
+        minWidth: '100px',
         render: (item) => (
           item.imageUrl ? (
-            <div className="ratio ratio-4x3" style={{ width: '80px', borderRadius: '8px', overflow: 'hidden' }}>
-               {/* Fix 2: Hiển thị ảnh thay vì text URL */}
+            <div className="ratio ratio-4x3 shadow-sm" style={{ width: '80px', borderRadius: '8px', overflow: 'hidden' }}>
               <img 
                 src={item.imageUrl} 
                 alt={item.name} 
                 className="object-fit-cover w-100 h-100"
-                onError={(e) => { e.target.src = 'https://placehold.co/80x60?text=No+Img'; }} // Fallback nếu ảnh lỗi
+                onError={(e) => { e.target.src = 'https://placehold.co/80x60?text=No+Img'; }}
               />
             </div>
           ) : (
-            <span className="text-muted small fst-italic">Không có ảnh</span>
+            // Đồng bộ style "No Img" với trang Vocabulary
+            <div className="bg-light d-flex align-items-center justify-content-center text-muted small border" style={{ width: '80px', height: '60px', borderRadius: '8px' }}>
+              No Img
+            </div>
           )
         ),
       },
       {
         key: 'name',
-        label: 'Chủ đề',
+        label: 'Tên chủ đề',
         minWidth: '200px',
         render: (item) => (
           <div>
-            <div className="fw-bold text-dark fs-6">{item.name}</div>
+            <div className="fw-bold text-dark fs-6 mb-1">{item.name}</div>
+            {/* Hiển thị ID nhỏ giúp Admin dễ debug nếu cần */}
+            <small className="text-muted fst-italic" style={{ fontSize: '0.75rem' }}>ID: {item._id?.slice(-6).toUpperCase()}</small>
           </div>
         ),
       },
       {
         key: 'level',
-        label: 'Trình độ',
+        label: 'Level',
         minWidth: '100px',
         render: (item) => {
-          // Fix 3: Thêm Badge màu sắc cho Level nhìn chuyên nghiệp hơn
           let colorClass = 'bg-secondary';
           if (item.level === 'A') colorClass = 'bg-success';
           if (item.level === 'B') colorClass = 'bg-warning text-dark';
@@ -100,25 +102,23 @@ const Topics = () => {
           
           return (
             <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
-              {item.level ? `Level ${item.level}` : 'Chưa set'}
+              {item.level || '—'}
             </span>
           );
         },
       },
       {
         key: 'description',
-        label: 'Mô tả',
-        // Quan trọng: Đặt minWidth để cột đủ rộng, chữ không bị ép quá hẹp
-        minWidth: '300px', 
+        label: 'Mô tả chi tiết',
+        minWidth: '350px',
         render: (item) => (
           <div 
-            className="text-muted"
-            // whiteSpace: 'pre-wrap': Giữ nguyên xuống dòng nếu trong data có enter
-            // wordBreak: 'break-word': Đảm bảo từ quá dài sẽ tự xuống dòng, không tràn ra ngoài
+            className="text-secondary"
             style={{ 
               whiteSpace: 'pre-wrap', 
               wordBreak: 'break-word',
-              lineHeight: '1.5' 
+              lineHeight: '1.6',
+              fontSize: '0.95rem'
             }} 
           >
             {item.description || '—'}
@@ -133,14 +133,14 @@ const Topics = () => {
     () => [
       {
         name: 'search',
-        label: 'Tìm kiếm',
+        label: 'Tìm kiếm chủ đề...',
         type: 'text',
-        placeholder: 'Nhập tiêu đề...',
+        placeholder: 'Nhập tên chủ đề...',
         col: 6,
       },
       {
         name: 'level',
-        label: 'Trình độ',
+        label: 'Lọc theo trình độ',
         type: 'select',
         options: levelOptions,
         col: 3,
@@ -163,15 +163,15 @@ const Topics = () => {
         name: 'level',
         label: 'Trình độ',
         type: 'select',
-        options: levelOptions.slice(1), // Bỏ option 'Tất cả'
+        options: levelOptions.slice(1),
         defaultValue: 'A',
         col: 4,
       },
       {
         name: 'imageUrl',
         label: 'Link Hình ảnh (URL)',
-        type: 'text', // Đổi thành text input thường để paste link
-        placeholder: 'https://...',
+        type: 'text',
+        placeholder: 'https://example.com/image.jpg',
         col: 12,
         helper: 'Dán đường dẫn ảnh trực tiếp từ internet.'
       },
@@ -179,7 +179,7 @@ const Topics = () => {
         name: 'description',
         label: 'Mô tả chi tiết',
         type: 'textarea',
-        rows: 4,
+        rows: 5,
         col: 12,
         placeholder: 'Mô tả nội dung bài học...'
       },
@@ -204,6 +204,8 @@ const Topics = () => {
 
   return (
     <ResourceManager
+      title="Quản lý Chủ đề"
+      description="Chuẩn hóa và quản lý các nhóm chủ đề bài học trong hệ thống."
       ref={resourceManagerRef}
       resourceName="chủ đề"
       columns={columns}
