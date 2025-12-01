@@ -59,27 +59,6 @@ const Dashboard = () => {
   return (
     <div className="container-fluid py-5 px-4 px-lg-5">
       {/* Welcome Header */}
-      {!loading && !error && (
-        <div className="bg-white rounded-4 shadow p-4 mb-4 d-flex justify-content-between align-items-center">
-          <div>
-            <h2 className="h4 fw-bold mb-1">Xin chào, {profile?.username || 'Admin'}</h2>
-            <p className="text-muted mb-0">Tổng quan hệ thống</p>
-          </div>
-          <div className="d-flex align-items-center gap-3">
-            <div className="text-end d-none d-md-block">
-              <div className="fw-semibold text-dark small">{profile?.email || ''}</div>
-            </div>
-            <img
-              src={profile?.avatarUrl || 'https://randomuser.me/api/portraits/men/32.jpg'}
-              alt={profile?.username || 'admin'}
-              className="rounded-circle border border-warning border-2"
-              width={56}
-              height={56}
-              style={{ objectFit: 'cover' }}
-            />
-          </div>
-        </div>
-      )}
       {/* Loading */}
       {loading && (
         <div className="text-center py-5">
@@ -117,5 +96,4 @@ const Dashboard = () => {
     </div>
   );
 };
-
-export default Dashboard;
+    export default Dashboard;
