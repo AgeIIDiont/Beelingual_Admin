@@ -130,8 +130,8 @@ const Settings = () => {
             border: 1px solid transparent;
           }
           .btn-pale-success:hover {
-            background-color: #12e784ff; /* Hover: Nền xanh đậm */
-            color: #0df609ff; /* Hover: Chữ trắng */
+            background-color: #12e78432; /* Hover: Nền xanh đậm */
+            color: #23a521ff; /* Hover: Chữ trắng */
             box-shadow: 0 4px 12px rgba(25, 135, 84, 1); /* Đổ bóng xanh */
           }
 
@@ -142,7 +142,7 @@ const Settings = () => {
             border: 1px solid transparent;
           }
           .btn-pale-secondary:hover {
-            background-color: #647584ff; /* Hover: Nền xám đậm */
+            background-color: #6475843e; /* Hover: Nền xám đậm */
             color: #f20000ff; /* Hover: Chữ trắng */
             box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
         `}
