@@ -1,6 +1,12 @@
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css');
 
+:root {
+  /* Page background variable (light yellow by default) */
+  --page-bg: #ffffff;
+}
+
 body {
-  background: #f8f9fc;
+  /* Use CSS variable so it's easy to override later */
+  background: var(--page-bg);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
