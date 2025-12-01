@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import StatsCard from '../components/ui/StatsCard';
-import { getDashboardStats } from '../services/dashboardService';
-import { fetchProfile } from '../services/adminService'; 
+import { fetchProfile, fetchVocabulary, fetchGrammar, fetchTopics, fetchExercises } from '../services/adminService';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -15,18 +14,28 @@ const Dashboard = () => {
         setLoading(true);
         setError(null);
 
-        // Gọi song song: profile + stats → nhanh hơn
-        const [profileRes, statsRes] = await Promise.all([
+        // Gọi song song: profile + từng endpoint (mỗi endpoint trả về object có total)
+        const [profileRes, vocabRes, grammarRes, topicsRes, exercisesRes] = await Promise.all([
           fetchProfile(),
-          getDashboardStats(),
+          fetchVocabulary({ page: 1, limit: 1 }),
+          fetchGrammar({ page: 1, limit: 1 }),
+          fetchTopics({ page: 1, limit: 1 }),
+          fetchExercises({ page: 1, limit: 1 }),
         ]);
 
         setProfile(profileRes);
-        if (statsRes.success && statsRes.data) {
-          setStats(statsRes.data);
-        } else {
-          setError('Không thể tải thống kê');
-        }
+
+        const getTotal = (res) => {
+          if (!res) return 0;
+          return res.total ?? 0;
+        };
+
+        setStats({
+          vocabulary: getTotal(vocabRes),
+          grammar: getTotal(grammarRes),
+          topics: getTotal(topicsRes),
+          exercises: getTotal(exercisesRes),
+        });
       } catch (err) {
         console.error('Lỗi tải Dashboard:', err);
         setError(err.message || 'Đã xảy ra lỗi khi tải dữ liệu');
@@ -50,6 +59,27 @@ const Dashboard = () => {
   return (
     <div className="container-fluid py-5 px-4 px-lg-5">
       {/* Welcome Header */}
+      {!loading && !error && (
+        <div className="bg-white rounded-4 shadow p-4 mb-4 d-flex justify-content-between align-items-center">
+          <div>
+            <h2 className="h4 fw-bold mb-1">Xin chào, {profile?.username || 'Admin'}</h2>
+            <p className="text-muted mb-0">Tổng quan hệ thống</p>
+          </div>
+          <div className="d-flex align-items-center gap-3">
+            <div className="text-end d-none d-md-block">
+              <div className="fw-semibold text-dark small">{profile?.email || ''}</div>
+            </div>
+            <img
+              src={profile?.avatarUrl || 'https://randomuser.me/api/portraits/men/32.jpg'}
+              alt={profile?.username || 'admin'}
+              className="rounded-circle border border-warning border-2"
+              width={56}
+              height={56}
+              style={{ objectFit: 'cover' }}
+            />
+          </div>
+        </div>
+      )}
       {/* Loading */}
       {loading && (
         <div className="text-center py-5">
