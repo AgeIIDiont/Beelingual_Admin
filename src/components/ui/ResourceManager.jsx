@@ -440,25 +440,31 @@ const ResourceManager = forwardRef(({
                       </td>
                     ))}
                     {hasActions && (
-                      <td className="text-end">
-                        {updateApi && (
-                          <button
-                            className="btn btn-sm btn-outline-primary me-2"
-                            onClick={() => openEditForm(item)}
-                          >
-                            <i className="fas fa-pen me-1" />
-                            Sửa
-                          </button>
-                        )}
-                        {deleteApi && (
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDelete(item)}
-                          >
-                            <i className="fas fa-trash me-1" />
-                            Xóa
-                          </button>
-                        )}
+                      <td className="text-end align-middle"> {/* align-middle để canh giữa theo chiều dọc */}
+                        <div className="d-flex justify-content-end gap-2">
+                          {updateApi && (
+                            <button
+                              className="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
+                              onClick={() => openEditForm(item)}
+                              title="Chỉnh sửa" // Hover vào sẽ hiện chữ
+                            >
+                              <i className="fas fa-pen" />
+                              {/* Nếu muốn gọn hơn nữa thì xóa dòng dưới đi để chỉ hiện icon */}
+                              <span className="d-none d-md-inline">Sửa</span> 
+                            </button>
+                          )}
+                          {deleteApi && (
+                            <button
+                              className="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1"
+                              onClick={() => handleDelete(item)}
+                              title="Xóa"
+                            >
+                              <i className="fas fa-trash" />
+                              {/* Nếu muốn gọn hơn nữa thì xóa dòng dưới đi để chỉ hiện icon */}
+                              <span className="d-none d-md-inline">Xóa</span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     )}
                   </tr>
