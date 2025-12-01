@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   fetchTopics,
@@ -6,6 +6,7 @@ import {
   updateTopic,
   deleteTopic,
 } from '../services/adminService';
+import { usePage } from '../contexts/PageContext';
 
 const levelOptions = [
   { value: '', label: 'Tất cả' },
@@ -15,6 +16,44 @@ const levelOptions = [
 ];
 
 const Topics = () => {
+  const { setPageInfo } = usePage();
+  const resourceManagerRef = useRef(null);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.refresh();
+      }
+    };
+
+    const handleCreate = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.openCreateForm();
+      }
+    };
+
+    setPageInfo({
+      title: 'Chủ đề học',
+      description: 'Quản lý toàn bộ chủ đề bài học sử dụng trong ứng dụng.',
+      actions: (
+        <>
+          <button
+            className="btn btn-outline-secondary"
+            type="button"
+            onClick={handleRefresh}
+          >
+            <i className="fas fa-rotate me-2"></i>
+            Làm mới
+          </button>
+          <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
+            <i className="fas fa-plus me-2" />
+            Thêm chủ đề
+          </button>
+        </>
+      ),
+    });
+    return () => setPageInfo({ title: '', description: '', actions: null });
+  }, [setPageInfo]);
   const columns = useMemo(
     () => [
       {
@@ -167,6 +206,7 @@ const Topics = () => {
     <ResourceManager
       title="Quản lý Chủ đề"
       description="Chuẩn hóa và quản lý các nhóm chủ đề bài học trong hệ thống."
+      ref={resourceManagerRef}
       resourceName="chủ đề"
       columns={columns}
       filters={filters}
@@ -176,6 +216,7 @@ const Topics = () => {
       updateApi={updateTopic}
       deleteApi={deleteTopic}
       buildPayload={buildPayload}
+      hideHeader={true}
     />
   );
 };

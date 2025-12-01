@@ -12,7 +12,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Lấy redirect path từ state (nếu có)
   const from = location.state?.from?.pathname || '/dashboard';
 
   const handleChange = (e) => {
@@ -21,7 +20,7 @@ const Login = () => {
       ...prev,
       [name]: value
     }));
-    setError(''); // Clear error when user types
+    setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -31,22 +30,47 @@ const Login = () => {
 
     try {
       const result = await login(formData.username, formData.password);
+
       if (result && result.success) {
-        // Đảm bảo token và user đã được lưu trước khi redirect
-        // Redirect về trang trước đó hoặc dashboard
+        // Giả sử API trả về thông tin user bao gồm role
+        const user = result.user || result.data?.user || result;
+
+        // Kiểm tra role có phải là "admin" không (có thể là chuỗi hoặc mảng)
+        const role = user.role || user.roles;
+
+        let isAdmin = false;
+        if (Array.isArray(role)) {
+          isAdmin = role.includes('admin') || role.includes('ADMIN');
+        } else {
+          isAdmin = role === 'admin' || role === 'ADMIN';
+        }
+
+        if (!isAdmin) {
+          setError('Bạn không có quyền truy cập hệ thống quản trị. Chỉ dành cho Admin.');
+          // Optional: Đăng xuất ngay nếu đã lưu token
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          // hoặc gọi logout nếu có
+          return;
+        }
+
+        // Nếu là admin → cho phép vào
         setTimeout(() => {
           navigate(from, { replace: true });
-        }, 100); // Small delay để đảm bảo state đã được cập nhật
+        }, 100);
+
       } else {
-        setError('Đăng nhập thất bại. Vui lòng thử lại.');
+        setError('Tên đăng nhập hoặc mật khẩu không đúng.');
       }
     } catch (err) {
-      setError(err.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
+      const message = err.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
+  // Phần render giữ nguyên...
   return (
     <div 
       className="container-fluid d-flex align-items-center justify-content-center" 
@@ -56,7 +80,6 @@ const Login = () => {
       }}
     >
       <div className="bg-white rounded-4 shadow-lg p-5" style={{ maxWidth: '450px', width: '100%' }}>
-        {/* Logo/Header */}
         <div className="text-center mb-4">
           <h2 className="fw-bold text-dark mb-2">BEELINGUAL</h2>
           <p className="text-muted">Hệ thống quản trị</p>
@@ -64,7 +87,6 @@ const Login = () => {
 
         <h3 className="text-center mb-4 fw-bold text-dark">Đăng nhập</h3>
 
-        {/* Error message */}
         {error && (
           <div className="alert alert-danger d-flex align-items-center" role="alert">
             <i className="fas fa-exclamation-circle me-2"></i>
@@ -72,7 +94,6 @@ const Login = () => {
           </div>
         )}
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label htmlFor="username" className="form-label fw-medium text-dark">
@@ -120,14 +141,9 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Remember me & Forgot password */}
           <div className="mb-4 d-flex justify-content-between align-items-center">
             <div className="form-check">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="rememberMe"
-              />
+              <input className="form-check-input" type="checkbox" id="rememberMe" />
               <label className="form-check-label text-muted" htmlFor="rememberMe">
                 Ghi nhớ đăng nhập
               </label>
@@ -137,7 +153,6 @@ const Login = () => {
             </a>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             className="btn btn-warning w-100 fw-bold py-2"
@@ -158,7 +173,6 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Footer */}
         <div className="mt-4 text-center">
           <p className="text-muted small mb-0">
             © 2024 Beelingual. All rights reserved.
@@ -170,4 +184,3 @@ const Login = () => {
 };
 
 export default Login;
-

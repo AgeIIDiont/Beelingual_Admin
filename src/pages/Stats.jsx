@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import StatsCard from '../components/ui/StatsCard';
 import { fetchAdminLogs, fetchUserStats } from '../services/adminService';
+import { usePage } from '../contexts/PageContext';
 
 const formatDateTime = (value) => {
   if (!value) return '—';
@@ -9,6 +10,7 @@ const formatDateTime = (value) => {
 };
 
 const Stats = () => {
+  const { setPageInfo } = usePage();
   const [userStats, setUserStats] = useState(null);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,22 +35,26 @@ const Stats = () => {
   };
 
   useEffect(() => {
+    setPageInfo({
+      title: 'Thống kê hệ thống',
+      description: 'Theo dõi sức khỏe dữ liệu và hoạt động của admin',
+      actions: (
+        <button className="btn btn-warning text-dark fw-bold" onClick={loadAll}>
+          <i className="fas fa-rotate me-2" />
+          Làm mới
+        </button>
+      ),
+    });
+    return () => setPageInfo({ title: '', description: '', actions: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setPageInfo]); // loadAll is stable, no need to include it
+
+  useEffect(() => {
     loadAll();
   }, []);
 
   return (
     <div className="container-fluid py-5 px-4 px-lg-5">
-      <div className="bg-white rounded-4 shadow p-4 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-          <h1 className="h3 fw-bold text-dark mb-1">Thống kê hệ thống</h1>
-          <p className="text-muted mb-0">Theo dõi sức khỏe dữ liệu và hoạt động của admin</p>
-        </div>
-        <button className="btn btn-warning text-dark fw-bold" onClick={loadAll}>
-          <i className="fas fa-rotate me-2" />
-          Làm mới
-        </button>
-      </div>
-
       {error && (
         <div className="alert alert-danger" role="alert">
           {error}

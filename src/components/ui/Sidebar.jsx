@@ -9,7 +9,7 @@ const menu = [
   { icon: 'fa-file-alt', label: 'Bài tập & Đề thi', path: '/exercises' },
   { icon: 'fa-users', label: 'Người dùng', path: '/users' },
   { icon: 'fa-chart-bar', label: 'Thống kê', path: '/stats' },
-  { icon: 'fa-cog', label: 'Cài đặt', path: '/settings' },
+  // { icon: 'fa-cog', label: 'Cài đặt', path: '/settings' },
 ];
 
 const Sidebar = () => {

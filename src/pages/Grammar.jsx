@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   createGrammar,
@@ -6,6 +6,7 @@ import {
   fetchGrammar,
   updateGrammar,
 } from '../services/adminService';
+import { usePage } from '../contexts/PageContext';
 
 const levelOptions = [
   { value: '', label: 'Tất cả' },
@@ -15,6 +16,45 @@ const levelOptions = [
 ];
 
 const Grammar = () => {
+  const { setPageInfo } = usePage();
+  const resourceManagerRef = useRef(null);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.refresh();
+      }
+    };
+
+    const handleCreate = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.openCreateForm();
+      }
+    };
+
+    setPageInfo({
+      title: 'Quản lý Ngữ pháp',
+      description: 'Chuẩn hóa và quản lý toàn bộ bài học ngữ pháp sử dụng trong ứng dụng.',
+      actions: (
+        <>
+          <button
+            className="btn btn-outline-secondary"
+            type="button"
+            onClick={handleRefresh}
+          >
+            <i className="fas fa-rotate me-2"></i>
+            Làm mới
+          </button>
+          <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
+            <i className="fas fa-plus me-2" />
+            Thêm bài ngữ pháp
+          </button>
+        </>
+      ),
+    });
+    return () => setPageInfo({ title: '', description: '', actions: null });
+  }, [setPageInfo]);
+
   const columns = useMemo(
     () => [
       {
@@ -126,8 +166,7 @@ const Grammar = () => {
 
   return (
     <ResourceManager
-      title="Quản lý Ngữ pháp"
-      description="Chuẩn hóa và quản lý toàn bộ bài học ngữ pháp sử dụng trong ứng dụng."
+      ref={resourceManagerRef}
       resourceName="bài ngữ pháp"
       columns={columns}
       filters={filters}
@@ -137,6 +176,7 @@ const Grammar = () => {
       updateApi={updateGrammar}
       deleteApi={deleteGrammar}
       buildPayload={buildPayload}
+      hideHeader={true}
     />
   );
 };
