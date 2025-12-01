@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo , useEffect, useRef } from 'react';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   fetchVocabulary,
@@ -27,8 +27,46 @@ const typeOptions = [
   { value: 'idiom', label: 'Thành ngữ (idiom)' },
   { value: 'phrase', label: 'Cụm từ (phrase)' },
 ];
-
+import { usePage } from '../contexts/PageContext';
 const Vocabularys = () => {
+    const { setPageInfo } = usePage();
+    const resourceManagerRef = useRef(null);
+  
+    useEffect(() => {
+      const handleRefresh = () => {
+        if (resourceManagerRef.current) {
+          resourceManagerRef.current.refresh();
+        }
+      };
+  
+      const handleCreate = () => {
+        if (resourceManagerRef.current) {
+          resourceManagerRef.current.openCreateForm();
+        }
+      };
+  
+        setPageInfo({
+          title: 'Quản lý Từ vựng',
+          description: 'Quản lý toàn bộ từ vựng: thêm, sửa, xóa và tìm kiếm.',
+          actions: (
+            <>
+              <button
+                className="btn btn-outline-secondary"
+                type="button"
+                onClick={handleRefresh}
+              >
+                <i className="fas fa-rotate me-2"></i>
+                Làm mới
+              </button>
+              <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
+                <i className="fas fa-plus me-2" />
+                Thêm từ vựng
+              </button>
+            </>
+          ),
+        });
+      return () => setPageInfo({ title: '', description: '', actions: null });
+    }, [setPageInfo]);
   // Hàm xử lý phát âm thanh
   const playAudio = (url) => {
     if (!url) return;
@@ -256,8 +294,7 @@ const Vocabularys = () => {
 
   return (
     <ResourceManager
-      title="Quản lý Từ vựng"
-      description="Thêm mới và chuẩn hóa danh sách từ vựng trong hệ thống."
+      ref={resourceManagerRef}
       resourceName="từ vựng"
       columns={columns}
       filters={filters}
@@ -266,10 +303,11 @@ const Vocabularys = () => {
       createApi={createVocabulary}
       updateApi={updateVocabulary}
       deleteApi={deleteVocabulary}
+      hideHeader={true}
       buildPayload={buildPayload}
     />
   );
 };
 
-export default Vocabulary;
+export default Vocabularys;
 
