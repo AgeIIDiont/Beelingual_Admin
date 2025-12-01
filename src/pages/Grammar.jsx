@@ -1,12 +1,143 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import ResourceManager from '../components/ui/ResourceManager';
+import {
+  createGrammar,
+  deleteGrammar,
+  fetchGrammar,
+  updateGrammar,
+} from '../services/adminService';
+
+const levelOptions = [
+  { value: '', label: 'Tất cả' },
+  { value: 'A', label: 'Level A' },
+  { value: 'B', label: 'Level B' },
+  { value: 'C', label: 'Level C' },
+];
 
 const Grammar = () => {
+  const columns = useMemo(
+    () => [
+      {
+        key: 'title',
+        label: 'Chủ điểm',
+        render: (item) => (
+          <div>
+            <div className="fw-bold text-dark">{item.title}</div>
+            <small className="text-muted">{item.structure || '—'}</small>
+          </div>
+        ),
+      },
+      {
+        key: 'level',
+        label: 'Trình độ',
+        render: (item) => item.level || '—',
+      },
+      {
+        key: 'example',
+        label: 'Ví dụ',
+        render: (item) => item.example || '—',
+      },
+      {
+        key: 'createdAt',
+        label: 'Ngày tạo',
+        render: (item) => new Date(item.createdAt).toLocaleDateString('vi-VN'),
+      },
+    ],
+    []
+  );
+
+  const filters = useMemo(
+    () => [
+      {
+        name: 'search',
+        label: 'Tìm kiếm',
+        type: 'text',
+        placeholder: 'Nhập tiêu đề...',
+        col: 6,
+      },
+      {
+        name: 'level',
+        label: 'Trình độ',
+        type: 'select',
+        options: levelOptions,
+        col: 3,
+      },
+    ],
+    []
+  );
+
+  const formFields = useMemo(
+    () => [
+      {
+        name: 'title',
+        label: 'Tiêu đề',
+        type: 'text',
+        required: true,
+        col: 6,
+      },
+      {
+        name: 'level',
+        label: 'Trình độ',
+        type: 'select',
+        options: levelOptions.slice(1),
+        defaultValue: 'A',
+        col: 3,
+      },
+      {
+        name: 'structure',
+        label: 'Cấu trúc',
+        type: 'text',
+        placeholder: 'vd: S + V + O',
+        col: 12,
+      },
+      {
+        name: 'content',
+        label: 'Nội dung chi tiết',
+        type: 'textarea',
+        rows: 4,
+        col: 12,
+      },
+      {
+        name: 'example',
+        label: 'Ví dụ minh họa',
+        type: 'textarea',
+        rows: 2,
+        col: 12,
+      },
+    ],
+    []
+  );
+
+  const buildPayload = (values) => {
+    const payload = {
+      title: values.title?.trim(),
+      level: values.level || 'A',
+      structure: values.structure?.trim(),
+      content: values.content?.trim(),
+      example: values.example?.trim(),
+    };
+
+    Object.keys(payload).forEach((key) => {
+      if (!payload[key]) delete payload[key];
+    });
+
+    return payload;
+  };
+
   return (
-    <div className="container-fluid py-5 px-4 px-lg-5">
-      <div className="bg-white rounded-4 shadow p-4">
-        <h1 className="h3 fw-bold text-dark mb-0">Quản lý Ngữ pháp</h1>
-      </div>
-    </div>
+    <ResourceManager
+      title="Quản lý Ngữ pháp"
+      description="Chuẩn hóa và quản lý toàn bộ bài học ngữ pháp sử dụng trong ứng dụng."
+      resourceName="bài ngữ pháp"
+      columns={columns}
+      filters={filters}
+      formFields={formFields}
+      listApi={fetchGrammar}
+      createApi={createGrammar}
+      updateApi={updateGrammar}
+      deleteApi={deleteGrammar}
+      buildPayload={buildPayload}
+    />
   );
 };
 

@@ -1,107 +1,119 @@
-// Authentication service
-// TODO: Thay bằng real API call khi backend sẵn sàng
-
+// src/services/auth.js
 import api from './api';
 
 const TOKEN_KEY = 'beelingual_admin_token';
 const USER_KEY = 'beelingual_admin_user';
 
-/**
- * Lấy token từ localStorage
- */
-export const getToken = () => {
-  return localStorage.getItem(TOKEN_KEY);
-};
+// ====================== CÁC HÀM CƠ BẢN ======================
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
 
-/**
- * Lưu token vào localStorage
- */
 export const setToken = (token) => {
-  localStorage.setItem(TOKEN_KEY, token);
+  if (token) localStorage.setItem(TOKEN_KEY, token);
 };
 
-/**
- * Lưu thông tin user vào localStorage
- */
 export const setUser = (user) => {
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 
-/**
- * Lấy thông tin user từ localStorage
- */
 export const getUser = () => {
-  const userStr = localStorage.getItem(USER_KEY);
-  return userStr ? JSON.parse(userStr) : null;
+  const str = localStorage.getItem(USER_KEY);
+  if (!str) return null;
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    console.error('Lỗi parse user từ localStorage:', e);
+    return null;
+  }
 };
 
-/**
- * Xóa token và user info
- */
 export const clearAuth = () => {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
 };
 
-/**
- * Kiểm tra xem user đã đăng nhập chưa
- */
-export const isAuthenticated = () => {
-  return !!getToken();
-};
+export const isAuthenticated = () => !!getToken();
 
-/**
- * Đăng nhập
- * @param {string} username 
- * @param {string} password 
- * @returns {Promise<Object>} Response từ API
- */
+// ====================== ĐĂNG NHẬP ======================
 export const login = async (username, password) => {
   try {
-    // TODO: Thay bằng real API call khi backend sẵn sàng
-    // const response = await api.post('/auth/login', { username, password });
-    // const { token, user } = response.data;
-    // setToken(token);
-    // setUser(user);
-    // return { success: true, user };
+    const response = await api.post('/api/login', {
+      username: username.trim(),
+      password,
+    });
 
-    // Mock login cho development
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-    
-    // Mock validation
-    if (username && password) {
-      const mockUser = {
-        id: 1,
-        username: username,
-        name: 'Admin',
-        email: 'admin@beelingual.com',
-        role: 'admin'
-      };
-      const mockToken = 'mock_token_' + Date.now();
-      
-      setToken(mockToken);
-      setUser(mockUser);
-      
-      return {
-        success: true,
-        user: mockUser,
-        token: mockToken
-      };
-    } else {
-      throw new Error('Vui lòng nhập đầy đủ thông tin');
+    const { token, user, message } = response.data;
+
+    if (!token || !user) {
+      throw new Error('Server trả về dữ liệu không hợp lệ');
     }
+
+    setToken(token);
+    setUser(user);
+
+    return { success: true, user, token, message };
   } catch (error) {
+    let message = 'Đăng nhập thất bại. Vui lòng thử lại.';
+
+    if (error.response) {
+      const { status } = error.response;
+      const msg = error.response.data?.message || error.response.data?.error;
+
+      if (status === 401) message = msg || 'Tên đăng nhập hoặc mật khẩu không đúng';
+      else if (status === 400) message = msg || 'Dữ liệu gửi lên không hợp lệ';
+      else if (status >= 500) message = 'Lỗi máy chủ. Vui lòng thử lại sau';
+      else message = msg || message;
+    } else {
+      message = 'Không kết nối được server. Kiểm tra mạng của bạn.';
+    }
+
     console.error('Login error:', error);
-    throw error;
+    const err = new Error(message);
+    err.status = error.response?.status;
+    throw err;
   }
 };
 
-/**
- * Đăng xuất
- */
+// ====================== ĐĂNG XUẤT ======================
 export const logout = () => {
   clearAuth();
-  // TODO: Gọi API logout nếu cần
-  // await api.post('/auth/logout');
+  // Dùng href để reload hoàn toàn trang → tránh bấm Back vào được trang cũ
+  window.location.href = '/login';
 };
 
+// ====================== INTERCEPTORS ======================
+// Thêm token vào mọi request
+api.interceptors.request.use(
+  (config) => {
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Xử lý 401 toàn cục (token hết hạn / không hợp lệ)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      if (window.location.pathname !== '/login') {
+        console.warn('Token hết hạn → tự động đăng xuất');
+        logout();
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default {
+  login,
+  logout,
+  isAuthenticated,
+  getToken,
+  getUser,
+  setToken,
+  setUser,
+  clearAuth,
+};
