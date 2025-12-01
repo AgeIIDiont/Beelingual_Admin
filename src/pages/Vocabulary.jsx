@@ -14,7 +14,6 @@ const levelOptions = [
   { value: 'C', label: 'Level C' },
 ];
 
-// Fix: Chuẩn hóa nhãn hiển thị và loại bỏ trùng lặp
 const typeOptions = [
   { value: 'noun', label: 'Danh từ (n)' },
   { value: 'verb', label: 'Động từ (v)' },
@@ -80,7 +79,7 @@ const Vocabularys = () => {
               {/* Phiên âm */}
               <span className="text-muted fst-italic font-monospace">/{item.pronunciation}/</span>
               
-              {/* Nút nghe Audio xịn hơn */}
+              {/* Nút nghe Audio */}
               {item.audioUrl && (
                 <button 
                   type="button"
@@ -190,7 +189,7 @@ const Vocabularys = () => {
         name: 'type',
         label: 'Loại từ',
         type: 'select',
-        options: typeOptions, // Đã bỏ slice(1) để lấy full list đã chuẩn hóa
+        options: typeOptions,
         defaultValue: 'noun',
         col: 6,
       },
@@ -205,7 +204,7 @@ const Vocabularys = () => {
       {
         name: 'meaning',
         label: 'Ý nghĩa / Định nghĩa',
-        type: 'textarea', // Dùng textarea cho ý nghĩa dài
+        type: 'textarea',
         rows: 2,
         required: true,
         placeholder: 'Giải thích nghĩa của từ...',
@@ -242,7 +241,7 @@ const Vocabularys = () => {
       meaning: values.meaning?.trim(),
       level: values.level || 'A',
       type: values.type || 'noun',
-      pronunciation: values.pronunciation?.trim(), // Fix: Bỏ default 'n' sai logic
+      pronunciation: values.pronunciation?.trim(),
       topic: values.topic?.trim(),
       imageUrl: values.imageUrl?.trim(),
       audioUrl: values.audioUrl?.trim(),
@@ -257,7 +256,7 @@ const Vocabularys = () => {
 
   return (
     <ResourceManager
-      title="Quản lý Từ vựng" // Fix: Đổi title cho đúng trang
+      title="Quản lý Từ vựng"
       description="Thêm mới và chuẩn hóa danh sách từ vựng trong hệ thống."
       resourceName="từ vựng"
       columns={columns}

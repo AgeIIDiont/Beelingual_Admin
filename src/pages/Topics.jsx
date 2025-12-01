@@ -71,7 +71,7 @@ const Topics = () => {
       {
         key: 'description',
         label: 'Mô tả chi tiết',
-        minWidth: '350px', // Tăng độ rộng để text dài không bị ép quá
+        minWidth: '350px',
         render: (item) => (
           <div 
             className="text-secondary"
