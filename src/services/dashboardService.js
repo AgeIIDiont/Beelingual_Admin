@@ -1,7 +1,7 @@
 // Service để fetch dashboard statistics
 // TODO: Thay bằng real API call khi backend sẵn sàng
 
-import api from './api';
+// import api from './api';
 import { fetchDashboardStats } from '../data/mockData';
 
 /**
