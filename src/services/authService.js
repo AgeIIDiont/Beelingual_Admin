@@ -1,22 +1,12 @@
-<<<<<<< HEAD
-import api from './api'; // Import instance axios đã cấu hình ở trên
-
-// Đặt tên key giống nhau để tránh nhầm lẫn
-const TOKEN_KEY = 'accessToken'; 
-const USER_KEY = 'beelingual_user';
-=======
 // src/services/auth.js
 import api from './api';
->>>>>>> master
 
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
+const TOKEN_KEY = 'admin_token';
+const USER_KEY = 'admin_user';
 
-<<<<<<< HEAD
-=======
 // ====================== CÁC HÀM CƠ BẢN ======================
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 
->>>>>>> master
 export const setToken = (token) => {
   if (token) localStorage.setItem(TOKEN_KEY, token);
 };
@@ -41,26 +31,6 @@ export const clearAuth = () => {
   localStorage.removeItem(USER_KEY);
 };
 
-<<<<<<< HEAD
-export const isAuthenticated = () => {
-  return !!getToken();
-};
-
-// SỬA: Hàm Login gọi API thật
-export const login = async (username, password) => {
-  try {
-    // Gọi API thật lên Server
-    const response = await api.post('/login', { username, password });
-    const { token, ...userData } = response.data; 
-    if (token) {
-        setToken(token);
-        setUser(userData);
-        return { success: true, user: userData };
-    } else {
-        throw new Error("Không nhận được token từ server");
-    }
-
-=======
 export const isAuthenticated = () => !!getToken();
 
 // ====================== ĐĂNG NHẬP ======================
@@ -81,7 +51,6 @@ export const login = async (username, password) => {
     setUser(user);
 
     return { success: true, user, token, message };
->>>>>>> master
   } catch (error) {
     let message = 'Đăng nhập thất bại. Vui lòng thử lại.';
 
@@ -98,15 +67,6 @@ export const login = async (username, password) => {
     }
 
     console.error('Login error:', error);
-<<<<<<< HEAD
-    const message = error.response?.data?.message || 'Đăng nhập thất bại';
-    throw new Error(message);
-  }
-};
-
-export const logout = () => {
-  clearAuth();
-=======
     const err = new Error(message);
     err.status = error.response?.status;
     throw err;
@@ -156,5 +116,4 @@ export default {
   setToken,
   setUser,
   clearAuth,
->>>>>>> master
 };
