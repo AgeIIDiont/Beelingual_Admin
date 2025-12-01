@@ -78,17 +78,17 @@ const Dashboard = () => {
 
       {/* Stats */}
       {!loading && !error && stats && (
-        <div className="row g-5">
-          <div className="col-12 col-md-6">
+        <div className="row g-4">
+          <div className="col-6 col-md-3">
             <StatsCard title="Tổng từ vựng" number={stats.vocabulary} subtitle="Từ & cụm từ" icon="fa-book" />
           </div>
-          <div className="col-12 col-md-6">
+          <div className="col-6 col-md-3">
             <StatsCard title="Ngữ pháp" number={stats.grammar} subtitle="Chủ điểm ngữ pháp" icon="fa-spell-check" />
           </div>
-          <div className="col-12 col-md-6">
+          <div className="col-6 col-md-3">
             <StatsCard title="Chủ đề" number={stats.topics} subtitle="Topics & Units" icon="fa-tags" />
           </div>
-          <div className="col-12 col-md-6">
+          <div className="col-6 col-md-3">
             <StatsCard title="Bài tập" number={stats.exercises} subtitle="Đề thi & bài tập" icon="fa-file-alt" />
           </div>
         </div>
