@@ -49,33 +49,7 @@ const Dashboard = () => {
 
   return (
     <div className="container-fluid py-5 px-4 px-lg-5">
-      {/* Header chào mừng */}
-      <div className="bg-white rounded-4 shadow p-4 mb-5 d-flex justify-content-between align-items-center">
-        <h1 className="h3 fw-bold text-dark mb-0">
-          Chào mừng quay lại,{' '}
-          <span className="text-warning">
-            {profile?.username || profile?.name || 'Admin'}!
-          </span>
-        </h1>
-        <div className="d-flex align-items-center gap-3">
-          <span className="text-muted">
-            Xin chào, {profile?.username || 'Admin'}
-          </span>
-          <img
-            src={profile?.avatarUrl || 'https://randomuser.me/api/portraits/men/32.jpg'}
-            alt={profile?.username || 'admin'}
-            className="rounded-circle border border-warning border-4"
-            width={56}
-            height={56}
-            style={{ objectFit: 'cover' }}
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = 'https://randomuser.me/api/portraits/men/32.jpg';
-            }}
-          />
-        </div>
-      </div>
-
+      {/* Welcome Header */}
       {/* Loading */}
       {loading && (
         <div className="text-center py-5">

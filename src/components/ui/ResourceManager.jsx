@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useImperativeHandle, forwardRef } from 'react';
 
 const sanitizePayload = (values) => {
   const payload = {};
@@ -17,7 +17,7 @@ const sanitizePayload = (values) => {
   return payload;
 };
 
-const ResourceManager = ({
+const ResourceManager = forwardRef(({
   title,
   description,
   resourceName = 'bản ghi',
@@ -34,7 +34,8 @@ const ResourceManager = ({
   baseQuery = {},
   mapItemToForm,
   buildPayload,
-}) => {
+  hideHeader = false, // New prop to hide header section
+}, ref) => {
   const initialFilterValues = useMemo(() => {
     const values = {};
     filters.forEach((filter) => {
@@ -226,6 +227,12 @@ const ResourceManager = ({
     }
   };
 
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    refresh: () => setRefreshIndex((prev) => prev + 1),
+    openCreateForm,
+  }));
+
   const renderFilterInput = (filter) => {
     const value = filterInputs[filter.name] ?? '';
     const commonProps = {
@@ -309,41 +316,56 @@ const ResourceManager = ({
 
   return (
     <div className="container-fluid py-5 px-4 px-lg-5">
-      <div className="bg-white rounded-4 shadow p-4 mb-4">
-        <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
-          <div>
-            <h1 className="h3 fw-bold text-dark mb-1">{title}</h1>
-            {description && <p className="text-muted mb-0">{description}</p>}
-          </div>
-          <div className="d-flex gap-2">
-            <button
-              className="btn btn-outline-secondary"
-              type="button"
-              onClick={() => setRefreshIndex((prev) => prev + 1)}
-            >
-              <i className="fas fa-rotate me-2"></i>
-              Làm mới
-            </button>
-            {createApi && (
-              <button className="btn btn-warning text-dark fw-bold" onClick={openCreateForm}>
-                <i className="fas fa-plus me-2" />
-                Thêm {resourceName}
+      {/* Only show header section if not hidden */}
+      {!hideHeader && (
+        <div className="bg-white rounded-4 shadow p-4 mb-4">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+              <h1 className="h3 fw-bold text-dark mb-1">{title}</h1>
+              {description && <p className="text-muted mb-0">{description}</p>}
+            </div>
+            <div className="d-flex gap-2">
+              <button
+                className="btn btn-outline-secondary"
+                type="button"
+                onClick={() => setRefreshIndex((prev) => prev + 1)}
+              >
+                <i className="fas fa-rotate me-2"></i>
+                Làm mới
               </button>
-            )}
+              {createApi && (
+                <button className="btn btn-warning text-dark fw-bold" onClick={openCreateForm}>
+                  <i className="fas fa-plus me-2" />
+                  Thêm {resourceName}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
-        {feedback && (
-          <div className={`alert alert-${feedback.type} mt-3 mb-0`} role="alert">
-            {feedback.message}
-            <button
-              type="button"
-              className="btn-close float-end"
-              onClick={() => setFeedback(null)}
-            ></button>
-          </div>
-        )}
-      </div>
+          {feedback && (
+            <div className={`alert alert-${feedback.type} mt-3 mb-0`} role="alert">
+              {feedback.message}
+              <button
+                type="button"
+                className="btn-close float-end"
+                onClick={() => setFeedback(null)}
+              ></button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Feedback alert when header is hidden */}
+      {hideHeader && feedback && (
+        <div className={`alert alert-${feedback.type} mb-4`} role="alert">
+          {feedback.message}
+          <button
+            type="button"
+            className="btn-close float-end"
+            onClick={() => setFeedback(null)}
+          ></button>
+        </div>
+      )}
 
       {filters.length > 0 && (
         <div className="bg-white rounded-4 shadow p-4 mb-4">
@@ -550,7 +572,9 @@ const ResourceManager = ({
       )}
     </div>
   );
-};
+});
+
+ResourceManager.displayName = 'ResourceManager';
 
 export default ResourceManager;
 

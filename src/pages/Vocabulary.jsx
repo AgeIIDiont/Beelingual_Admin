@@ -11,4 +11,3 @@ const Vocabulary = () => {
 };
 
 export default Vocabulary;
-

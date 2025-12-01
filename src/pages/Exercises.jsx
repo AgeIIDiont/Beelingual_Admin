@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   createExercise,
@@ -6,6 +6,7 @@ import {
   fetchExercises,
   updateExercise,
 } from '../services/adminService';
+import { usePage } from '../contexts/PageContext';
 
 const skillOptions = [
   { value: '', label: 'Tất cả kỹ năng' },
@@ -29,6 +30,45 @@ const levelOptions = [
 ];
 
 const Exercises = () => {
+  const { setPageInfo } = usePage();
+  const resourceManagerRef = useRef(null);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.refresh();
+      }
+    };
+
+    const handleCreate = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.openCreateForm();
+      }
+    };
+
+    setPageInfo({
+      title: 'Bài tập & Đề thi',
+      description: 'Xây dựng ngân hàng câu hỏi cho từng kỹ năng và cấp độ.',
+      actions: (
+        <>
+          <button
+            className="btn btn-outline-secondary"
+            type="button"
+            onClick={handleRefresh}
+          >
+            <i className="fas fa-rotate me-2"></i>
+            Làm mới
+          </button>
+          <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
+            <i className="fas fa-plus me-2" />
+            Thêm bài tập
+          </button>
+        </>
+      ),
+    });
+    return () => setPageInfo({ title: '', description: '', actions: null });
+  }, [setPageInfo]);
+
   const columns = useMemo(
     () => [
       {
@@ -226,8 +266,7 @@ const Exercises = () => {
 
   return (
     <ResourceManager
-      title="Bài tập & Đề thi"
-      description="Xây dựng ngân hàng câu hỏi cho từng kỹ năng và cấp độ."
+      ref={resourceManagerRef}
       resourceName="bài tập"
       columns={columns}
       filters={filters}
@@ -238,6 +277,7 @@ const Exercises = () => {
       deleteApi={deleteExercise}
       mapItemToForm={mapExerciseToForm}
       buildPayload={buildPayload}
+      hideHeader={true}
     />
   );
 };

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   createUser,
@@ -6,6 +6,7 @@ import {
   fetchUsers,
   updateUser,
 } from '../services/adminService';
+import { usePage } from '../contexts/PageContext';
 
 const levelOptions = [
   { value: '', label: 'Tất cả' },
@@ -26,6 +27,45 @@ const formatDate = (value) => {
 };
 
 const Users = () => {
+  const { setPageInfo } = usePage();
+  const resourceManagerRef = useRef(null);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.refresh();
+      }
+    };
+
+    const handleCreate = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.openCreateForm();
+      }
+    };
+
+    setPageInfo({
+      title: 'Người dùng',
+      description: 'Quản lý tài khoản admin và học viên trên hệ thống Beelingual.',
+      actions: (
+        <>
+          <button
+            className="btn btn-outline-secondary"
+            type="button"
+            onClick={handleRefresh}
+          >
+            <i className="fas fa-rotate me-2"></i>
+            Làm mới
+          </button>
+          <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
+            <i className="fas fa-plus me-2" />
+            Thêm người dùng
+          </button>
+        </>
+      ),
+    });
+    return () => setPageInfo({ title: '', description: '', actions: null });
+  }, [setPageInfo]);
+
   const columns = useMemo(
     () => [
       {
@@ -208,8 +248,7 @@ const Users = () => {
 
   return (
     <ResourceManager
-      title="Người dùng"
-      description="Quản lý tài khoản admin và học viên trên hệ thống Beelingual."
+      ref={resourceManagerRef}
       resourceName="người dùng"
       columns={columns}
       filters={filters}
@@ -220,6 +259,7 @@ const Users = () => {
       deleteApi={deleteUser}
       mapItemToForm={mapUserToForm}
       buildPayload={buildPayload}
+      hideHeader={true}
     />
   );
 };
