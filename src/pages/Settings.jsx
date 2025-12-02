@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { changePassword, fetchProfile, updateProfile } from '../services/adminService';
-import { logout, setUser } from '../services/authService';
+import {  setUser } from '../services/authService';
 import { usePage } from '../contexts/PageContext';
 
 const Settings = () => {
