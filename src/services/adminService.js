@@ -15,7 +15,7 @@ export const fetchAdminLogs = (params = {}) => unwrap(api.get('/api/admin/logs',
 
 // ===== Users =====
 export const fetchUsers = (params = {}) => unwrap(api.get('/api/admin/users', { params }));
-export const createUser = (payload) => unwrap(api.post('/api/register', payload));
+export const createUser = (payload) => unwrap(api.post('/api/admin/add_users', payload));
 export const updateUser = (id, payload) => unwrap(api.put(`/api/admin/users/${id}`, payload));
 export const deleteUser = (id) => unwrap(api.delete(`/api/admin/users/${id}`));
 export const resetUserPassword = (id, newPassword) =>
