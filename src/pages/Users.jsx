@@ -115,9 +115,9 @@ const Users = () => {
     () => [
       {
         name: 'search',
-        label: 'Tìm kiếm (Tên/Email)',
+        label: 'Tìm kiếm ',
         type: 'text',
-        placeholder: 'Nhập từ khóa...',
+        placeholder: 'Nhập tên hoặc email...',
         col: 4,
       },
       {

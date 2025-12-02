@@ -101,7 +101,7 @@ const Grammar = () => {
   const filters = useMemo(
     () => [
       {
-        name: 'search',
+        name: 'title',
         label: 'Tìm kiếm',
         type: 'text',
         placeholder: 'Nhập tiêu đề...',
