@@ -212,7 +212,7 @@ const Users = () => {
         placeholder: 'https://...',
         col: 12,
         helper: 'URL ảnh đại diện nếu có',
-      },
+      }
     ],
     []
   );
