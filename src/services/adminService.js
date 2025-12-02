@@ -33,6 +33,10 @@ export const createGrammar = (payload) => unwrap(api.post('/api/add_grammar', pa
 export const updateGrammar = (id, payload) => unwrap(api.put(`/api/edit_grammar/${id}`, payload));
 export const deleteGrammar = (id) => unwrap(api.delete(`/api/delet_grammar/${id}`));
 
+// ===== Grammar_categories =====
+export const fetchCategories = (params = {}) => unwrap(api.get('/api/grammar-categories', { params }));
+export const createCategory = (payload) => unwrap(api.post('/api/grammar-categories', payload));
+
 // ===== Topics =====
 export const fetchTopics = (params = {}) => unwrap(api.get('/api/topics', { params }));
 export const createTopic = (payload) => unwrap(api.post('/api/topics', payload));

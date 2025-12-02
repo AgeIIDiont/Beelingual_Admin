@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   createGrammar,
@@ -7,6 +7,7 @@ import {
   updateGrammar,
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
+import { fetchCategories } from '../services/adminService';
 
 const levelOptions = [
   { value: '', label: 'Tất cả' },
@@ -18,6 +19,26 @@ const levelOptions = [
 const Grammar = () => {
   const { setPageInfo } = usePage();
   const resourceManagerRef = useRef(null);
+
+  const [categoriOptions, setCategoriOptions] = useState([]);
+  
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await fetchCategories();
+        const categoriesData = Array.isArray(response) ? response : (response.data || []);
+        const options = categoriesData.map(categorie => ({
+          value: categorie.name,
+          label: `${categorie.name}`,
+        }));
+        setCategoriOptions(options);
+      } catch (error) {
+        console.error('Error fetching topics:', error);
+      }
+    };
+    loadCategories();
+  }, []);
+  
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -66,6 +87,21 @@ const Grammar = () => {
             <small className="text-muted">{item.structure || '—'}</small>
           </div>
         ),
+      },
+      {
+        key: 'categoryId',
+        label: 'Danh mục',
+        render: (item) => {
+          // Kiểm tra nếu categoryId là object (đã populate)
+          if (item.categoryId && typeof item.categoryId === 'object') {
+            return (
+              <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
+                {item.categoryId.icon} {item.categoryId.name}
+              </span>
+            );
+          }
+          return '—';
+        },
       },
       {
         key: 'level',
@@ -143,6 +179,14 @@ const Grammar = () => {
         col: 12,
       },
       {
+        name: 'categoryId', // Sửa name cho đúng với API
+        label: 'Loại ngữ pháp',
+        type: 'select',
+        options: categoriOptions, // List options đã lấy từ API
+        required: true,
+        col: 12, // Hoặc 3 tùy layout
+      },
+      {
         name: 'content',
         label: 'Nội dung chi tiết',
         type: 'textarea',
@@ -157,13 +201,14 @@ const Grammar = () => {
         col: 12,
       },
     ],
-    []
+    [categoriOptions,]
   );
 
   const buildPayload = (values) => {
     const payload = {
       title: values.title?.trim(),
       level: values.level || 'A',
+      categoryId: values.categoryId, // Gửi _id của category
       structure: values.structure?.trim(),
       content: values.content?.trim(),
       example: values.example?.trim(),
@@ -174,6 +219,14 @@ const Grammar = () => {
     });
 
     return payload;
+  };
+
+  const mapItemToForm = (item) => {
+    return {
+      ...item,
+      // Khi load về categoryId là object { _id, name... }, nhưng select cần _id string
+      categoryId: item.categoryId?._id || item.categoryId || '', 
+    };
   };
 
   return (
@@ -188,6 +241,7 @@ const Grammar = () => {
       updateApi={updateGrammar}
       deleteApi={deleteGrammar}
       buildPayload={buildPayload}
+      mapItemToForm={mapItemToForm}
       hideHeader={true}
     />
   );
