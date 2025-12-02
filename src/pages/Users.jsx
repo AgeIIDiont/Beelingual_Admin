@@ -73,8 +73,8 @@ const Users = () => {
         label: 'Người dùng',
         render: (item) => (
           <div>
-            <div className="fw-bold text-dark text-capitalize">{item.username}</div>
-            <small className="text-muted">{item.email || 'Chưa cập nhật email'}</small>
+            <div className="fw-bold text-dark text-capitalize">{item.fullname || item.username}</div>
+            <small className="text-muted">{item.username}{item.email ? ` · ${item.email}` : ''}</small>
           </div>
         ),
       },
@@ -149,6 +149,13 @@ const Users = () => {
         col: 6,
       },
       {
+        name: 'fullname',
+        label: 'Họ và tên',
+        type: 'text',
+        placeholder: 'vd: Nguyễn Văn A',
+        col: 6,
+      },
+      {
         name: 'email',
         label: 'Email',
         type: 'text',
@@ -212,6 +219,7 @@ const Users = () => {
 
   const buildPayload = (values, isEdit) => {
     const payload = {
+      fullname: values.fullname?.trim(),
       username: values.username?.trim(),
       email: values.email?.trim(),
       role: values.role || 'student',
@@ -236,6 +244,7 @@ const Users = () => {
   };
 
   const mapUserToForm = (item) => ({
+    fullname: item.fullname || '',
     username: item.username || '',
     email: item.email || '',
     password: '',
