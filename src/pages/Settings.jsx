@@ -2,30 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { changePassword, fetchProfile, updateProfile } from '../services/adminService';
 import { setUser } from '../services/authService';
 import { usePage } from '../contexts/PageContext';
+import ProfileCard from '../components/ui/ProfileCard';
 
 const Settings = () => {
+  // Các biến logic cũ của bạn giữ nguyên
   const { setPageInfo } = usePage();
   const [profile, setProfile] = useState(null);
-  
-  // States quản lý Form
-  const [profileForm, setProfileForm] = useState({ email: '', level: 'A', avatarUrl: '' });
+  const [profileForm, setProfileForm] = useState({ fullname: '', email: '', level: 'A', avatarUrl: '' });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  
-  // States quản lý UI
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showCrPassword, setShowCrPassword] = useState(false);
   const [toast, setToast] = useState({ show: false, type: '', message: '' });
-
-  // --- STATE 1: CHẾ ĐỘ SỬA PROFILE ---
   const [isEditing, setIsEditing] = useState(false); 
-
-  // --- STATE 2: CHẾ ĐỘ MỞ RỘNG MẬT KHẨU (MỚI) ---
   const [isPasswordExpanded, setIsPasswordExpanded] = useState(false);
 
-  // Helper: Show Toast
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
     setTimeout(() => setToast({ show: false, type: '', message: '' }), 5000);
@@ -42,6 +35,7 @@ const Settings = () => {
       const data = await fetchProfile();
       setProfile(data);
       setProfileForm({
+        fullname: data.fullname || '',
         email: data.email || '',
         level: data.level || 'A',
         avatarUrl: data.avatarUrl || '',
@@ -57,10 +51,10 @@ const Settings = () => {
     loadProfile();
   }, [setPageInfo]);
 
-  // Handle Edit Mode Toggle
   const toggleEditMode = () => {
     if (isEditing) {
       setProfileForm({
+        fullname: profile.fullname || '',
         email: profile.email || '',
         level: profile.level || 'A',
         avatarUrl: profile.avatarUrl || '',
@@ -69,7 +63,6 @@ const Settings = () => {
     setIsEditing(!isEditing);
   };
 
-  // Handle Profile Submit
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setSavingProfile(true);
@@ -87,7 +80,6 @@ const Settings = () => {
     }
   };
 
-  // Handle Password Submit
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) return showToast('danger', 'Mật khẩu xác nhận không khớp.');
@@ -97,7 +89,7 @@ const Settings = () => {
       await changePassword({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword });
       showToast('success', 'Đổi mật khẩu thành công!');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      setIsPasswordExpanded(false); // Đóng lại sau khi thành công
+      setIsPasswordExpanded(false); 
     } catch (err) {
       showToast('danger', err.message);
     } finally {
@@ -109,7 +101,7 @@ const Settings = () => {
 
   return (
     <div className="container-fluid py-4">
-      {/* CSS Animation cho hiệu ứng trượt */}
+      {/* CSS Animation và Toast giữ nguyên */}
       <style>
         {`
           .password-collapse {
@@ -119,31 +111,28 @@ const Settings = () => {
             transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, margin-top 0.3s ease;
           }
           .password-collapse.open {
-            max-height: 500px; /* Đủ lớn để chứa form */
+            max-height: 500px;
             opacity: 1;
             margin-top: 1rem;
           }
-            /* Style cho trạng thái CHỈNH SỬA (Màu xanh lá) */
           .btn-pale-success {
-            background-color: rgba(25, 135, 84, 0.15); /* Màu xanh nhạt (độ trong suốt 15%) */
-            color: #198754; /* Chữ màu xanh đậm */
+            background-color: rgba(25, 135, 84, 0.15);
+            color: #198754;
             border: 1px solid transparent;
           }
           .btn-pale-success:hover {
-            background-color: #12e78432; /* Hover: Nền xanh đậm */
-            color: #23a521ff; /* Hover: Chữ trắng */
-            box-shadow: 0 4px 12px rgba(25, 135, 84, 1); /* Đổ bóng xanh */
+            background-color: #12e78432;
+            color: #23a521ff;
+            box-shadow: 0 4px 12px rgba(25, 135, 84, 1);
           }
-
-          /* Style cho trạng thái HỦY BỎ (Màu xám) */
           .btn-pale-secondary {
-            background-color: rgba(108, 117, 125, 0.15); /* Màu xám nhạt */
-            color: #6c757d; /* Chữ xám đậm */
+            background-color: rgba(108, 117, 125, 0.15);
+            color: #6c757d;
             border: 1px solid transparent;
           }
           .btn-pale-secondary:hover {
-            background-color: #6475843e; /* Hover: Nền xám đậm */
-            color: #f20000ff; /* Hover: Chữ trắng */
+            background-color: #6475843e;
+            color: #f20000ff;
             box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
         `}
       </style>
@@ -157,9 +146,9 @@ const Settings = () => {
         </div>
       )}
 
-      {/* HERO SECTION */}
+      {/* HERO SECTION - Giữ nguyên */}
       <div className="card border-0 shadow-lg rounded-4 mb-4 overflow-hidden">
-        <div style={{ height: '180px', background: 'linear-gradient(90deg, #FFC107 0%, #FF9800 100%)' }}></div>
+        <div style={{ height: '175px', background: 'linear-gradient(90deg, #FFC107 0%, #FF9800 100%)' }}></div>
         <div className="card-body px-4 px-md-5 position-relative">
           <div className="d-flex flex-column flex-md-row align-items-center align-items-md-end" style={{ marginTop: '-80px' }}>
             <div className="position-relative mb-3 mb-md-0 me-md-4">
@@ -173,15 +162,15 @@ const Settings = () => {
               />
               <div className="position-absolute bottom-0 end-0 bg-success rounded-circle border border-3 border-white p-2"></div>
             </div>
-            <div className="text-center text-md-start mb-3 flex-grow-1">
-              <h2 className="fw-bold text-dark mb-1">{profile?.username || 'Admin User'}</h2>
+            <div className="text-center text-md-start mb-35flex-grow-1">
+              <h2 className="fw-bold text-dark mb-1">{profile?.fullname || 'Admin User'}</h2>
               <p className="text-muted mb-0">
                 <i className="fas fa-shield-alt text-primary me-2"></i>{profile?.role} 
                 <span className="mx-2">•</span> 
                 <i className="fas fa-calendar-alt text-secondary me-2"></i>Tham gia: {formatDate(profile?.createdAt)}
               </p>
             </div>
-            <div className="mb-3">
+            <div className="mb-3 ms-md-auto">
                <button 
                  className={`btn ${isEditing ? 'btn-pale-secondary' : 'btn-pale-success'} rounded-pill px-4 fw-bold shadow-sm transition-all`}
                  onClick={toggleEditMode}
@@ -193,56 +182,44 @@ const Settings = () => {
         </div>
       </div>
 
-      {/* STATS CARDS */}
+      {/* --- PHẦN CẬP NHẬT: Profile CARDS MỚI --- */}
       <div className="row g-4 mb-4">
-        {/* ... (Các card thống kê giữ nguyên như cũ) ... */}
         <div className="col-md-3 col-sm-6">
-          <div className="card border-0 shadow h-100 rounded-4">
-            <div className="card-body d-flex align-items-center justify-content-between p-4">
-              <div>
-                <i className="fas fa-user-shield fa-2x text-primary mb-2"></i>
-                <h6 className="text-muted text-uppercase fw-bold small mb-1">Loại tài khoản</h6>
-                <h5 className="fw-bold text-dark mb-0">{profile?.role || 'Admin'}</h5>
-              </div>
-            </div>
-          </div>
+          <ProfileCard 
+            title="Loại tài khoản" 
+            number={profile?.role || 'Admin'} 
+            subtitle="Quyền hạn" 
+            icon="fa-user-shield" 
+          />
         </div>
         <div className="col-md-3 col-sm-6">
-          <div className="card border-0 shadow h-100 rounded-4">
-            <div className="card-body d-flex align-items-center justify-content-between p-4">
-              <div>
-                <i className="fas fa-check-circle fa-2x text-success mb-2"></i>
-                <h6 className="text-muted text-uppercase fw-bold small mb-1">Trạng thái</h6>
-                <h5 className="fw-bold text-success mb-0">Hoạt động</h5>
-              </div>
-            </div>
-          </div>
+          <ProfileCard 
+            title="Trạng thái" 
+            number="Hoạt động" 
+            subtitle="Tình trạng" 
+            icon="fa-check-circle" 
+          />
         </div>
         <div className="col-md-3 col-sm-6">
-          <div className="card border-0 shadow h-100 rounded-4">
-            <div className="card-body d-flex align-items-center justify-content-between p-4">
-              <div>
-                <i className="fas fa-calendar-day fa-2x text-info mb-2"></i>
-                <h6 className="text-muted text-uppercase fw-bold small mb-1">Ngày tham gia</h6>
-                <h5 className="fw-bold text-dark mb-0">{formatDate(profile?.createdAt)}</h5>
-              </div>
-            </div>
-          </div>
+          <ProfileCard 
+            title="Ngày tham gia" 
+            number={formatDate(profile?.createdAt)} 
+            subtitle="Thời gian" 
+            icon="fa-calendar-day" 
+          />
         </div>
         <div className="col-md-3 col-sm-6">
-          <div className="card border-0 shadow h-100 rounded-4">
-            <div className="card-body d-flex align-items-center justify-content-between p-4">
-              <div>
-                <i className="fas fa-star fa-2x text-warning mb-2"></i>
-                <h6 className="text-muted text-uppercase fw-bold small mb-1">XP</h6>
-                <h5 className="fw-bold text-warning mb-0">{profile?.xp || 0}</h5>
-              </div>
-            </div>
-          </div>
+          <ProfileCard 
+            title="XP" 
+            number={profile?.xp || 0} 
+            subtitle="Điểm kinh nghiệm" 
+            icon="fa-star" 
+          />
         </div>
       </div>
+      {/* -------------------------------------- */}
 
-      {/* SPLIT CONTENT */}
+      {/* SPLIT CONTENT - Giữ nguyên */}
       <div className="row g-4">
         
         {/* LEFT COLUMN: EDIT INFO */}
@@ -258,8 +235,8 @@ const Settings = () => {
               <form onSubmit={handleProfileSubmit}>
                 <div className="row g-4">
                   <div className="col-12">
-                    <label className="form-label fw-semibold text-secondary">Tên đăng nhập</label>
-                    <input type="text" className="form-control bg-light" value={profile?.username} disabled />
+                    <label className="form-label fw-semibold text-secondary">Tên người dùng</label>
+                    <input type="text" className={`form-control ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.fullname} onChange={(e) => setProfileForm({...profileForm, fullname: e.target.value})} disabled={!isEditing} />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-semibold text-secondary">Email</label>
@@ -289,10 +266,9 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: SECURITY (Đã chỉnh sửa hiệu ứng Slide) */}
+        {/* RIGHT COLUMN: SECURITY */}
         <div className="col-lg-4">
           
-          {/* Card Tài sản (Giữ nguyên) */}
           <div className="card border-0 shadow rounded-4 mb-4">
             <div className="card-header bg-white border-0 pt-4 px-4">
                <div className="d-flex align-items-center border-start border-4 border-warning ps-3">
@@ -311,7 +287,6 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Card Bảo mật (Có hiệu ứng Slide) */}
           <div className="card border-0 shadow rounded-4">
             <div className="card-header bg-white border-0 pt-4 px-4">
               <div className="d-flex align-items-center border-start border-4 border-danger ps-3">
@@ -323,7 +298,6 @@ const Settings = () => {
                 Giữ tài khoản an toàn bằng mật khẩu mạnh.
               </p>
               
-              {/* Nút bấm ban đầu (Chỉ hiện khi chưa mở rộng) */}
               {!isPasswordExpanded && (
                 <button 
                   className="btn btn-outline-danger w-100 fw-bold py-2 shadow-sm"
@@ -336,7 +310,6 @@ const Settings = () => {
               <div className={`password-collapse ${isPasswordExpanded ? 'open' : ''}`}>
                 <form onSubmit={handlePasswordSubmit}>
                   
-                  {/* Mật khẩu hiện tại */}
                   <div className="mb-4">
                     <div className="input-group">
                       <input
@@ -358,7 +331,6 @@ const Settings = () => {
                     </div>
                   </div>
 
-                  {/* Mật khẩu mới */}
                   <div className="mb-4">
                     <div className="input-group">
                       <input
@@ -381,7 +353,6 @@ const Settings = () => {
                     </div>
                   </div>
 
-                  {/* Nhập lại mật khẩu */}
                   <div className="mb-1">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -396,7 +367,6 @@ const Settings = () => {
                     />
                   </div>
 
-                  {/* Cảnh báo realtime */}
                   {passwordForm.confirmPassword.length > 0 &&
                     passwordForm.newPassword !== passwordForm.confirmPassword && (
                       <small className="text-danger d-block mb-3">
@@ -404,7 +374,6 @@ const Settings = () => {
                       </small>
                     )}
 
-                  {/* Nút bấm */}
                   <div className="d-flex gap-2 mt-2">
                     <button
                       type="submit"
