@@ -186,7 +186,7 @@ const Header = () => {
                 {/* Text Info */}
                 <div className="text-end d-none d-md-block" style={{ lineHeight: '1.2' }}>
                   <div className="fw-bold text-dark" style={{ fontSize: '14px' }}>
-                    {profile?.username || 'Admin User'}
+                    {profile?.fullname || 'Admin User'}
                   </div>
                   <div className="text-muted text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>
                     {profile?.role || 'Administrator'}
@@ -220,7 +220,7 @@ const Header = () => {
                   style={{ minWidth: '240px' }}
                 >
                   <div className="p-3 bg-light border-bottom">
-                    <p className="fw-bold mb-0 text-dark">{profile?.username}</p>
+                    <p className="fw-bold mb-0 text-dark">{profile?.fullname}</p>
                     <p className="text-muted small mb-0 text-truncate">{profile?.email || 'admin@beelingual.com'}</p>
                   </div>
 
