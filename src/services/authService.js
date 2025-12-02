@@ -36,7 +36,7 @@ export const isAuthenticated = () => !!getToken();
 // ====================== ĐĂNG NHẬP ======================
 export const login = async (username, password) => {
   try {
-    const response = await api.post('/api/login', {
+    const response = await api.post('/api/admin/login', {
       username: username.trim(),
       password,
     });
