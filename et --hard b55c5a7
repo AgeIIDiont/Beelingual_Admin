@@ -1,0 +1,27 @@
+[33m8e62ede[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mnghia[m[33m, [m[1;31morigin/nghia[m[33m)[m HEAD@{0}: pull --ff --recurse-submodules --progress origin: Fast-forward
+[33m0958417[m HEAD@{1}: reset: moving to HEAD
+[33m0958417[m HEAD@{2}: reset: moving to 0958417b5a0395d5a5aba91c99accda85f5a932b
+[33mb55c5a7[m HEAD@{3}: reset: moving to HEAD
+[33mb55c5a7[m HEAD@{4}: reset: moving to HEAD
+[33mb55c5a7[m HEAD@{5}: commit: update hmm
+[33m0958417[m HEAD@{6}: commit: add full name
+[33m6d36a8e[m HEAD@{7}: commit: update ...
+[33m7b807e6[m HEAD@{8}: commit: fix dashboard
+[33mfaa8edf[m HEAD@{9}: commit: update dashboard
+[33m376b8c7[m HEAD@{10}: commit: sua lai giao dien tu vung
+[33m4910c24[m HEAD@{11}: commit (merge): Merge remote-tracking branch 'origin/master' into nghia
+[33m4f17521[m HEAD@{12}: reset: moving to ORIG_HEAD
+[33m4f17521[m HEAD@{13}: commit: add admin role validation cho form đăng nhập
+[33m9e92d68[m HEAD@{14}: commit: fix slidebar
+[33m5b1652b[m HEAD@{15}: commit: sửa lại giao diện topics
+[33md3f9706[m HEAD@{16}: commit (merge): Merge branch 'master' into nghia
+[33m5c93e5f[m HEAD@{17}: checkout: moving from master to nghia
+[33m09c0b74[m HEAD@{18}: checkout: moving from nghia to master
+[33m5c93e5f[m HEAD@{19}: commit: toi uu performance + sua lai header
+[33m1571e41[m HEAD@{20}: checkout: moving from master to nghia
+[33mca9542a[m HEAD@{21}: checkout: moving from nghia to master
+[33m1571e41[m HEAD@{22}: commit: them sua xoa, quan li nguoi dung
+[33mca9542a[m HEAD@{23}: commit: Cau hinh routes + component + form login
+[33m68ee127[m HEAD@{24}: checkout: moving from master to nghia
+[33m68ee127[m HEAD@{25}: reset: moving to HEAD
+[33m68ee127[m HEAD@{26}: clone: from https://github.com/AgeIIDiont/Beelingual_Admin.git

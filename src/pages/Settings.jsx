@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { changePassword, fetchProfile, updateProfile } from '../services/adminService';
-import { setUser } from '../services/authService';
+import {  setUser } from '../services/authService';
 import { usePage } from '../contexts/PageContext';
 import ProfileCard from '../components/ui/ProfileCard';
 

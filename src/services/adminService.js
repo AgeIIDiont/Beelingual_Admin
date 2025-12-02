@@ -33,6 +33,10 @@ export const createGrammar = (payload) => unwrap(api.post('/api/add_grammar', pa
 export const updateGrammar = (id, payload) => unwrap(api.put(`/api/edit_grammar/${id}`, payload));
 export const deleteGrammar = (id) => unwrap(api.delete(`/api/delet_grammar/${id}`));
 
+// ===== Grammar_categories =====
+export const fetchCategories = (params = {}) => unwrap(api.get('/api/grammar-categories', { params }));
+export const createCategory = (payload) => unwrap(api.post('/api/grammar-categories', payload));
+
 // ===== Topics =====
 export const fetchTopics = (params = {}) => unwrap(api.get('/api/topics', { params }));
 export const createTopic = (payload) => unwrap(api.post('/api/topics', payload));
@@ -61,6 +65,10 @@ export const fetchProfile = async () => {
     throw error;
   }
 };
+//============= Stats =============
+export const fetchStatsNewUsers = () => unwrap(api.get('/api/admin/stats/new-users'));
+
+//============= Profile =============
 export const updateProfile = (payload) => unwrap(api.put('/api/profile', payload));
 export const changePassword = (payload) => unwrap(api.put('/api/change-password', payload));
 export const fetchMyStreak = () => unwrap(api.get('/api/my-streak'));

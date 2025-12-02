@@ -1,4 +1,4 @@
-import React, { useMemo , useEffect, useRef } from 'react';
+import React, { useMemo , useEffect, useRef, useState } from 'react';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   fetchVocabulary,
@@ -6,7 +6,7 @@ import {
   updateVocabulary,
   deleteVocabulary,
 } from '../services/adminService';
-
+import { fetchTopics as fetchAllTopics } from '../services/adminService';
 const levelOptions = [
   { value: '', label: 'Tất cả' },
   { value: 'A', label: 'Level A' },
@@ -27,11 +27,30 @@ const typeOptions = [
   { value: 'idiom', label: 'Thành ngữ (idiom)' },
   { value: 'phrase', label: 'Cụm từ (phrase)' },
 ];
+
 import { usePage } from '../contexts/PageContext';
 const Vocabularys = () => {
     const { setPageInfo } = usePage();
     const resourceManagerRef = useRef(null);
-  
+    const [topicOptions, setTopicOptions] = useState([]);
+
+    useEffect(() => {
+      const loadTopics = async () => {
+        try {
+          const response = await fetchAllTopics();
+          const topicsData = response.data || [];
+          const options = topicsData.map(topic => ({
+            value: topic.name,
+            label: `${topic.name}`,
+          }));
+          setTopicOptions(options);
+        } catch (error) {
+          console.error('Error fetching topics:', error);
+        }
+      };
+      loadTopics();
+    }, []);
+
     useEffect(() => {
       const handleRefresh = () => {
         if (resourceManagerRef.current) {
@@ -251,7 +270,9 @@ const Vocabularys = () => {
       {
         name: 'topic',
         label: 'Chủ đề',
-        type: 'text',
+        type: 'select',
+        options: topicOptions.slice(1),
+        required: true,
         col: 12,
         placeholder: 'Ví dụ: Travel, Business...'
       },
@@ -270,7 +291,7 @@ const Vocabularys = () => {
         col: 12,
       },
     ],
-    []
+    [topicOptions, typeOptions, levelOptions]
   );
 
   const buildPayload = (values) => {
