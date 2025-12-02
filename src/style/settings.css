@@ -1,0 +1,107 @@
+/* ================================
+   GLOBAL UI EFFECTS
+================================ */
+
+/* Card vàng bóng giống StatsCard */
+.ui-card-gold {
+  background: linear-gradient(145deg, #ffffff, #fdfbf7);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  box-shadow: 0 12px 25px -10px rgba(255, 215, 0, 0.15),
+              0 6px 10px -4px rgba(0, 0, 0, 0.05);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+.ui-card-gold:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 20px 40px -10px rgba(255, 215, 0, 0.3);
+}
+
+/* Floating animation */
+.floating-icon {
+  animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-10px, -15px) rotate(5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* Slide up */
+.slide-up-fade {
+  animation: slideUp 0.8s ease-out forwards;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Grow Progress Line */
+.progress-line-anim {
+  width: 0%;
+  animation: growWidth 1.5s ease-out 0.5s forwards;
+}
+@keyframes growWidth {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+/* Password Collapse Animation */
+.password-collapse {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.5s ease, opacity 0.5s ease, margin-top 0.3s ease;
+}
+.password-collapse.open {
+  max-height: 500px;
+  opacity: 1;
+  margin-top: 1rem;
+}
+
+/* Custom Buttons */
+.btn-pale-success {
+  background-color: rgba(25, 135, 84, 0.15);
+  color: #198754;
+  border: 1px solid transparent;
+}
+.btn-pale-success:hover {
+  background-color: #12e78432;
+  color: #198754;
+  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4);
+}
+
+.btn-pale-secondary {
+  background-color: rgba(108, 117, 125, 0.15);
+  color: #6c757d;
+  border: 1px solid transparent;
+}
+.btn-pale-secondary:hover {
+  background-color: rgba(108, 117, 125, 0.25);
+  color: #dc3545;
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* Modern input */
+.ui-input {
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
+  padding: 10px 14px;
+  transition: all .25s ease;
+}
+.ui-input:focus {
+  border-color: #ffc107;
+  box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.25);
+}
+
+/* Section Card */
+.ui-section-card {
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+  transition: .3s ease;
+}
+.ui-section-card:hover {
+  transform: translateY(-6px);
+}

@@ -159,23 +159,24 @@ const Stats = () => {
                 <thead>
                   <tr className="text-muted">
                     <th>Thời gian</th>
+                    <th>Id tài khoản</th>
                     <th>Hành động</th>
-                    <th>Chi tiết</th>
                   </tr>
                 </thead>
                 <tbody>
                   {logs.map((log) => (
                     <tr key={log._id}>
                       <td>{formatDateTime(log.createdAt)}</td>
+                      <td>{log.adminId || '—'}</td>
                       <td>
                         <span className="badge bg-warning text-dark text-uppercase">{log.action}</span>
                       </td>
-                      <td>
+                      {/* <td>
                         <pre className="mb-0 small bg-light rounded-3 p-2">
                           {JSON.stringify(log.meta || {}, null, 2)}
                         </pre>
-                      </td>
-                    </tr>
+                      </td>*/}
+                    </tr> 
                   ))}
                   {!logs.length && (
                     <tr>

@@ -69,8 +69,20 @@ const Grammar = () => {
       },
       {
         key: 'level',
-        label: 'Trình độ',
-        render: (item) => item.level || '—',
+        label: 'Level',
+        minWidth: '100px',
+        render: (item) => {
+          let colorClass = 'bg-secondary';
+          if (item.level === 'A') colorClass = 'bg-success';
+          if (item.level === 'B') colorClass = 'bg-warning text-dark';
+          if (item.level === 'C') colorClass = 'bg-danger';
+          
+          return (
+            <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
+              {item.level || '—'}
+            </span>
+          );
+        },
       },
       {
         key: 'example',
@@ -89,7 +101,7 @@ const Grammar = () => {
   const filters = useMemo(
     () => [
       {
-        name: 'search',
+        name: 'title',
         label: 'Tìm kiếm',
         type: 'text',
         placeholder: 'Nhập tiêu đề...',
