@@ -65,6 +65,10 @@ export const fetchProfile = async () => {
     throw error;
   }
 };
+//============= Stats =============
+export const fetchStatsNewUsers = () => unwrap(api.get('/api/admin/stats/new-users'));
+
+//============= Profile =============
 export const updateProfile = (payload) => unwrap(api.put('/api/profile', payload));
 export const changePassword = (payload) => unwrap(api.put('/api/change-password', payload));
 export const fetchMyStreak = () => unwrap(api.get('/api/my-streak'));
