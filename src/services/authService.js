@@ -5,10 +5,11 @@ const TOKEN_KEY = 'beelingual_admin_token';
 const USER_KEY = 'beelingual_admin_user';
 
 // ====================== CÁC HÀM CƠ BẢN ======================
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
+// Token is stored as HttpOnly cookie by the backend. Do NOT persist token in localStorage.
+export const getToken = () => null;
 
-export const setToken = (token) => {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
+export const setToken = () => {
+  // noop: token should be set as HttpOnly cookie by backend
 };
 
 export const setUser = (user) => {
@@ -27,11 +28,11 @@ export const getUser = () => {
 };
 
 export const clearAuth = () => {
-  localStorage.removeItem(TOKEN_KEY);
+  // Token cookie is cleared by backend (if necessary). Only remove local user copy.
   localStorage.removeItem(USER_KEY);
 };
 
-export const isAuthenticated = () => !!getToken();
+export const isAuthenticated = () => !!getUser();
 
 // ====================== ĐĂNG NHẬP ======================
 export const login = async (username, password) => {
@@ -41,16 +42,16 @@ export const login = async (username, password) => {
       password,
     });
 
-    const { token, user, message } = response.data;
+    const { user, message } = response.data;
 
-    if (!token || !user) {
+    if (!user) {
       throw new Error('Server trả về dữ liệu không hợp lệ');
     }
 
-    setToken(token);
+    // Backend should set HttpOnly cookie; frontend stores only user info for UI state
     setUser(user);
 
-    return { success: true, user, token, message };
+    return { success: true, user, message };
   } catch (error) {
     let message = 'Đăng nhập thất bại. Vui lòng thử lại.';
 
@@ -74,24 +75,21 @@ export const login = async (username, password) => {
 };
 
 // ====================== ĐĂNG XUẤT ======================
-export const logout = () => {
+export const logout = async () => {
+  try {
+    // Ask backend to clear auth cookie if endpoint exists
+    await api.post('/api/logout').catch(() => {});
+  } catch {
+    // ignore
+  }
   clearAuth();
-  // Dùng href để reload hoàn toàn trang → tránh bấm Back vào được trang cũ
+  // Full reload to ensure protected routes redirect
   window.location.href = '/login';
 };
 
 // ====================== INTERCEPTORS ======================
-// Thêm token vào mọi request
-api.interceptors.request.use(
-  (config) => {
-    const token = getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// When backend uses HttpOnly cookies, Authorization header is not required here.
+// Do not automatically inject local token into headers.
 
 // Xử lý 401 toàn cục (token hết hạn / không hợp lệ)
 api.interceptors.response.use(
