@@ -20,18 +20,19 @@ const Grammar = () => {
   const { setPageInfo } = usePage();
   const resourceManagerRef = useRef(null);
 
-  const [categoriOptions, setCategoriOptions] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([]);
   
   useEffect(() => {
     const loadCategories = async () => {
       try {
         const response = await fetchCategories();
         const categoriesData = Array.isArray(response) ? response : (response.data || []);
-        const options = categoriesData.map(categorie => ({
-          value: categorie.name,
-          label: `${categorie.name}`,
+        const options = categoriesData.map((categorie) => ({
+          value: categorie._id || categorie.id || categorie.name,
+          label: `${categorie.icon ? categorie.icon + ' ' : ''}${categorie.name}`,
         }));
-        setCategoriOptions(options);
+        // add a default "Tất cả" option for filters
+        setCategoryOptions([{ value: '', label: 'Tất cả' }, ...options]);
       } catch (error) {
         console.error('Error fetching topics:', error);
       }
@@ -150,8 +151,15 @@ const Grammar = () => {
         options: levelOptions,
         col: 3,
       },
+      {
+        name: 'categoryId',
+        label: 'Loại ngữ pháp',
+        type: 'select',
+        options: categoryOptions,
+        col: 3,
+      },
     ],
-    []
+    [categoryOptions]
   );
 
   const formFields = useMemo(
@@ -182,7 +190,7 @@ const Grammar = () => {
         name: 'categoryId', // Sửa name cho đúng với API
         label: 'Loại ngữ pháp',
         type: 'select',
-        options: categoriOptions, // List options đã lấy từ API
+        options: categoryOptions, // List options đã lấy từ API
         required: true,
         col: 12, // Hoặc 3 tùy layout
       },
@@ -201,7 +209,7 @@ const Grammar = () => {
         col: 12,
       },
     ],
-    [categoriOptions,]
+    [categoryOptions]
   );
 
   const buildPayload = (values) => {
@@ -236,7 +244,40 @@ const Grammar = () => {
       columns={columns}
       filters={filters}
       formFields={formFields}
-      listApi={fetchGrammar}
+      listApi={async (params) => {
+        // Call backend
+        const res = await fetchGrammar(params);
+        // Normalize items array
+        let items = res.data || res.items || [];
+
+        // If backend did not apply filters, do a lightweight client-side filter as fallback
+        try {
+          if (params) {
+            if (params.categoryId) {
+              items = items.filter((it) => {
+                const cid = it.categoryId?._id || it.categoryId || '';
+                return String(cid) === String(params.categoryId);
+              });
+            }
+            if (params.title) {
+              const q = String(params.title).toLowerCase();
+              items = items.filter((it) => (it.title || '').toLowerCase().includes(q));
+            }
+            if (params.level) {
+              if (params.level !== '') items = items.filter((it) => it.level === params.level);
+            }
+          }
+        } catch (e) {
+          // ignore client-side filter errors
+          console.warn('Client-side filter fallback failed', e);
+        }
+
+        return {
+          ...res,
+          data: items,
+          total: items.length,
+        };
+      }}
       createApi={createGrammar}
       updateApi={updateGrammar}
       deleteApi={deleteGrammar}

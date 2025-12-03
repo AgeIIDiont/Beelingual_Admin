@@ -211,7 +211,26 @@ const Topics = () => {
       columns={columns}
       filters={filters}
       formFields={formFields}
-      listApi={fetchTopics}
+      listApi={async (params) => {
+        const res = await fetchTopics(params);
+        let items = res.data || res.items || [];
+
+        try {
+          if (params) {
+            if (params.search) {
+              const q = String(params.search).toLowerCase();
+              items = items.filter((it) => (it.name || '').toLowerCase().includes(q));
+            }
+            if (params.level) {
+              if (params.level !== '') items = items.filter((it) => it.level === params.level);
+            }
+          }
+        } catch (e) {
+          console.warn('Client-side filter fallback failed for Topics', e);
+        }
+
+        return { ...res, data: items, total: items.length };
+      }}
       createApi={createTopic}
       updateApi={updateTopic}
       deleteApi={deleteTopic}

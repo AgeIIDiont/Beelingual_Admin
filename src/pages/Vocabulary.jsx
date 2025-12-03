@@ -39,11 +39,11 @@ const Vocabularys = () => {
         try {
           const response = await fetchAllTopics();
           const topicsData = response.data || [];
-          const options = topicsData.map(topic => ({
-            value: topic.name,
+          const options = topicsData.map((topic) => ({
+            value: topic._id || topic.id || topic.name,
             label: `${topic.name}`,
           }));
-          setTopicOptions(options);
+          setTopicOptions([{ value: '', label: 'Tất cả' }, ...options]);
         } catch (error) {
           console.error('Error fetching topics:', error);
         }
@@ -182,12 +182,31 @@ const Vocabularys = () => {
       {
         key: 'topic',
         label: 'Chủ đề',
-        render: (item) => (
-           item.topic ? <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">{item.topic}</span> : '—'
-        ),
+        render: (item) => {
+          // topic may be a populated object or a plain string (id or name)
+          if (!item.topic) return '—';
+          if (typeof item.topic === 'object') {
+            return (
+              <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
+                {item.topic.icon ? item.topic.icon + ' ' : ''}{item.topic.name || item.topic.label || item.topic.title}
+              </span>
+            );
+          }
+
+          // If topic is a string, it might be an id. Try to resolve a friendly name from topicOptions
+          const topicStr = String(item.topic);
+          const found = topicOptions.find((t) => String(t.value) === topicStr || String(t.label) === topicStr);
+          const label = found ? found.label : topicStr;
+
+          return (
+            <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
+              {label}
+            </span>
+          );
+        },
       },
     ],
-    []
+    [topicOptions]
   );
 
   const filters = useMemo(
@@ -202,8 +221,8 @@ const Vocabularys = () => {
       {
         name: 'topic',
         label: 'Chủ đề',
-        type: 'text',
-        placeholder: 'Lọc theo chủ đề...',
+        type: 'select',
+        options: topicOptions,
         col: 3,
       },
       {
@@ -214,14 +233,14 @@ const Vocabularys = () => {
         col: 2,
       },
       {
-        name: 'level',
-        label: 'Trình độ',
+        name: 'type',
+        label: 'Loại từ',
         type: 'select',
         options: typeOptions,
-        col: 2,
+        col: 3,
       },
     ],
-    []
+    [topicOptions]
   );
 
   const formFields = useMemo(
@@ -291,7 +310,7 @@ const Vocabularys = () => {
         col: 12,
       },
     ],
-    [topicOptions, typeOptions, levelOptions]
+    [topicOptions]
   );
 
   const buildPayload = (values) => {
@@ -320,7 +339,37 @@ const Vocabularys = () => {
       columns={columns}
       filters={filters}
       formFields={formFields}
-      listApi={fetchVocabulary}
+      listApi={async (params) => {
+        const res = await fetchVocabulary(params);
+        let items = res.data || res.items || [];
+
+        try {
+          if (params) {
+            if (params.topic) {
+              const wanted = String(params.topic).toLowerCase();
+              items = items.filter((it) => {
+                const topicId = it.topic?._id || '';
+                const topicName = (it.topic?.name || it.topic || '').toString().toLowerCase();
+                return String(topicId) === wanted || topicName === wanted;
+              });
+            }
+            if (params.search) {
+              const q = String(params.search).toLowerCase();
+              items = items.filter((it) => (it.word || '').toLowerCase().includes(q) || (it.meaning || '').toLowerCase().includes(q));
+            }
+            if (params.level) {
+              if (params.level !== '') items = items.filter((it) => it.level === params.level);
+            }
+            if (params.type) {
+              if (params.type !== '') items = items.filter((it) => it.type === params.type);
+            }
+          }
+        } catch (e) {
+          console.warn('Client-side filter fallback failed for Vocabulary', e);
+        }
+
+        return { ...res, data: items, total: items.length };
+      }}
       createApi={createVocabulary}
       updateApi={updateVocabulary}
       deleteApi={deleteVocabulary}
