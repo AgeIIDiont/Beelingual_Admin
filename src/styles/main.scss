@@ -3,9 +3,9 @@
 // ================================
 
 // 1. Base System
-@import 'variables';
-@import 'mixins';
-@import 'animations';
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'animations' as *;
 
 // 2. Global Styles
-@import 'global';
+@use 'global' as *;
