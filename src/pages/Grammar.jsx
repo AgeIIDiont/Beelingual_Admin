@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   createGrammar,
@@ -18,10 +19,11 @@ const levelOptions = [
 
 const Grammar = () => {
   const { setPageInfo } = usePage();
+  const navigate = useNavigate();
   const resourceManagerRef = useRef(null);
 
   const [categoryOptions, setCategoryOptions] = useState([]);
-  
+
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -39,7 +41,7 @@ const Grammar = () => {
     };
     loadCategories();
   }, []);
-  
+
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -113,7 +115,7 @@ const Grammar = () => {
           if (item.level === 'A') colorClass = 'bg-success';
           if (item.level === 'B') colorClass = 'bg-warning text-dark';
           if (item.level === 'C') colorClass = 'bg-danger';
-          
+
           return (
             <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
               {item.level || '—'}
@@ -131,8 +133,24 @@ const Grammar = () => {
         label: 'Ngày tạo',
         render: (item) => new Date(item.createdAt).toLocaleDateString('vi-VN'),
       },
+      {
+        key: 'actions',
+        label: 'Hành động',
+        render: (item) => (
+          <button
+            className="btn btn-sm btn-outline-primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/exercises?skill=grammar&grammarId=${item._id}`);
+            }}
+          >
+            <i className="fas fa-list-check me-1"></i>
+            Quản lý bài tập
+          </button>
+        ),
+      },
     ],
-    []
+    [navigate]
   );
 
   const filters = useMemo(
@@ -233,7 +251,7 @@ const Grammar = () => {
     return {
       ...item,
       // Khi load về categoryId là object { _id, name... }, nhưng select cần _id string
-      categoryId: item.categoryId?._id || item.categoryId || '', 
+      categoryId: item.categoryId?._id || item.categoryId || '',
     };
   };
 

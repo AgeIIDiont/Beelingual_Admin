@@ -49,6 +49,12 @@ export const createExercise = (payload) => unwrap(api.post('/api/exercises', pay
 export const updateExercise = (id, payload) => unwrap(api.put(`/api/edit_exercise/${id}`, payload));
 export const deleteExercise = (id) => unwrap(api.delete(`/api/delet_exercise/${id}`));
 
+// ===== Grammar Exercises =====
+export const fetchGrammarExercises = (grammarId) => unwrap(api.get('/api/grammar-exercises', { params: { grammarId } }));
+export const createGrammarExercise = (payload) => unwrap(api.post('/api/grammar-exercises/create', payload));
+export const updateGrammarExercise = (id, payload) => unwrap(api.put(`/api/grammar-exercises/update/${id}`, payload));
+export const deleteGrammarExercise = (id) => unwrap(api.delete(`/api/grammar-exercises/delete/${id}`));
+
 // ===== Profile / Settings =====
 export const fetchProfile = async () => {
   try {
