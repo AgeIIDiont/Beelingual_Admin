@@ -69,7 +69,7 @@ const Stats = () => {
       ) : (
         <>
           <div className="row g-4 mb-4">
-              <div className="col-md-4 col-sm-6">
+            <div className="col-md-4 col-sm-6">
               <StatsCard
                 title="Tổng người dùng"
                 number={userStats?.totalUsers || 0}
@@ -77,7 +77,7 @@ const Stats = () => {
                 icon="fa-users"
               />
             </div>
-              <div className="col-md-4 col-sm-6">
+            <div className="col-md-4 col-sm-6">
               <StatsCard
                 title="Quản trị viên"
                 number={userStats?.adminsCount || 0}
@@ -85,7 +85,7 @@ const Stats = () => {
                 icon="fa-user-shield"
               />
             </div>
-              <div className="col-md-4 col-sm-6">
+            <div className="col-md-4 col-sm-6">
               <StatsCard
                 title="Học viên"
                 number={userStats?.studentsCount || 0}
@@ -159,7 +159,7 @@ const Stats = () => {
                 <thead>
                   <tr className="text-muted">
                     <th>Thời gian</th>
-                    <th>Id tài khoản</th>
+                    <th>Tài khoản</th>
                     <th>Hành động</th>
                   </tr>
                 </thead>
@@ -167,7 +167,9 @@ const Stats = () => {
                   {logs.map((log) => (
                     <tr key={log._id}>
                       <td>{formatDateTime(log.createdAt)}</td>
-                      <td>{log.adminId || '—'}</td>
+                      <td>
+                        {log.adminId?.fullname || log.adminId?.username || log.adminId || '—'}
+                      </td>
                       <td>
                         <span className="badge bg-warning text-dark text-uppercase">{log.action}</span>
                       </td>
@@ -176,7 +178,7 @@ const Stats = () => {
                           {JSON.stringify(log.meta || {}, null, 2)}
                         </pre>
                       </td>*/}
-                    </tr> 
+                    </tr>
                   ))}
                   {!logs.length && (
                     <tr>
