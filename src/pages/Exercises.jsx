@@ -5,6 +5,7 @@ import {
   deleteExercise,
   fetchExercises,
   updateExercise,
+  fetchTopics,
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
 
@@ -32,6 +33,13 @@ const levelOptions = [
 const Exercises = () => {
   const { setPageInfo } = usePage();
   const resourceManagerRef = useRef(null);
+  const [topics, setTopics] = React.useState([]);
+
+  useEffect(() => {
+    fetchTopics().then((res) => {
+      setTopics(res.data || res.items || []);
+    }).catch(console.error);
+  }, []);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -251,15 +259,20 @@ const Exercises = () => {
           <label htmlFor="topicRef" className="form-label fw-medium text-muted">
             Topic tham chiếu
           </label>
-          <input
-            type="text"
-            className="form-control"
+          <select
+            className="form-select"
             id="topicRef"
             name="topicRef"
             value={formState.topicRef || ''}
             onChange={(e) => setFormState({ ...formState, topicRef: e.target.value })}
-            placeholder="vd: Travel - Lesson 1"
-          />
+          >
+            <option value="">-- Chọn Topic --</option>
+            {topics.map((topic) => (
+              <option key={topic._id} value={topic.name}>
+                {topic.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Audio URL for listening exercises */}
@@ -456,4 +469,3 @@ const Exercises = () => {
 };
 
 export default Exercises;
-

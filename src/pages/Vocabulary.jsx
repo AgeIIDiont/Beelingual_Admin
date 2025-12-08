@@ -1,4 +1,4 @@
-import React, { useMemo , useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   fetchVocabulary,
@@ -30,62 +30,62 @@ const typeOptions = [
 
 import { usePage } from '../contexts/PageContext';
 const Vocabularys = () => {
-    const { setPageInfo } = usePage();
-    const resourceManagerRef = useRef(null);
-    const [topicOptions, setTopicOptions] = useState([]);
+  const { setPageInfo } = usePage();
+  const resourceManagerRef = useRef(null);
+  const [topicOptions, setTopicOptions] = useState([]);
 
-    useEffect(() => {
-      const loadTopics = async () => {
-        try {
-          const response = await fetchAllTopics();
-          const topicsData = response.data || [];
-          const options = topicsData.map((topic) => ({
-            value: topic._id || topic.id || topic.name,
-            label: `${topic.name}`,
-          }));
-          setTopicOptions([{ value: '', label: 'Tất cả' }, ...options]);
-        } catch (error) {
-          console.error('Error fetching topics:', error);
-        }
-      };
-      loadTopics();
-    }, []);
+  useEffect(() => {
+    const loadTopics = async () => {
+      try {
+        const response = await fetchAllTopics();
+        const topicsData = response.data || [];
+        const options = topicsData.map((topic) => ({
+          value: topic._id || topic.id || topic.name,
+          label: `${topic.name}`,
+        }));
+        setTopicOptions([{ value: '', label: 'Tất cả' }, ...options]);
+      } catch (error) {
+        console.error('Error fetching topics:', error);
+      }
+    };
+    loadTopics();
+  }, []);
 
-    useEffect(() => {
-      const handleRefresh = () => {
-        if (resourceManagerRef.current) {
-          resourceManagerRef.current.refresh();
-        }
-      };
-  
-      const handleCreate = () => {
-        if (resourceManagerRef.current) {
-          resourceManagerRef.current.openCreateForm();
-        }
-      };
-  
-        setPageInfo({
-          title: 'Quản lý Từ vựng',
-          description: 'Quản lý toàn bộ từ vựng: thêm, sửa, xóa và tìm kiếm.',
-          actions: (
-            <>
-              <button
-                className="btn btn-outline-secondary"
-                type="button"
-                onClick={handleRefresh}
-              >
-                <i className="fas fa-rotate me-2"></i>
-                Làm mới
-              </button>
-              <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
-                <i className="fas fa-plus me-2" />
-                Thêm từ vựng
-              </button>
-            </>
-          ),
-        });
-      return () => setPageInfo({ title: '', description: '', actions: null });
-    }, [setPageInfo]);
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.refresh();
+      }
+    };
+
+    const handleCreate = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.openCreateForm();
+      }
+    };
+
+    setPageInfo({
+      title: 'Quản lý Từ vựng',
+      description: 'Quản lý toàn bộ từ vựng: thêm, sửa, xóa và tìm kiếm.',
+      actions: (
+        <>
+          <button
+            className="btn btn-outline-secondary"
+            type="button"
+            onClick={handleRefresh}
+          >
+            <i className="fas fa-rotate me-2"></i>
+            Làm mới
+          </button>
+          <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
+            <i className="fas fa-plus me-2" />
+            Thêm từ vựng
+          </button>
+        </>
+      ),
+    });
+    return () => setPageInfo({ title: '', description: '', actions: null });
+  }, [setPageInfo]);
   // Hàm xử lý phát âm thanh
   const playAudio = (url) => {
     if (!url) return;
@@ -102,9 +102,9 @@ const Vocabularys = () => {
         render: (item) => (
           item.imageUrl ? (
             <div className="ratio ratio-4x3" style={{ width: '80px', borderRadius: '8px', overflow: 'hidden' }}>
-              <img 
-                src={item.imageUrl} 
-                alt={item.word} 
+              <img
+                src={item.imageUrl}
+                alt={item.word}
                 className="object-fit-cover w-100 h-100"
                 onError={(e) => { e.target.src = 'https://placehold.co/80x60?text=No+Img'; }}
               />
@@ -131,14 +131,14 @@ const Vocabularys = () => {
                 </span>
               )}
             </div>
-            
+
             <div className="d-flex align-items-center gap-2">
               {/* Phiên âm */}
               <span className="text-muted fst-italic font-monospace">/{item.pronunciation}/</span>
-              
+
               {/* Nút nghe Audio */}
               {item.audioUrl && (
-                <button 
+                <button
                   type="button"
                   className="btn btn-sm btn-light text-primary rounded-circle p-1 d-flex align-items-center justify-content-center"
                   style={{ width: '28px', height: '28px' }}
@@ -171,7 +171,7 @@ const Vocabularys = () => {
           if (item.level === 'A') colorClass = 'bg-success';
           if (item.level === 'B') colorClass = 'bg-warning text-dark';
           if (item.level === 'C') colorClass = 'bg-danger';
-          
+
           return (
             <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
               {item.level || '—'}
@@ -380,4 +380,3 @@ const Vocabularys = () => {
 };
 
 export default Vocabularys;
-

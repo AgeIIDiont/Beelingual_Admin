@@ -595,4 +595,3 @@ ResourceManager.displayName = 'ResourceManager';
 
 export default ResourceManager;
 
-
