@@ -3,8 +3,8 @@ import axios from 'axios';
 // Tạo instance của Axios với cấu hình mặc định
 const api = axios.create({
   baseURL:
-    // import.meta.env.VITE_API_BASE_URL 
-    // || 
+    import.meta.env.VITE_API_BASE_URL
+    ||
     'http://localhost:3000',
 
   // Thời gian chờ tối đa cho 1 request (10 giây)
