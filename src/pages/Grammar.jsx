@@ -79,74 +79,96 @@ const Grammar = () => {
     return () => setPageInfo({ title: '', description: '', actions: null });
   }, [setPageInfo]);
 
+  // Manual delete handler since we are customizing the actions column
+  const handleDelete = async (id) => {
+    if (!window.confirm('Bạn chắc chắn muốn xóa bài ngữ pháp này?')) return;
+    try {
+      await deleteGrammar(id);
+      // Refresh list
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.refresh();
+      }
+    } catch (error) {
+      alert('Không thể xóa: ' + (error.message || 'Lỗi không xác định'));
+    }
+  };
+
   const columns = useMemo(
     () => [
       {
         key: 'title',
-        label: 'Chủ điểm',
+        label: 'Chủ điểm ngữ pháp',
         render: (item) => (
           <div>
-            <div className="fw-bold text-dark">{item.title}</div>
-            <small className="text-muted">{item.structure || '—'}</small>
+            <div className="d-flex align-items-center gap-2 mb-1">
+              <h6 className="fw-bold text-dark mb-0">{item.title}</h6>
+              {/* Level Badge */}
+              <span className={`badge rounded-pill ${item.level === 'A' ? 'bg-success' :
+                item.level === 'B' ? 'bg-warning text-dark' :
+                  item.level === 'C' ? 'bg-danger' : 'bg-secondary'
+                }`}>
+                {item.level || '—'}
+              </span>
+            </div>
+
+            <div className="d-flex flex-wrap gap-2 fs-7">
+              {/* Category Badge */}
+              {item.categoryId && typeof item.categoryId === 'object' && (
+                <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
+                  {item.categoryId.icon} {item.categoryId.name}
+                </span>
+              )}
+
+              {/* Structure */}
+              <span className="text-muted fst-italic border-start ps-2">
+                {item.structure || 'Không có cấu trúc'}
+              </span>
+            </div>
           </div>
         ),
       },
       {
-        key: 'categoryId',
-        label: 'Danh mục',
-        render: (item) => {
-          // Kiểm tra nếu categoryId là object (đã populate)
-          if (item.categoryId && typeof item.categoryId === 'object') {
-            return (
-              <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
-                {item.categoryId.icon} {item.categoryId.name}
-              </span>
-            );
-          }
-          return '—';
-        },
-      },
-      {
-        key: 'level',
-        label: 'Level',
-        minWidth: '100px',
-        render: (item) => {
-          let colorClass = 'bg-secondary';
-          if (item.level === 'A') colorClass = 'bg-success';
-          if (item.level === 'B') colorClass = 'bg-warning text-dark';
-          if (item.level === 'C') colorClass = 'bg-danger';
-
-          return (
-            <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
-              {item.level || '—'}
-            </span>
-          );
-        },
-      },
-      {
         key: 'example',
         label: 'Ví dụ',
-        render: (item) => item.example || '—',
-      },
-      {
-        key: 'createdAt',
-        label: 'Ngày tạo',
-        render: (item) => new Date(item.createdAt).toLocaleDateString('vi-VN'),
+        render: (item) => (
+          <div className="text-muted small text-truncate" style={{ maxWidth: '250px' }} title={item.example}>
+            {item.example || '—'}
+          </div>
+        ),
       },
       {
         key: 'actions',
         label: 'Hành động',
+        minWidth: '150px',
+        className: 'text-end',
         render: (item) => (
-          <button
-            className="btn btn-sm btn-outline-primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/exercises?skill=grammar&grammarId=${item._id}`);
-            }}
-          >
-            <i className="fas fa-list-check me-1"></i>
-            Quản lý bài tập
-          </button>
+          <div className="d-flex gap-2 justify-content-end">
+            <button
+              className="btn btn-sm btn-outline-primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/exercises?skill=grammar&grammarId=${item._id}`);
+              }}
+              title="Quản lý bài tập"
+            >
+              <i className="fas fa-list-check me-1"></i>
+              Bài tập
+            </button>
+            <button
+              className="btn btn-sm btn-light text-primary"
+              onClick={() => resourceManagerRef.current?.openEditForm(item)}
+              title="Chỉnh sửa"
+            >
+              <i className="fas fa-pen"></i>
+            </button>
+            <button
+              className="btn btn-sm btn-light text-danger"
+              onClick={() => handleDelete(item._id)}
+              title="Xóa"
+            >
+              <i className="fas fa-trash"></i>
+            </button>
+          </div>
         ),
       },
     ],
@@ -302,9 +324,9 @@ const Grammar = () => {
       buildPayload={buildPayload}
       mapItemToForm={mapItemToForm}
       hideHeader={true}
+      hideActionsColumn={true}
     />
   );
 };
 
 export default Grammar;
-
