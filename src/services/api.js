@@ -2,16 +2,16 @@ import axios from 'axios';
 
 // Tạo instance của Axios với cấu hình mặc định
 const api = axios.create({
-  baseURL: 
-  import.meta.env.VITE_API_BASE_URL 
-  || 
-  'http://localhost:3000', 
+  baseURL:
+    // import.meta.env.VITE_API_BASE_URL 
+    // || 
+    'http://localhost:3000',
 
   // Thời gian chờ tối đa cho 1 request (10 giây)
-  timeout: 10000, 
+  timeout: 10000,
 
-// Gửi kèm cookie (nếu có) trong các request cross-site
-  withCredentials: true, 
+  // Gửi kèm cookie (nếu có) trong các request cross-site
+  withCredentials: true,
 
   // 3. Các Header mặc định
   headers: {

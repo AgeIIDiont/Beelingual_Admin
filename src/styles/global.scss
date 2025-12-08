@@ -1,0 +1,132 @@
+// ================================
+// GLOBAL STYLES
+// ================================
+
+// CSS Reset & Base Styles
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --page-bg: #ffffff;
+}
+
+body {
+    background: var(--page-bg);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #1e293b;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+// Utility Classes from settings.css
+.ui-card-gold {
+    background: linear-gradient(145deg, #ffffff, #fdfbf7);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.15);
+    box-shadow: 0 12px 25px -10px rgba(255, 215, 0, 0.15), 0 6px 10px -4px rgba(0, 0, 0, 0.05);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+
+    &:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 40px -10px rgba(255, 215, 0, 0.3);
+    }
+}
+
+.stat-card-hover {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+
+    &:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 40px -10px rgba(255, 215, 0, 0.3);
+    }
+}
+
+// Password Collapse Animation
+.password-collapse {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.5s ease, opacity 0.5s ease, margin-top 0.3s ease;
+
+    &.open {
+        max-height: 500px;
+        opacity: 1;
+        margin-top: 1rem;
+    }
+}
+
+// Custom Buttons
+.btn-pale-success {
+    background-color: rgba(25, 135, 84, 0.15);
+    color: #198754;
+    border: 1px solid transparent;
+
+    &:hover {
+        background-color: rgba(25, 135, 84, 0.2);
+        color: #198754;
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.4);
+    }
+}
+
+.btn-pale-secondary {
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+    border: 1px solid transparent;
+
+    &:hover {
+        background-color: rgba(108, 117, 125, 0.25);
+        color: #dc3545;
+        box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    }
+}
+
+// Modern Input
+.ui-input {
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 10px 14px;
+    transition: all 0.25s ease;
+
+    &:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.25);
+        outline: none;
+    }
+}
+
+// Section Card
+.ui-section-card {
+    border-radius: 18px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+    transition: 0.3s ease;
+
+    &:hover {
+        transform: translateY(-6px);
+    }
+}
+
+// Scrollbar Styling
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 8px;
+
+    &:hover {
+        background: #64748b;
+    }
+}

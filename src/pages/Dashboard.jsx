@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import StatsCard from '../components/ui/StatsCard';
-// Import component chung mới
-import AreaChartCard from '../components/ui/AreaChartCard'; 
-import { 
-  fetchProfile, 
-  fetchVocabulary, 
-  fetchGrammar, 
-  fetchTopics, 
-  fetchExercises, 
-  fetchStatsNewUsers 
+import AreaChartCard from '../components/ui/AreaChartCard';
+import LeaderboardCard from '../components/ui/LeaderboardCard';
+import {
+  fetchProfile,
+  fetchVocabulary,
+  fetchGrammar,
+  fetchTopics,
+  fetchExercises,
+  fetchStatsNewUsers,
+  fetchUsers
 } from '../services/adminService';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [profile, setProfile] = useState(null);
   const [userChartData, setUserChartData] = useState([]);
+  const [topUsers, setTopUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -25,10 +28,10 @@ const Dashboard = () => {
         setError(null);
 
         const [
-          profileRes, 
-          vocabRes, 
-          grammarRes, 
-          topicsRes, 
+          profileRes,
+          vocabRes,
+          grammarRes,
+          topicsRes,
           exercisesRes,
           newUsersRes
         ] = await Promise.all([
@@ -62,7 +65,31 @@ const Dashboard = () => {
     loadData();
   }, []);
 
-  // Effect xử lý update profile (giữ nguyên code cũ của bạn)
+  // Load top users - Xử lý hoàn toàn ở frontend
+  useEffect(() => {
+    const loadTopUsers = async () => {
+      try {
+        setLeaderboardLoading(true);
+        const data = await fetchUsers({ page: 1, limit: 100 });
+
+        const users = data.users || data.data || [];
+        const sortedUsers = users
+          .sort((a, b) => (b.xp || 0) - (a.xp || 0))
+          .slice(0, 10);
+
+        setTopUsers(sortedUsers);
+      } catch (err) {
+        console.error('Lỗi tải bảng xếp hạng:', err);
+        setTopUsers([]);
+      } finally {
+        setLeaderboardLoading(false);
+      }
+    };
+
+    loadTopUsers();
+  }, []);
+
+  // Effect xử lý update profile
   useEffect(() => {
     const handler = (e) => { if (e.detail) setProfile(e.detail); };
     window.addEventListener('auth:userUpdated', handler);
@@ -103,29 +130,22 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Hàng 2: Biểu đồ */}
+          {/* Hàng 2: Biểu đồ & Bảng xếp hạng */}
           <div className="row g-4">
-            {/* Biểu đồ 1: Người dùng mới (Màu xanh dương) */}
-            <div className="col-12 col-lg-6">
-              <AreaChartCard 
-                title="Người dùng mới trong 7 ngày qua" 
-                data={userChartData} 
-                dataKey="count"       // Key trong object API: { count: 12 }
-                color="#0d6efd"       // Màu xanh Primary
+            {/* Biểu đồ: Người dùng mới */}
+            <div className="col-12 col-xl-6">
+              <AreaChartCard
+                title="Người dùng mới trong 7 ngày qua"
+                data={userChartData}
+                dataKey="count"
+                color="#0d6efd"
                 unit="người"
               />
             </div>
 
-            {/* Ví dụ Biểu đồ 2: Giả sử bạn muốn dùng lại component này cho thống kê khác (Màu vàng cam) */}
-            {/* Bạn có thể bỏ đoạn này đi nếu chưa có dữ liệu */}
-            <div className="col-12 col-lg-6">
-               <AreaChartCard 
-                title="Hoạt động bài tập (Demo)" 
-                data={userChartData} // Tạm dùng chung data để demo
-                dataKey="count"
-                color="#ffc107"       // Màu vàng Warning
-                unit="lượt làm"
-              />
+            {/* Bảng xếp hạng */}
+            <div className="col-12 col-xl-6">
+              <LeaderboardCard users={topUsers} loading={leaderboardLoading} />
             </div>
           </div>
         </>

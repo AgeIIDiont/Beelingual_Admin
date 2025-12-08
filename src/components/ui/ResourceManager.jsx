@@ -35,6 +35,7 @@ const ResourceManager = forwardRef(({
   mapItemToForm,
   buildPayload,
   hideHeader = false, // New prop to hide header section
+  customFormRenderer, // New prop for custom form rendering
 }, ref) => {
   const initialFilterValues = useMemo(() => {
     const values = {};
@@ -306,8 +307,8 @@ const ResourceManager = forwardRef(({
       field.type === 'number'
         ? 'number'
         : field.type === 'password'
-        ? 'password'
-        : 'text';
+          ? 'password'
+          : 'text';
 
     return <input type={inputType} {...commonProps} />;
   };
@@ -450,7 +451,7 @@ const ResourceManager = forwardRef(({
                             >
                               <i className="fas fa-pen" />
                               {/* Nếu muốn gọn hơn nữa thì xóa dòng dưới đi để chỉ hiện icon */}
-                              <span className="d-none d-md-inline">Sửa</span> 
+                              <span className="d-none d-md-inline">Sửa</span>
                             </button>
                           )}
                           {deleteApi && (
@@ -534,17 +535,27 @@ const ResourceManager = forwardRef(({
                         {formError}
                       </div>
                     )}
-                    <div className="row">
-                      {formFields.map((field) => (
-                        <div className={`col-md-${field.col || 12} mb-3`} key={field.name}>
-                          <label htmlFor={field.name} className="form-label fw-medium text-muted">
-                            {field.label}
-                          </label>
-                          {renderFormField(field)}
-                          {field.helper && <small className="text-muted d-block mt-1">{field.helper}</small>}
-                        </div>
-                      ))}
-                    </div>
+                    {customFormRenderer ? (
+                      customFormRenderer({
+                        formState,
+                        setFormState,
+                        editingItem,
+                        handleFormChange,
+                        renderFormField,
+                      })
+                    ) : (
+                      <div className="row">
+                        {formFields.map((field) => (
+                          <div className={`col-md-${field.col || 12} mb-3`} key={field.name}>
+                            <label htmlFor={field.name} className="form-label fw-medium text-muted">
+                              {field.label}
+                            </label>
+                            {renderFormField(field)}
+                            {field.helper && <small className="text-muted d-block mt-1">{field.helper}</small>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="modal-footer">
                     <button

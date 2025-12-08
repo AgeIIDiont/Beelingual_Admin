@@ -1,0 +1,22 @@
+// ================================
+// LAYOUT COMPONENT STYLES
+// ================================
+
+.layout-container {
+    background-color: #f5f7fa;
+    min-height: 100vh;
+}
+
+.layout-main {
+    margin-left: 280px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.layout-content {
+    flex-grow: 1;
+    padding: 2rem;
+    margin-top: 80px;
+    overflow-y: auto;
+}

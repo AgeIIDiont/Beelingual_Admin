@@ -1,0 +1,98 @@
+// ================================
+// SCSS VARIABLES
+// ================================
+
+// Colors - Primary Palette
+$color-primary: #ffc107;
+$color-primary-dark: #ff9800;
+$color-primary-light: #ffd700;
+$color-primary-pale: #fff9c4;
+
+$color-secondary: #6c757d;
+$color-success: #198754;
+$color-danger: #dc3545;
+$color-warning: #ffc107;
+$color-info: #0dcaf0;
+
+// Neutral Colors
+$color-dark: #1e293b;
+$color-muted: #94a3b8;
+$color-light: #f8fafc;
+$color-white: #ffffff;
+$color-black: #000000;
+
+// Background Colors
+$bg-page: #f5f7fa;
+$bg-card: linear-gradient(145deg, #ffffff, #fdfbf7);
+$bg-gradient-primary: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+$bg-gradient-gold: linear-gradient(90deg, #ffc107 0%, #ff9800 100%);
+
+// Border Colors
+$border-color: #e2e8f0;
+$border-color-gold: rgba(255, 215, 0, 0.15);
+
+// Shadows
+$shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 8px 25px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 12px 25px -10px rgba(255, 215, 0, 0.15), 0 6px 10px -4px rgba(0, 0, 0, 0.05);
+$shadow-xl: 0 20px 40px -10px rgba(255, 215, 0, 0.3);
+$shadow-gold: 0 6px 15px rgba(255, 215, 0, 0.35);
+$shadow-dropdown: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
+
+// Spacing
+$spacing-xs: 0.25rem; // 4px
+$spacing-sm: 0.5rem; // 8px
+$spacing-md: 1rem; // 16px
+$spacing-lg: 1.5rem; // 24px
+$spacing-xl: 2rem; // 32px
+$spacing-2xl: 3rem; // 48px
+
+// Border Radius
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 18px;
+$radius-xl: 20px;
+$radius-2xl: 24px;
+$radius-full: 50%;
+
+// Font Sizes
+$font-size-xs: 10px;
+$font-size-sm: 13px;
+$font-size-base: 14px;
+$font-size-md: 15px;
+$font-size-lg: 16px;
+$font-size-xl: 44px;
+
+// Font Weights
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Transitions
+$transition-fast: 0.2s ease;
+$transition-base: 0.3s ease;
+$transition-slow: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+// Z-index
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-fixed: 1030;
+$z-index-modal-backdrop: 1040;
+$z-index-modal: 1050;
+$z-index-popover: 1060;
+$z-index-tooltip: 1070;
+
+// Breakpoints
+$breakpoint-xs: 0;
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+$breakpoint-xxl: 1400px;
+
+// Sidebar
+$sidebar-width: 280px;
+
+// Header
+$header-height: 80px;
