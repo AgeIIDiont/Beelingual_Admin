@@ -670,12 +670,17 @@ const Exercises = () => {
 
         // Map grammar exercises to match UI format
         const grammar = grammars.find(g => String(g._id) === String(params.grammarId));
-        const mappedData = items.map((item) => ({
-          ...item,
-          skill: 'grammar',
-          questionText: item.question,
-          grammarTitle: grammar?.title || item.grammarId?.title || '',
-        }));
+        const mappedData = items.map((item) => {
+          // Logic: Options empty -> 'fill_in_blank', else 'multiple_choice'
+          const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
+          return {
+            ...item,
+            skill: 'grammar',
+            questionText: item.question,
+            grammarTitle: grammar?.title || item.grammarId?.title || '',
+            type: computedType,
+          };
+        });
 
         // Apply search filter if provided
         let filteredData = mappedData;
@@ -702,6 +707,10 @@ const Exercises = () => {
           // Find grammar title from the pre-loaded grammars list
           const grammarIdStr = item.grammarId?._id || item.grammarId;
           const grammar = grammars.find(g => String(g._id) === String(grammarIdStr));
+
+          // Logic: Options empty -> 'fill_in_blank', else 'multiple_choice'
+          const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
+
           return {
             ...item,
             skill: 'grammar',
@@ -709,6 +718,7 @@ const Exercises = () => {
             grammarTitle: grammar?.title || 'Unknown Grammar',
             // Ensure grammarId is the string ID for consistency if needed
             grammarId: grammarIdStr,
+            type: computedType,
           };
         });
 
@@ -760,7 +770,8 @@ const Exercises = () => {
   const deleteApiWrapper = async (id, item) => {
     // Check if this is a grammar exercise
     // Grammar exercises have grammarId and question (not questionText)
-    const isGrammarExercise = item?.grammarId || (item?.question && !item?.questionText);
+    // Also explicitly check skill property if we added it in mapping
+    const isGrammarExercise = item?.skill === 'grammar' || item?.grammarId || (item?.question && !item?.questionText);
     if (isGrammarExercise) {
       return deleteGrammarExercise(id);
     }

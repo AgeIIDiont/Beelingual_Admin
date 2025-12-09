@@ -318,7 +318,7 @@ const ResourceManager = forwardRef(({
     if (!confirmDelete) return;
 
     try {
-      await deleteApi(item[primaryKey]);
+      await deleteApi(item[primaryKey], item);
       setFeedback({
         type: 'success',
         message: `Đã xóa ${resourceName} thành công.`,
