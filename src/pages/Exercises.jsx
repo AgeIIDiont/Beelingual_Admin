@@ -59,9 +59,7 @@ const Exercises = () => {
       setTopics(res.data || res.items || []);
     }).catch(console.error);
 
-    fetchGrammar({}).then((res) => {
-      setGrammars(res.data || res.items || []);
-    }).catch(console.error);
+    // Không fetch grammar lúc init nữa - sẽ fetch khi user chọn category
 
     fetchGrammarCategories({}).then((res) => {
       // Backend trả về mảng trực tiếp, không phải object với thuộc tính data
@@ -72,6 +70,26 @@ const Exercises = () => {
       console.error('Error fetching grammar categories:', err);
     });
   }, []);
+
+  // Fetch grammar khi user chọn category (server-side filtering)
+  useEffect(() => {
+    if (filterValues.grammarCategoryId) {
+      console.log('🔍 Fetching grammars for category:', filterValues.grammarCategoryId);
+      fetchGrammar({ categoryId: filterValues.grammarCategoryId, limit: 1000 })
+        .then((res) => {
+          const grammarData = res.data || res.items || [];
+          setGrammars(grammarData);
+          console.log('✅ Fetched grammars:', grammarData.length, 'items');
+        })
+        .catch((err) => {
+          console.error('❌ Error fetching grammars:', err);
+          setGrammars([]);
+        });
+    } else {
+      // Reset grammars khi không chọn category
+      setGrammars([]);
+    }
+  }, [filterValues.grammarCategoryId]);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -213,13 +231,8 @@ const Exercises = () => {
         type: 'select',
         options: [
           { value: '', label: 'Tất cả bài ngữ pháp' },
-          // Filter grammars based on current selected category
-          ...grammars
-            .filter(g => {
-              const selectedCat = filterValues.grammarCategoryId;
-              return selectedCat && String(g.categoryId) === String(selectedCat);
-            })
-            .map((g) => ({ value: g._id, label: g.title })),
+          // Backend đã filter theo category rồi, chỉ cần map ra options
+          ...grammars.map((g) => ({ value: g._id, label: g.title })),
         ],
         defaultValue: filterValues.grammarId || '',
         col: 3,
