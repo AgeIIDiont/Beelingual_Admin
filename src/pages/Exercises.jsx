@@ -564,6 +564,12 @@ const Exercises = () => {
           text: ans.text.trim(),
           isCorrect: ans.isCorrect || false,
         }));
+
+      // Find correct answer from answers array and set it to payload.correctAnswer
+      const correctOpt = values.answers.find(ans => ans.isCorrect);
+      if (correctOpt && correctOpt.text) {
+        payload.correctAnswer = correctOpt.text.trim();
+      }
     }
 
     // Add correct answer for fill in blank
@@ -634,7 +640,8 @@ const Exercises = () => {
     if (item.type === 'multiple_choice' && Array.isArray(item.options)) {
       formData.answers = item.options.map((opt) => ({
         text: opt.text || '',
-        isCorrect: opt.isCorrect || false,
+        // Check both the object's isCorrect and string comparison with item.correctAnswer
+        isCorrect: opt.isCorrect || (item.correctAnswer && opt.text === item.correctAnswer) || false,
       }));
       // Ensure we have 4 answers
       while (formData.answers.length < 4) {
