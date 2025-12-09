@@ -8,6 +8,7 @@ import {
   updateExercise,
   fetchTopics,
   fetchGrammar,
+  fetchGrammarCategories,
   fetchGrammarExercises,
   createGrammarExercise,
   updateGrammarExercise,
@@ -45,6 +46,13 @@ const Exercises = () => {
   const resourceManagerRef = useRef(null);
   const [topics, setTopics] = React.useState([]);
   const [grammars, setGrammars] = React.useState([]);
+  const [grammarCategories, setGrammarCategories] = React.useState([]);
+  // State để track filter values cho real-time filtering
+  const [filterValues, setFilterValues] = React.useState({
+    skill: searchParams.get('skill') || '',
+    grammarCategoryId: searchParams.get('grammarCategoryId') || '',
+    grammarId: searchParams.get('grammarId') || '',
+  });
 
   useEffect(() => {
     fetchTopics().then((res) => {
@@ -54,6 +62,15 @@ const Exercises = () => {
     fetchGrammar({}).then((res) => {
       setGrammars(res.data || res.items || []);
     }).catch(console.error);
+
+    fetchGrammarCategories({}).then((res) => {
+      // Backend trả về mảng trực tiếp, không phải object với thuộc tính data
+      const categories = Array.isArray(res) ? res : (res.data || res.items || []);
+      console.log('Grammar Categories:', categories); // Debug log
+      setGrammarCategories(categories);
+    }).catch((err) => {
+      console.error('Error fetching grammar categories:', err);
+    });
   }, []);
 
   useEffect(() => {
@@ -160,8 +177,35 @@ const Exercises = () => {
         label: 'Kỹ năng',
         type: 'select',
         options: skillOptions,
-        defaultValue: searchParams.get('skill') || '',
+        defaultValue: filterValues.skill || '',
         col: 3,
+        onChange: (value) => {
+          setFilterValues(prev => ({
+            ...prev,
+            skill: value,
+            grammarCategoryId: value === 'grammar' ? prev.grammarCategoryId : '',
+            grammarId: value === 'grammar' ? prev.grammarId : '',
+          }));
+        },
+      },
+      {
+        name: 'grammarCategoryId',
+        label: 'Danh mục ngữ pháp',
+        type: 'select',
+        options: [
+          { value: '', label: 'Chọn danh mục' },
+          ...grammarCategories.map((cat) => ({ value: cat._id, label: cat.name })),
+        ],
+        defaultValue: filterValues.grammarCategoryId || '',
+        col: 3,
+        hideCondition: (values) => values.skill !== 'grammar',
+        onChange: (value) => {
+          setFilterValues(prev => ({
+            ...prev,
+            grammarCategoryId: value,
+            grammarId: '', // Reset grammar when category changes
+          }));
+        },
       },
       {
         name: 'grammarId',
@@ -169,11 +213,18 @@ const Exercises = () => {
         type: 'select',
         options: [
           { value: '', label: 'Tất cả bài ngữ pháp' },
-          ...grammars.map((g) => ({ value: g._id, label: g.title })),
+          // Filter grammars based on current selected category
+          ...grammars
+            .filter(g => {
+              const selectedCat = filterValues.grammarCategoryId;
+              return selectedCat && String(g.categoryId) === String(selectedCat);
+            })
+            .map((g) => ({ value: g._id, label: g.title })),
         ],
-        defaultValue: searchParams.get('grammarId') || '',
+        defaultValue: filterValues.grammarId || '',
         col: 3,
-        hideCondition: (values) => values.skill !== 'grammar',
+        // Chỉ hiển thị khi: skill = grammar VÀ đã chọn danh mục
+        hideCondition: (values) => values.skill !== 'grammar' || !values.grammarCategoryId,
       },
       {
         name: 'type',
@@ -190,7 +241,7 @@ const Exercises = () => {
         col: 3,
       },
     ],
-    [grammars, searchParams]
+    [grammars, grammarCategories, searchParams, filterValues]
   );
 
   const formFields = useMemo(
@@ -229,6 +280,32 @@ const Exercises = () => {
   const renderExerciseForm = ({ formState, setFormState, renderFormField }) => {
     const currentType = formState.type || 'multiple_choice';
     const currentSkill = formState.skill || 'vocab';
+    const selectedCategoryId = formState.grammarCategoryId || '';
+
+    // Filter grammars based on selected category
+    const filteredGrammars = selectedCategoryId
+      ? grammars.filter(g => String(g.categoryId) === String(selectedCategoryId))
+      : grammars;
+
+    // Get selected category to generate dynamic label
+    const selectedCategory = grammarCategories.find(cat => String(cat._id) === String(selectedCategoryId));
+
+    // Generate dynamic label based on category
+    const getGrammarLabel = () => {
+      if (!selectedCategory) return 'Chọn ngữ pháp';
+
+      const categoryName = selectedCategory.name.toLowerCase();
+      if (categoryName.includes('tense')) return 'Chọn thì';
+      if (categoryName.includes('modal')) return 'Chọn động từ khuyết thiếu';
+      if (categoryName.includes('conditional')) return 'Chọn loại câu điều kiện';
+      if (categoryName.includes('passive')) return 'Chọn dạng câu bị động';
+      if (categoryName.includes('wish')) return 'Chọn loại câu ước';
+      if (categoryName.includes('tag')) return 'Chọn dạng câu hỏi đuôi';
+
+      return `Chọn ${selectedCategory.name}`;
+    };
+
+    const grammarLabel = getGrammarLabel();
 
     const handleAnswerChange = (index, field, value) => {
       setFormState((prev) => {
@@ -294,11 +371,42 @@ const Exercises = () => {
           />
         </div>
 
-        {/* Grammar ID for grammar exercises */}
+        {/* Grammar Category for grammar exercises */}
         {currentSkill === 'grammar' && (
           <div className="col-md-6 mb-3">
+            <label htmlFor="grammarCategoryId" className="form-label fw-medium text-muted">
+              Danh mục ngữ pháp <span className="text-danger">*</span>
+            </label>
+            <select
+              className="form-select"
+              id="grammarCategoryId"
+              name="grammarCategoryId"
+              value={formState.grammarCategoryId || ''}
+              onChange={(e) => {
+                // Reset grammarId when category changes
+                setFormState({
+                  ...formState,
+                  grammarCategoryId: e.target.value,
+                  grammarId: '' // Clear selected grammar
+                });
+              }}
+              required
+            >
+              <option value="">-- Chọn danh mục --</option>
+              {grammarCategories.map((category) => (
+                <option key={category._id} value={category._id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Grammar ID for grammar exercises - only show if category is selected */}
+        {currentSkill === 'grammar' && selectedCategoryId && (
+          <div className="col-md-6 mb-3">
             <label htmlFor="grammarId" className="form-label fw-medium text-muted">
-              Bài ngữ pháp <span className="text-danger">*</span>
+              {grammarLabel} <span className="text-danger">*</span>
             </label>
             <select
               className="form-select"
@@ -308,8 +416,8 @@ const Exercises = () => {
               onChange={(e) => setFormState({ ...formState, grammarId: e.target.value })}
               required
             >
-              <option value="">-- Chọn bài ngữ pháp --</option>
-              {grammars.map((grammar) => (
+              <option value="">-- {grammarLabel} --</option>
+              {filteredGrammars.map((grammar) => (
                 <option key={grammar._id} value={grammar._id}>
                   {grammar.title}
                 </option>
@@ -598,10 +706,15 @@ const Exercises = () => {
     const isGrammarExercise = item.skill === 'grammar' || (item.grammarId && item.question);
 
     if (isGrammarExercise) {
+      // Extract grammarId and find the corresponding grammar to get categoryId
+      const grammarIdValue = item.grammarId?._id || item.grammarId || '';
+      const grammar = grammars.find(g => String(g._id) === String(grammarIdValue));
+
       const formData = {
         skill: 'grammar',
         questionText: item.question || '',
-        grammarId: item.grammarId?._id || item.grammarId || '',
+        grammarId: grammarIdValue,
+        grammarCategoryId: grammar?.categoryId || item.grammarId?.categoryId || '',
         explanation: item.explanation || '',
         correctAnswer: item.correctAnswer || '',
         type: item.type || (item.options && item.options.length > 0 ? 'multiple_choice' : 'fill_in_blank'),

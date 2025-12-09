@@ -228,6 +228,11 @@ const ResourceManager = forwardRef(({
       ...prev,
       [name]: filter.type === 'number' ? Number(value) : value,
     }));
+
+    // Call onChange callback if provided
+    if (filter.onChange) {
+      filter.onChange(value, name);
+    }
   };
 
   const handleApplyFilters = (e) => {
