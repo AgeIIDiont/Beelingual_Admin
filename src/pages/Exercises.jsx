@@ -31,9 +31,12 @@ const typeOptions = [
 
 const levelOptions = [
   { value: '', label: 'Tất cả cấp độ' },
-  { value: 'A', label: 'Level A' },
-  { value: 'B', label: 'Level B' },
-  { value: 'C', label: 'Level C' },
+  { value: 'A1', label: 'Level A1' },
+  { value: 'A2', label: 'Level A2' },
+  { value: 'B1', label: 'Level B1' },
+  { value: 'B2', label: 'Level B2' },
+  { value: 'C1', label: 'Level C1' },
+  { value: 'C2', label: 'Level C2' },
 ];
 
 const Exercises = () => {
@@ -123,9 +126,9 @@ const Exercises = () => {
         minWidth: '100px',
         render: (item) => {
           let colorClass = 'bg-secondary';
-          if (item.level === 'A') colorClass = 'bg-success';
-          if (item.level === 'B') colorClass = 'bg-warning text-dark';
-          if (item.level === 'C') colorClass = 'bg-danger';
+          if (['A1', 'A2', 'A'].includes(item.level)) colorClass = 'bg-success';
+          if (['B1', 'B2', 'B'].includes(item.level)) colorClass = 'bg-warning text-dark';
+          if (['C1', 'C2', 'C'].includes(item.level)) colorClass = 'bg-danger';
 
           return (
             <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
@@ -215,7 +218,7 @@ const Exercises = () => {
         label: 'Cấp độ',
         type: 'select',
         options: levelOptions.slice(1),
-        defaultValue: 'A',
+        defaultValue: 'A1',
         col: 4,
         required: true,
       },
@@ -356,6 +359,8 @@ const Exercises = () => {
             />
           </div>
         )}
+
+        {/* Removed Audio File input as per request */}
 
         {/* Multiple choice answers - for grammar exercises (array of strings) */}
         {currentType === 'multiple_choice' && currentSkill === 'grammar' && (
@@ -551,9 +556,9 @@ const Exercises = () => {
       explanation: values.explanation?.trim(),
     };
 
-    // Add audio text for listening exercises
+    // Add audio text (stored in 'audioUrl' field) for listening exercises
     if (values.skill === 'listening' && values.audioText) {
-      payload.audioText = values.audioText.trim();
+      payload.audioUrl = values.audioText.trim();
     }
 
     // Add answers for multiple choice
@@ -632,7 +637,8 @@ const Exercises = () => {
       questionText: item.questionText || '',
       topicRef: item.topicRef || '',
       explanation: item.explanation || '',
-      audioText: item.audioText || '',
+      audioText: item.audioUrl || item.audio || '', // Map 'audioUrl' or 'audio' (backend) to 'audioText' (frontend form)
+      audio: item.audioUrl || item.audio || '',
       correctAnswer: item.correctAnswer || '',
     };
 

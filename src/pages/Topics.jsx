@@ -10,9 +10,12 @@ import { usePage } from '../contexts/PageContext';
 
 const levelOptions = [
   { value: '', label: 'Tất cả' },
-  { value: 'A', label: 'Level A' },
-  { value: 'B', label: 'Level B' },
-  { value: 'C', label: 'Level C' },
+  { value: 'A1', label: 'Level A1' },
+  { value: 'A2', label: 'Level A2' },
+  { value: 'B1', label: 'Level B1' },
+  { value: 'B2', label: 'Level B2' },
+  { value: 'C1', label: 'Level C1' },
+  { value: 'C2', label: 'Level C2' },
 ];
 
 const Topics = () => {
@@ -63,9 +66,9 @@ const Topics = () => {
         render: (item) => (
           item.imageUrl ? (
             <div className="ratio ratio-4x3 shadow-sm" style={{ width: '80px', borderRadius: '8px', overflow: 'hidden' }}>
-              <img 
-                src={item.imageUrl} 
-                alt={item.name} 
+              <img
+                src={item.imageUrl}
+                alt={item.name}
                 className="object-fit-cover w-100 h-100"
                 onError={(e) => { e.target.src = 'https://placehold.co/80x60?text=No+Img'; }}
               />
@@ -96,10 +99,10 @@ const Topics = () => {
         minWidth: '100px',
         render: (item) => {
           let colorClass = 'bg-secondary';
-          if (item.level === 'A') colorClass = 'bg-success';
-          if (item.level === 'B') colorClass = 'bg-warning text-dark';
-          if (item.level === 'C') colorClass = 'bg-danger';
-          
+          if (['A1', 'A2', 'A'].includes(item.level)) colorClass = 'bg-success';
+          if (['B1', 'B2', 'B'].includes(item.level)) colorClass = 'bg-warning text-dark';
+          if (['C1', 'C2', 'C'].includes(item.level)) colorClass = 'bg-danger';
+
           return (
             <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
               {item.level || '—'}
@@ -112,14 +115,14 @@ const Topics = () => {
         label: 'Mô tả chi tiết',
         minWidth: '350px',
         render: (item) => (
-          <div 
+          <div
             className="text-secondary"
-            style={{ 
-              whiteSpace: 'pre-wrap', 
+            style={{
+              whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
               lineHeight: '1.6',
               fontSize: '0.95rem'
-            }} 
+            }}
           >
             {item.description || '—'}
           </div>
@@ -164,7 +167,9 @@ const Topics = () => {
         label: 'Trình độ',
         type: 'select',
         options: levelOptions.slice(1),
-        defaultValue: 'A',
+        type: 'select',
+        options: levelOptions.slice(1),
+        defaultValue: 'A1',
         col: 4,
       },
       {
@@ -190,7 +195,9 @@ const Topics = () => {
   const buildPayload = (values) => {
     const payload = {
       name: values.name?.trim(),
-      level: values.level || 'A',
+      name: values.name?.trim(),
+      level: values.level || 'A1',
+      description: values.description?.trim(),
       description: values.description?.trim(),
       imageUrl: values.imageUrl?.trim(),
     };

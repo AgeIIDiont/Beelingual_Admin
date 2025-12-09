@@ -10,9 +10,12 @@ import { usePage } from '../contexts/PageContext';
 
 const levelOptions = [
   { value: '', label: 'Tất cả' },
-  { value: 'A', label: 'Level A' },
-  { value: 'B', label: 'Level B' },
-  { value: 'C', label: 'Level C' },
+  { value: 'A1', label: 'Level A1' },
+  { value: 'A2', label: 'Level A2' },
+  { value: 'B1', label: 'Level B1' },
+  { value: 'B2', label: 'Level B2' },
+  { value: 'C1', label: 'Level C1' },
+  { value: 'C2', label: 'Level C2' },
 ];
 
 const roleOptions = [
@@ -183,12 +186,9 @@ const Users = () => {
         name: 'level',
         label: 'Trình độ',
         type: 'select',
-        options: [
-          { value: 'A', label: 'Level A' },
-          { value: 'B', label: 'Level B' },
-          { value: 'C', label: 'Level C' },
-        ],
-        defaultValue: 'A',
+        type: 'select',
+        options: levelOptions.slice(1),
+        defaultValue: 'A1',
         col: 3,
       },
       {
@@ -223,7 +223,9 @@ const Users = () => {
       username: values.username?.trim(),
       email: values.email?.trim(),
       role: values.role || 'student',
-      level: values.level || 'A',
+      role: values.role || 'student',
+      level: values.level || 'A1',
+      xp: Number.isFinite(values.xp) ? values.xp : Number(values.xp || 0),
       xp: Number.isFinite(values.xp) ? values.xp : Number(values.xp || 0),
       gems: Number.isFinite(values.gems) ? values.gems : Number(values.gems || 0),
       avatarUrl: values.avatarUrl?.trim(),
@@ -249,7 +251,9 @@ const Users = () => {
     email: item.email || '',
     password: '',
     role: item.role || 'student',
-    level: item.level || 'A',
+    role: item.role || 'student',
+    level: item.level || 'A1',
+    xp: item.xp ?? 0,
     xp: item.xp ?? 0,
     gems: item.gems ?? 0,
     avatarUrl: item.avatarUrl || '',

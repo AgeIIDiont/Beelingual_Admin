@@ -12,9 +12,12 @@ import { fetchCategories } from '../services/adminService';
 
 const levelOptions = [
   { value: '', label: 'Tất cả' },
-  { value: 'A', label: 'Level A' },
-  { value: 'B', label: 'Level B' },
-  { value: 'C', label: 'Level C' },
+  { value: 'A1', label: 'Level A1' },
+  { value: 'A2', label: 'Level A2' },
+  { value: 'B1', label: 'Level B1' },
+  { value: 'B2', label: 'Level B2' },
+  { value: 'C1', label: 'Level C1' },
+  { value: 'C2', label: 'Level C2' },
 ];
 
 const Grammar = () => {
@@ -103,9 +106,9 @@ const Grammar = () => {
             <div className="d-flex align-items-center gap-2 mb-1">
               <h6 className="fw-bold text-dark mb-0">{item.title}</h6>
               {/* Level Badge */}
-              <span className={`badge rounded-pill ${item.level === 'A' ? 'bg-success' :
-                item.level === 'B' ? 'bg-warning text-dark' :
-                  item.level === 'C' ? 'bg-danger' : 'bg-secondary'
+              <span className={`badge rounded-pill ${['A1', 'A2', 'A'].includes(item.level) ? 'bg-success' :
+                ['B1', 'B2', 'B'].includes(item.level) ? 'bg-warning text-dark' :
+                  ['C1', 'C2', 'C'].includes(item.level) ? 'bg-danger' : 'bg-secondary'
                 }`}>
                 {item.level || '—'}
               </span>
@@ -216,7 +219,9 @@ const Grammar = () => {
         label: 'Trình độ',
         type: 'select',
         options: levelOptions.slice(1),
-        defaultValue: 'A',
+        type: 'select',
+        options: levelOptions.slice(1),
+        defaultValue: 'A1',
         col: 3,
       },
       {
@@ -255,7 +260,9 @@ const Grammar = () => {
   const buildPayload = (values) => {
     const payload = {
       title: values.title?.trim(),
-      level: values.level || 'A',
+      title: values.title?.trim(),
+      level: values.level || 'A1',
+      categoryId: values.categoryId, // Gửi _id của category
       categoryId: values.categoryId, // Gửi _id của category
       structure: values.structure?.trim(),
       content: values.content?.trim(),

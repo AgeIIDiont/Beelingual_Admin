@@ -9,9 +9,12 @@ import {
 import { fetchTopics as fetchAllTopics } from '../services/adminService';
 const levelOptions = [
   { value: '', label: 'Tất cả' },
-  { value: 'A', label: 'Level A' },
-  { value: 'B', label: 'Level B' },
-  { value: 'C', label: 'Level C' },
+  { value: 'A1', label: 'Level A1' },
+  { value: 'A2', label: 'Level A2' },
+  { value: 'B1', label: 'Level B1' },
+  { value: 'B2', label: 'Level B2' },
+  { value: 'C1', label: 'Level C1' },
+  { value: 'C2', label: 'Level C2' },
 ];
 
 const typeOptions = [
@@ -168,9 +171,9 @@ const Vocabularys = () => {
         minWidth: '100px',
         render: (item) => {
           let colorClass = 'bg-secondary';
-          if (item.level === 'A') colorClass = 'bg-success';
-          if (item.level === 'B') colorClass = 'bg-warning text-dark';
-          if (item.level === 'C') colorClass = 'bg-danger';
+          if (['A1', 'A2', 'A'].includes(item.level)) colorClass = 'bg-success';
+          if (['B1', 'B2', 'B'].includes(item.level)) colorClass = 'bg-warning text-dark';
+          if (['C1', 'C2', 'C'].includes(item.level)) colorClass = 'bg-danger';
 
           return (
             <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
@@ -274,7 +277,7 @@ const Vocabularys = () => {
         label: 'Trình độ',
         type: 'select',
         options: levelOptions.slice(1),
-        defaultValue: 'A',
+        defaultValue: 'A1',
         col: 6,
       },
       {
@@ -284,6 +287,15 @@ const Vocabularys = () => {
         rows: 2,
         required: true,
         placeholder: 'Giải thích nghĩa của từ...',
+        col: 12,
+      },
+      {
+        name: 'example',
+        label: 'Ví dụ (Example)',
+        type: 'textarea',
+        rows: 2,
+        required: false,
+        placeholder: 'Ví dụ câu sử dụng từ này...',
         col: 12,
       },
       {
@@ -317,7 +329,10 @@ const Vocabularys = () => {
     const payload = {
       word: values.word?.trim(),
       meaning: values.meaning?.trim(),
-      level: values.level || 'A',
+      example: values.example?.trim(),
+      meaning: values.meaning?.trim(),
+      example: values.example?.trim(),
+      level: values.level || 'A1',
       type: values.type || 'noun',
       pronunciation: values.pronunciation?.trim(),
       topic: values.topic?.trim(),
