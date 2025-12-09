@@ -103,30 +103,36 @@ const Grammar = () => {
         label: 'Chủ điểm ngữ pháp',
         render: (item) => (
           <div>
-            <div className="d-flex align-items-center gap-2 mb-1">
-              <h6 className="fw-bold text-dark mb-0">{item.title}</h6>
-              {/* Level Badge */}
-              <span className={`badge rounded-pill ${['A1', 'A2', 'A'].includes(item.level) ? 'bg-success' :
-                ['B1', 'B2', 'B'].includes(item.level) ? 'bg-warning text-dark' :
-                  ['C1', 'C2', 'C'].includes(item.level) ? 'bg-danger' : 'bg-secondary'
-                }`}>
-                {item.level || '—'}
-              </span>
+            <h6 className="fw-bold text-dark mb-1">{item.title}</h6>
+            {/* Structure */}
+            <div className="text-muted fst-italic small">
+              {item.structure || 'Không có cấu trúc'}
             </div>
-
-            <div className="d-flex flex-wrap gap-2 fs-7">
-              {/* Category Badge */}
-              {item.categoryId && typeof item.categoryId === 'object' && (
-                <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
-                  {item.categoryId.icon} {item.categoryId.name}
-                </span>
-              )}
-
-              {/* Structure */}
-              <span className="text-muted fst-italic border-start ps-2">
-                {item.structure || 'Không có cấu trúc'}
-              </span>
-            </div>
+          </div>
+        ),
+      },
+      {
+        key: 'level',
+        label: 'Level',
+        minWidth: '100px',
+        render: (item) => (
+          <span className={`badge rounded-pill ${['A1', 'A2', 'A'].includes(item.level) ? 'bg-success' :
+            ['B1', 'B2', 'B'].includes(item.level) ? 'bg-warning text-dark' :
+              ['C1', 'C2', 'C'].includes(item.level) ? 'bg-danger' : 'bg-secondary'
+            }`}>
+            {item.level || '—'}
+          </span>
+        ),
+      },
+      {
+        key: 'category',
+        label: 'Danh mục',
+        minWidth: '150px',
+        render: (item) => (
+          <div className="text-dark">
+            {item.categoryId && typeof item.categoryId === 'object'
+              ? item.categoryId.name
+              : '—'}
           </div>
         ),
       },
@@ -141,22 +147,11 @@ const Grammar = () => {
       },
       {
         key: 'actions',
-        label: 'Hành động',
-        minWidth: '150px',
+        label: 'Thao tác',
+        minWidth: '100px',
         className: 'text-end',
         render: (item) => (
           <div className="d-flex gap-2 justify-content-end">
-            <button
-              className="btn btn-sm btn-outline-primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/exercises?skill=grammar&grammarId=${item._id}`);
-              }}
-              title="Quản lý bài tập"
-            >
-              <i className="fas fa-list-check me-1"></i>
-              Bài tập
-            </button>
             <button
               className="btn btn-sm btn-light text-primary"
               onClick={() => resourceManagerRef.current?.openEditForm(item)}

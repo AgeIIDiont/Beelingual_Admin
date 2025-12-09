@@ -190,8 +190,8 @@ const Vocabularys = () => {
           if (!item.topic) return '—';
           if (typeof item.topic === 'object') {
             return (
-              <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
-                {item.topic.icon ? item.topic.icon + ' ' : ''}{item.topic.name || item.topic.label || item.topic.title}
+              <span className="text-dark">
+                {item.topic.name || item.topic.label || item.topic.title}
               </span>
             );
           }
@@ -202,7 +202,7 @@ const Vocabularys = () => {
           const label = found ? found.label : topicStr;
 
           return (
-            <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
+            <span className="text-dark">
               {label}
             </span>
           );
