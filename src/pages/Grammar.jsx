@@ -219,8 +219,6 @@ const Grammar = () => {
         label: 'Trình độ',
         type: 'select',
         options: levelOptions.slice(1),
-        type: 'select',
-        options: levelOptions.slice(1),
         defaultValue: 'A1',
         col: 3,
       },
@@ -260,17 +258,25 @@ const Grammar = () => {
   const buildPayload = (values) => {
     const payload = {
       title: values.title?.trim(),
-      title: values.title?.trim(),
       level: values.level || 'A1',
-      categoryId: values.categoryId, // Gửi _id của category
-      categoryId: values.categoryId, // Gửi _id của category
+      // categoryId có thể là object (khi edit) hoặc string (khi create)
+      // Luôn extract _id nếu là object
+      categoryId: values.categoryId?._id || values.categoryId,
       structure: values.structure?.trim(),
       content: values.content?.trim(),
       example: values.example?.trim(),
     };
 
+    // Chỉ xóa các field undefined, null, hoặc empty string
+    // NHƯNG KHÔNG xóa categoryId nếu nó có giá trị
     Object.keys(payload).forEach((key) => {
-      if (!payload[key]) delete payload[key];
+      if (key === 'categoryId') {
+        // Giữ categoryId nếu nó có giá trị (không phải '', null, undefined)
+        if (!payload[key]) delete payload[key];
+      } else {
+        // Các field khác: xóa nếu falsy
+        if (!payload[key]) delete payload[key];
+      }
     });
 
     return payload;
@@ -292,37 +298,21 @@ const Grammar = () => {
       filters={filters}
       formFields={formFields}
       listApi={async (params) => {
-        // Call backend
+        // Backend đã xử lý filter, chỉ cần gọi API và trả về kết quả
         const res = await fetchGrammar(params);
-        // Normalize items array
-        let items = res.data || res.items || [];
+        const items = res.data || res.items || [];
 
-        // If backend did not apply filters, do a lightweight client-side filter as fallback
-        try {
-          if (params) {
-            if (params.categoryId) {
-              items = items.filter((it) => {
-                const cid = it.categoryId?._id || it.categoryId || '';
-                return String(cid) === String(params.categoryId);
-              });
-            }
-            if (params.title) {
-              const q = String(params.title).toLowerCase();
-              items = items.filter((it) => (it.title || '').toLowerCase().includes(q));
-            }
-            if (params.level) {
-              if (params.level !== '') items = items.filter((it) => it.level === params.level);
-            }
-          }
-        } catch (e) {
-          // ignore client-side filter errors
-          console.warn('Client-side filter fallback failed', e);
-        }
+        // Debug log (có thể xóa sau khi test xong)
+        console.log('📊 Grammar API Response:', {
+          params,
+          totalItems: items.length,
+          total: res.total
+        });
 
         return {
           ...res,
           data: items,
-          total: items.length,
+          total: res.total || items.length,
         };
       }}
       createApi={createGrammar}
