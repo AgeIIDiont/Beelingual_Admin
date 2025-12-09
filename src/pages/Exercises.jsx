@@ -45,7 +45,8 @@ const Exercises = () => {
   const [searchParams] = useSearchParams();
   const resourceManagerRef = useRef(null);
   const [topics, setTopics] = React.useState([]);
-  const [grammars, setGrammars] = React.useState([]);
+  const [grammars, setGrammars] = React.useState([]); // For filter
+  const [formGrammars, setFormGrammars] = React.useState([]); // For form dropdown
   const [grammarCategories, setGrammarCategories] = React.useState([]);
   // State để track filter values cho real-time filtering
   const [filterValues, setFilterValues] = React.useState({
@@ -58,6 +59,9 @@ const Exercises = () => {
     fetchTopics().then((res) => {
       setTopics(res.data || res.items || []);
     }).catch(console.error);
+
+    // Initial fetch empty to ensure state is ready
+    setFormGrammars([]);
 
     // Không fetch grammar lúc init nữa - sẽ fetch khi user chọn category
 
@@ -90,6 +94,22 @@ const Exercises = () => {
       setGrammars([]);
     }
   }, [filterValues.grammarCategoryId]);
+
+  // Helper to fetch grammars for form based on category
+  const fetchFormGrammars = async (categoryId) => {
+    if (!categoryId) {
+      setFormGrammars([]);
+      return;
+    }
+    try {
+      // Use API wrapper to fetch grammars
+      const res = await fetchGrammar({ categoryId, limit: 1000 });
+      setFormGrammars(res.data || res.items || []);
+    } catch (err) {
+      console.error('Error fetching form grammars:', err);
+      setFormGrammars([]);
+    }
+  };
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -295,10 +315,9 @@ const Exercises = () => {
     const currentSkill = formState.skill || 'vocab';
     const selectedCategoryId = formState.grammarCategoryId || '';
 
-    // Filter grammars based on selected category
-    const filteredGrammars = selectedCategoryId
-      ? grammars.filter(g => String(g.categoryId) === String(selectedCategoryId))
-      : grammars;
+    // Use formGrammars state which is fetched from server based on category
+    // This allows separation between filter search (grammars state) and form dropdown (formGrammars state)
+    const filteredGrammars = formGrammars;
 
     // Get selected category to generate dynamic label
     const selectedCategory = grammarCategories.find(cat => String(cat._id) === String(selectedCategoryId));
@@ -402,6 +421,8 @@ const Exercises = () => {
                   grammarCategoryId: e.target.value,
                   grammarId: '' // Clear selected grammar
                 });
+                // Fetch grammars for the new category
+                fetchFormGrammars(e.target.value);
               }}
               required
             >
@@ -720,14 +741,30 @@ const Exercises = () => {
 
     if (isGrammarExercise) {
       // Extract grammarId and find the corresponding grammar to get categoryId
-      const grammarIdValue = item.grammarId?._id || item.grammarId || '';
-      const grammar = grammars.find(g => String(g._id) === String(grammarIdValue));
+      const grammarIdValue = item.grammarId ? String(item.grammarId._id || item.grammarId) : '';
+
+      // Try to find category ID from item properties
+      let categoryIdValue = '';
+      if (item.grammarId && item.grammarId.categoryId) {
+        categoryIdValue = String(item.grammarId.categoryId._id || item.grammarId.categoryId);
+      } else {
+        // Fallback: try to find in current loaded grammars (might fail if not loaded)
+        // grammarIdValue should be compared as string
+        const grammar = grammars.find(g => String(g._id) === String(grammarIdValue));
+        const gCat = grammar?.categoryId;
+        categoryIdValue = gCat ? String(gCat._id || gCat) : '';
+      }
+
+      // Trigger fetch grammars for this category to populate form dropdown
+      if (categoryIdValue) {
+        fetchFormGrammars(categoryIdValue);
+      }
 
       const formData = {
         skill: 'grammar',
         questionText: item.question || '',
         grammarId: grammarIdValue,
-        grammarCategoryId: grammar?.categoryId || item.grammarId?.categoryId || '',
+        grammarCategoryId: categoryIdValue,
         explanation: item.explanation || '',
         correctAnswer: item.correctAnswer || '',
         type: item.type || (item.options && item.options.length > 0 ? 'multiple_choice' : 'fill_in_blank'),
