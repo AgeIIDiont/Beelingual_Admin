@@ -485,14 +485,20 @@ const ResourceManager = forwardRef(({
         <div className="rm-card p-4 mb-4 fade-in-up" style={{ animationDelay: '0.1s' }}>
           <form onSubmit={handleApplyFilters}>
             <div className="row g-3">
-              {filters.map((filter) => (
-                <div className={`col-md-${filter.col || 4}`} key={filter.name}>
-                  <label htmlFor={filter.name} className="form-label text-secondary fw-bold small text-uppercase">
-                    {filter.label}
-                  </label>
-                  {renderFilterInput(filter)}
-                </div>
-              ))}
+              {filters.map((filter) => {
+                // Check visibility condition
+                if (filter.hideCondition && filter.hideCondition(filterInputs)) {
+                  return null;
+                }
+                return (
+                  <div className={`col-md-${filter.col || 4}`} key={filter.name}>
+                    <label htmlFor={filter.name} className="form-label text-secondary fw-bold small text-uppercase">
+                      {filter.label}
+                    </label>
+                    {renderFilterInput(filter)}
+                  </div>
+                );
+              })}
             </div>
             <div className="d-flex gap-2 mt-4 pt-2 border-top">
               <button type="submit" className="btn btn-dark px-4 fw-medium">

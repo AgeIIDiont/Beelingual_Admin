@@ -170,6 +170,7 @@ const Exercises = () => {
         ],
         defaultValue: searchParams.get('grammarId') || '',
         col: 3,
+        hideCondition: (values) => values.skill !== 'grammar',
       },
       {
         name: 'type',
@@ -337,20 +338,20 @@ const Exercises = () => {
           </div>
         )}
 
-        {/* Audio URL for listening exercises */}
+        {/* Audio Text for listening exercises */}
         {currentSkill === 'listening' && (
-          <div className="col-md-6 mb-3">
-            <label htmlFor="audioUrl" className="form-label fw-medium text-muted">
-              Audio URL <span className="text-danger">*</span>
+          <div className="col-12 mb-3">
+            <label htmlFor="audioText" className="form-label fw-medium text-muted">
+              Câu/Đoạn nghe (Audio Text) <span className="text-danger">*</span>
             </label>
-            <input
-              type="text"
+            <textarea
               className="form-control"
-              id="audioUrl"
-              name="audioUrl"
-              value={formState.audioUrl || ''}
-              onChange={(e) => setFormState({ ...formState, audioUrl: e.target.value })}
-              placeholder="https://..."
+              id="audioText"
+              name="audioText"
+              value={formState.audioText || ''}
+              onChange={(e) => setFormState({ ...formState, audioText: e.target.value })}
+              placeholder="Nhập câu hoặc đoạn văn để luyện nghe. Ví dụ: 'The weather is beautiful today.'"
+              rows={3}
               required
             />
           </div>
@@ -550,9 +551,9 @@ const Exercises = () => {
       explanation: values.explanation?.trim(),
     };
 
-    // Add audio URL for listening exercises
-    if (values.skill === 'listening' && values.audioUrl) {
-      payload.audioUrl = values.audioUrl.trim();
+    // Add audio text for listening exercises
+    if (values.skill === 'listening' && values.audioText) {
+      payload.audioText = values.audioText.trim();
     }
 
     // Add answers for multiple choice
@@ -625,7 +626,7 @@ const Exercises = () => {
       questionText: item.questionText || '',
       topicRef: item.topicRef || '',
       explanation: item.explanation || '',
-      audioUrl: item.audioUrl || '',
+      audioText: item.audioText || '',
       correctAnswer: item.correctAnswer || '',
     };
 
