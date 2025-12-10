@@ -9,7 +9,7 @@ const Grammar = lazy(() => import('../pages/Grammar'));
 const Topics = lazy(() => import('../pages/Topics'));
 const Exercises = lazy(() => import('../pages/Exercises'));
 const Users = lazy(() => import('../pages/Users'));
-const Stats = lazy(() => import('../pages/Stats'));
+const AdminActivity = lazy(() => import('../pages/AdminActivity'));
 const Settings = lazy(() => import('../pages/Settings'));
 
 // Components
@@ -42,105 +42,105 @@ const AppRoutes = () => {
     <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Public routes */}
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
             <PublicRoute>
               <Login />
             </PublicRoute>
-          } 
+          }
         />
 
         {/* Private routes - bắt buộc đăng nhập, có Layout với Sidebar */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             <PrivateRoutes>
               <Suspense fallback={<PageLoader />}>
                 <Dashboard />
               </Suspense>
             </PrivateRoutes>
-          } 
+          }
         />
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <PrivateRoutes>
               <Suspense fallback={<PageLoader />}>
                 <Dashboard />
               </Suspense>
             </PrivateRoutes>
-          } 
+          }
         />
-        <Route 
-          path="/vocabulary" 
+        <Route
+          path="/vocabulary"
           element={
             <PrivateRoutes>
               <Suspense fallback={<PageLoader />}>
                 <Vocabulary />
               </Suspense>
             </PrivateRoutes>
-          } 
+          }
         />
-        <Route 
-          path="/grammar" 
+        <Route
+          path="/grammar"
           element={
             <PrivateRoutes>
               <Suspense fallback={<PageLoader />}>
                 <Grammar />
               </Suspense>
             </PrivateRoutes>
-          } 
+          }
         />
-        <Route 
-          path="/topics" 
+        <Route
+          path="/topics"
           element={
             <PrivateRoutes>
               <Suspense fallback={<PageLoader />}>
                 <Topics />
               </Suspense>
             </PrivateRoutes>
-          } 
+          }
         />
-        <Route 
-          path="/exercises" 
+        <Route
+          path="/exercises"
           element={
             <PrivateRoutes>
               <Suspense fallback={<PageLoader />}>
                 <Exercises />
               </Suspense>
             </PrivateRoutes>
-          } 
+          }
         />
-        <Route 
-          path="/users" 
+        <Route
+          path="/users"
           element={
             <PrivateRoutes>
               <Suspense fallback={<PageLoader />}>
                 <Users />
               </Suspense>
             </PrivateRoutes>
-          } 
+          }
         />
-        <Route 
-          path="/stats" 
+        <Route
+          path="/admin-activity"
           element={
             <PrivateRoutes>
               <Suspense fallback={<PageLoader />}>
-                <Stats />
+                <AdminActivity />
               </Suspense>
             </PrivateRoutes>
-          } 
+          }
         />
-        <Route 
-          path="/settings" 
+        <Route
+          path="/settings"
           element={
             <PrivateRoutes>
               <Suspense fallback={<PageLoader />}>
                 <Settings />
               </Suspense>
             </PrivateRoutes>
-          } 
+          }
         />
 
         {/* 404 */}

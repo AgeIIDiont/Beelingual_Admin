@@ -5,7 +5,9 @@ import {
   deleteUser,
   fetchUsers,
   updateUser,
+  fetchUserStats,
 } from '../services/adminService';
+import StatsCard from '../components/ui/StatsCard';
 import { usePage } from '../contexts/PageContext';
 
 const levelOptions = [
@@ -223,9 +225,7 @@ const Users = () => {
       username: values.username?.trim(),
       email: values.email?.trim(),
       role: values.role || 'student',
-      role: values.role || 'student',
       level: values.level || 'A1',
-      xp: Number.isFinite(values.xp) ? values.xp : Number(values.xp || 0),
       xp: Number.isFinite(values.xp) ? values.xp : Number(values.xp || 0),
       gems: Number.isFinite(values.gems) ? values.gems : Number(values.gems || 0),
       avatarUrl: values.avatarUrl?.trim(),
@@ -251,29 +251,132 @@ const Users = () => {
     email: item.email || '',
     password: '',
     role: item.role || 'student',
-    role: item.role || 'student',
     level: item.level || 'A1',
-    xp: item.xp ?? 0,
     xp: item.xp ?? 0,
     gems: item.gems ?? 0,
     avatarUrl: item.avatarUrl || '',
   });
 
+  // State for stats
+  const [userStats, setUserStats] = React.useState(null);
+  const [statsLoading, setStatsLoading] = React.useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await fetchUserStats();
+        setUserStats(data);
+      } catch (error) {
+        console.error('Failed to load user stats:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    loadStats();
+  }, []);
+
   return (
-    <ResourceManager
-      ref={resourceManagerRef}
-      resourceName="người dùng"
-      columns={columns}
-      filters={filters}
-      formFields={formFields}
-      listApi={fetchUsers}
-      createApi={createUser}
-      updateApi={updateUser}
-      deleteApi={deleteUser}
-      mapItemToForm={mapUserToForm}
-      buildPayload={buildPayload}
-      hideHeader={true}
-    />
+    <div className="container-fluid py-4">
+      {/* Stats Section */}
+      {!statsLoading && userStats && (
+        <div className="mb-5">
+          <div className="row g-4 mb-4">
+            <div className="col-md-4 col-sm-6">
+              <StatsCard
+                title="Tổng người dùng"
+                number={userStats?.totalUsers || 0}
+                subtitle="Tất cả tài khoản"
+                icon="fa-users"
+              />
+            </div>
+            <div className="col-md-4 col-sm-6">
+              <StatsCard
+                title="Quản trị viên"
+                number={userStats?.adminsCount || 0}
+                subtitle="Có quyền quản trị"
+                icon="fa-user-shield"
+              />
+            </div>
+            <div className="col-md-4 col-sm-6">
+              <StatsCard
+                title="Học viên"
+                number={userStats?.studentsCount || 0}
+                subtitle="Đang học trên app"
+                icon="fa-graduation-cap"
+              />
+            </div>
+          </div>
+
+          <div className="row g-4">
+            <div className="col-lg-6">
+              <div className="bg-white rounded-4 shadow p-4 h-100">
+                <h5 className="fw-bold text-dark mb-3">Phân bổ cấp độ</h5>
+                <table className="table table-borderless align-middle">
+                  <thead>
+                    <tr className="text-muted">
+                      <th>Cấp độ</th>
+                      <th className="text-end">Số lượng</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(userStats?.levelStats || []).map((item) => (
+                      <tr key={item._id || 'unknown'}>
+                        <td className="fw-medium">{item._id || 'Chưa xác định'}</td>
+                        <td className="text-end">{item.count}</td>
+                      </tr>
+                    ))}
+                    {!userStats?.levelStats?.length && (
+                      <tr>
+                        <td colSpan={2} className="text-center text-muted py-3">
+                          Chưa có dữ liệu.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="col-lg-6">
+              <div className="bg-white rounded-4 shadow p-4 h-100">
+                <h5 className="fw-bold text-dark mb-3">Người dùng đăng ký gần đây</h5>
+                <ul className="list-group list-group-flush">
+                  {(userStats?.recentUsers || []).map((user) => (
+                    <li className="list-group-item d-flex justify-content-between align-items-center" key={user._id}>
+                      <div>
+                        <div className="fw-semibold">{user.fullname || user.username}</div>
+                        <small className="text-muted">
+                          {user.role} • {formatDate(user.createdAt)}
+                        </small>
+                      </div>
+                      <span className="badge bg-light text-dark">{user.level || '—'}</span>
+                    </li>
+                  ))}
+                  {!userStats?.recentUsers?.length && (
+                    <li className="list-group-item text-center text-muted">Chưa có dữ liệu.</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ResourceManager
+        ref={resourceManagerRef}
+        resourceName="người dùng"
+        columns={columns}
+        filters={filters}
+        formFields={formFields}
+        listApi={fetchUsers}
+        createApi={createUser}
+        updateApi={updateUser}
+        deleteApi={deleteUser}
+        mapItemToForm={mapUserToForm}
+        buildPayload={buildPayload}
+        hideHeader={true}
+      />
+    </div>
   );
 };
 

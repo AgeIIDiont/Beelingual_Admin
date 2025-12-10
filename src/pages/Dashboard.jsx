@@ -75,7 +75,7 @@ const Dashboard = () => {
         const users = data.users || data.data || [];
         const sortedUsers = users
           .sort((a, b) => (b.xp || 0) - (a.xp || 0))
-          .slice(0, 10);
+          .slice(0, 5);
 
         setTopUsers(sortedUsers);
       } catch (err) {
@@ -133,7 +133,7 @@ const Dashboard = () => {
           {/* Hàng 2: Biểu đồ & Bảng xếp hạng */}
           <div className="row g-4">
             {/* Biểu đồ: Người dùng mới */}
-            <div className="col-12 col-xl-6">
+            <div className="col-12 col-lg-7">
               <AreaChartCard
                 title="Người dùng mới trong 7 ngày qua"
                 data={userChartData}
@@ -144,7 +144,7 @@ const Dashboard = () => {
             </div>
 
             {/* Bảng xếp hạng */}
-            <div className="col-12 col-xl-6">
+            <div className="col-12 col-lg-5">
               <LeaderboardCard users={topUsers} loading={leaderboardLoading} />
             </div>
           </div>
