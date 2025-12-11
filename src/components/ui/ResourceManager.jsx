@@ -216,7 +216,8 @@ const ResourceManager = forwardRef(({
     setFilterInputs(initialFilterValues);
     setAppliedFilters(initialFilterValues);
     setPage(1);
-  }, [initialFilterValues]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(initialFilterValues)]);
 
   useEffect(() => {
     setFormState(initialFormValues);
@@ -608,12 +609,13 @@ const ResourceManager = forwardRef(({
           </div>
           <div className="d-flex align-items-center gap-3">
             <select
-              className="form-select form-select-sm rm-input-modern w-auto"
+              className="form-select form-select-sm rm-input-modern"
               value={limit}
               onChange={(e) => {
                 setLimit(Number(e.target.value));
                 setPage(1);
               }}
+              style={{ minWidth: '140px', paddingRight: '2.5rem' }}
             >
               {limitOptions.map((option) => (
                 <option key={option} value={option}>

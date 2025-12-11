@@ -148,7 +148,6 @@ const Header = () => {
 
                   <button
                     className="btn w-100 text-start px-3 py-2 border-0 bg-transparent dropdown-item-custom mb-1"
-                    onClick={() => navigate('/settings')}
                   >
                     <i className="fas fa-cog me-3 text-secondary"></i>
                     Cài đặt hệ thống

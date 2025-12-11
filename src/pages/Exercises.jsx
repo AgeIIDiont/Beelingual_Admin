@@ -215,7 +215,7 @@ const Exercises = () => {
         label: 'Kỹ năng',
         type: 'select',
         options: skillOptions,
-        defaultValue: filterValues.skill || '',
+        defaultValue: searchParams.get('skill') || '',
         col: 3,
         onChange: (value) => {
           setFilterValues(prev => ({
@@ -234,7 +234,7 @@ const Exercises = () => {
           { value: '', label: 'Chọn danh mục' },
           ...grammarCategories.map((cat) => ({ value: cat._id, label: cat.name })),
         ],
-        defaultValue: filterValues.grammarCategoryId || '',
+        defaultValue: searchParams.get('grammarCategoryId') || '',
         col: 3,
         hideCondition: (values) => values.skill !== 'grammar',
         onChange: (value) => {
@@ -254,7 +254,7 @@ const Exercises = () => {
           // Backend đã filter theo category rồi, chỉ cần map ra options
           ...grammars.map((g) => ({ value: g._id, label: g.title })),
         ],
-        defaultValue: filterValues.grammarId || '',
+        defaultValue: searchParams.get('grammarId') || '',
         col: 3,
         // Chỉ hiển thị khi: skill = grammar VÀ đã chọn danh mục
         hideCondition: (values) => values.skill !== 'grammar' || !values.grammarCategoryId,
@@ -828,8 +828,15 @@ const Exercises = () => {
     return formData;
   };
 
+  // Ref to hold grammars for stable API access
+  const grammarsRef = useRef(grammars);
+
+  useEffect(() => {
+    grammarsRef.current = grammars;
+  }, [grammars]);
+
   // Wrapper functions to handle grammar exercises
-  const listApiWrapper = async (params = {}) => {
+  const listApiWrapper = React.useCallback(async (params = {}) => {
     // If filtering by grammar skill OR if a specific grammar is selected (implying grammar skill)
     if (params.skill === 'grammar' || params.grammarId) {
       // If grammarId filter is provided, fetch grammar exercises for that grammar
@@ -846,7 +853,9 @@ const Exercises = () => {
         });
 
         // Map grammar exercises to match UI format
-        const grammar = grammars.find(g => String(g._id) === String(params.grammarId));
+        // Use ref to avoid dependency change
+        const currentGrammars = grammarsRef.current;
+        const grammar = currentGrammars.find(g => String(g._id) === String(params.grammarId));
         const mappedData = items.map((item) => {
           // Logic: Options empty -> 'fill_in_blank', else 'multiple_choice'
           const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
@@ -855,6 +864,7 @@ const Exercises = () => {
             skill: 'grammar',
             questionText: item.question,
             grammarTitle: grammar?.title || item.grammarId?.title || '',
+            level: grammar?.level || item.grammarId?.level || 'A1', // Inherit level from grammar
             type: computedType,
           };
         });
@@ -880,10 +890,12 @@ const Exercises = () => {
       try {
         // Call API without grammarId to get all
         const res = await fetchGrammarExercises();
+        const currentGrammars = grammarsRef.current;
+
         const allExercises = (res.data || []).map((item) => {
           // Find grammar title from the pre-loaded grammars list
           const grammarIdStr = item.grammarId?._id || item.grammarId;
-          const grammar = grammars.find(g => String(g._id) === String(grammarIdStr));
+          const grammar = currentGrammars.find(g => String(g._id) === String(grammarIdStr));
 
           // Logic: Options empty -> 'fill_in_blank', else 'multiple_choice'
           const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
@@ -893,6 +905,7 @@ const Exercises = () => {
             skill: 'grammar',
             questionText: item.question,
             grammarTitle: grammar?.title || 'Unknown Grammar',
+            level: grammar?.level || 'A1', // Inherit level from grammar
             // Ensure grammarId is the string ID for consistency if needed
             grammarId: grammarIdStr,
             type: computedType,
@@ -925,26 +938,26 @@ const Exercises = () => {
     // Remove grammarId from params for regular exercises
     delete filteredParams.grammarId;
     return fetchExercises(filteredParams);
-  };
+  }, []);
 
-  const createApiWrapper = async (payload) => {
+  const createApiWrapper = React.useCallback(async (payload) => {
     // Check if this is a grammar exercise by checking if payload has grammarId
     if (payload.grammarId) {
       // This is a grammar exercise
       return createGrammarExercise(payload);
     }
     return createExercise(payload);
-  };
+  }, []);
 
-  const updateApiWrapper = async (id, payload) => {
+  const updateApiWrapper = React.useCallback(async (id, payload) => {
     // Check if this is a grammar exercise by checking if payload has grammarId
     if (payload.grammarId) {
       return updateGrammarExercise(id, payload);
     }
     return updateExercise(id, payload);
-  };
+  }, []);
 
-  const deleteApiWrapper = async (id, item) => {
+  const deleteApiWrapper = React.useCallback(async (id, item) => {
     // Check if this is a grammar exercise
     // Grammar exercises have grammarId and question (not questionText)
     // Also explicitly check skill property if we added it in mapping
@@ -953,7 +966,7 @@ const Exercises = () => {
       return deleteGrammarExercise(id);
     }
     return deleteExercise(id);
-  };
+  }, []);
 
   return (
     <ResourceManager
