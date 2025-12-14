@@ -14,7 +14,7 @@ import {
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [_profile, setProfile] = useState(null);
   const [userChartData, setUserChartData] = useState([]);
   const [topUsers, setTopUsers] = useState([]);
   const [loading, setLoading] = useState(true);

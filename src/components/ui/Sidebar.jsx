@@ -11,6 +11,7 @@ const menu = [
   { icon: 'fa-file-alt', label: 'Bài tập & Đề thi', path: '/exercises' },
   { icon: 'fa-users', label: 'Người dùng', path: '/users' },
   { icon: 'fa-chart-bar', label: 'Hoạt động Admin', path: '/admin-activity' },
+  { icon: 'fa-globe', label: 'Landing Page', path: '/landing-page' },
 ];
 
 const Sidebar = () => {

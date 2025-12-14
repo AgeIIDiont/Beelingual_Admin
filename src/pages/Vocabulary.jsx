@@ -330,8 +330,6 @@ const Vocabularys = () => {
       word: values.word?.trim(),
       meaning: values.meaning?.trim(),
       example: values.example?.trim(),
-      meaning: values.meaning?.trim(),
-      example: values.example?.trim(),
       level: values.level || 'A1',
       type: values.type || 'noun',
       pronunciation: values.pronunciation?.trim(),

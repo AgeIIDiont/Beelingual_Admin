@@ -11,6 +11,7 @@ const Exercises = lazy(() => import('../pages/Exercises'));
 const Users = lazy(() => import('../pages/Users'));
 const AdminActivity = lazy(() => import('../pages/AdminActivity'));
 const Settings = lazy(() => import('../pages/Settings'));
+const LandingPage = lazy(() => import('../pages/LandingPage'));
 
 // Components
 import PrivateRoutes from './PrivateRoutes';
@@ -138,6 +139,16 @@ const AppRoutes = () => {
             <PrivateRoutes>
               <Suspense fallback={<PageLoader />}>
                 <Settings />
+              </Suspense>
+            </PrivateRoutes>
+          }
+        />
+        <Route
+          path="/landing-page"
+          element={
+            <PrivateRoutes>
+              <Suspense fallback={<PageLoader />}>
+                <LandingPage />
               </Suspense>
             </PrivateRoutes>
           }

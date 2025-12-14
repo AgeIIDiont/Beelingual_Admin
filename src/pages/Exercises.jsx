@@ -60,9 +60,6 @@ const Exercises = () => {
       setTopics(res.data || res.items || []);
     }).catch(console.error);
 
-    // Initial fetch empty to ensure state is ready
-    setFormGrammars([]);
-
     // Không fetch grammar lúc init nữa - sẽ fetch khi user chọn category
 
     fetchGrammarCategories({}).then((res) => {
@@ -91,6 +88,7 @@ const Exercises = () => {
         });
     } else {
       // Reset grammars khi không chọn category
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGrammars([]);
     }
   }, [filterValues.grammarCategoryId]);

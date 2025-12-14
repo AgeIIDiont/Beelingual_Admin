@@ -78,7 +78,7 @@ export const login = async (username, password) => {
 export const logout = async () => {
   try {
     // Ask backend to clear auth cookie if endpoint exists
-    await api.post('/api/logout').catch(() => {});
+    await api.post('/api/logout').catch(() => { });
   } catch {
     // ignore
   }
@@ -125,13 +125,13 @@ const refreshAccessToken = async () => {
     }
 
     const data = await response.json();
-    
+
     // Backend tự động set accessToken cookie mới
     // Cập nhật user info nếu có
     if (data?.user) {
       setUser(data.user);
     }
-    
+
     return data?.accessToken || true;
   } catch (error) {
     // Refresh token cũng hết hạn hoặc không hợp lệ → cần đăng nhập lại
@@ -158,58 +158,55 @@ api.interceptors.response.use(
 
     // Xử lý lỗi 401 - token hết hạn hoặc không hợp lệ
     if (error.response?.status === 401) {
-      const errorCode = error.response?.data?.code;
-      const isTokenExpired = errorCode === 'TOKEN_EXPIRED';
+      // Logic cũ: chỉ refresh nếu code === 'TOKEN_EXPIRED'
+      // Logic mới: Thử refresh cho mọi lỗi 401 (trừ login) để tránh logout oan khi backend trả lỗi chung chung
+      const isLoginRequest = originalRequest.url?.includes('/login');
 
-      // Nếu là lỗi token hết hạn, thử refresh
-      if (isTokenExpired) {
-        // Nếu đang refresh, thêm request vào queue
-        if (isRefreshing) {
-          return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
+      // Nếu là request login bị 401 thì không refresh, trả về lỗi luôn để component Login xử lý
+      if (isLoginRequest) {
+        return Promise.reject(error);
+      }
+
+      // Với các request khác, nếu bị 401 thì thử refresh token
+      // Nếu đang refresh, thêm request vào queue
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            // Retry request ban đầu sau khi refresh thành công
+            originalRequest._retry = true;
+            return api(originalRequest);
           })
-            .then((token) => {
-              // Retry request ban đầu sau khi refresh thành công
-              originalRequest._retry = true;
-              return api(originalRequest);
-            })
-            .catch((err) => {
-              return Promise.reject(err);
-            });
-        }
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
 
-        // Bắt đầu refresh token
-        originalRequest._retry = true;
-        isRefreshing = true;
+      // Bắt đầu refresh token
+      originalRequest._retry = true;
+      isRefreshing = true;
 
-        try {
-          await refreshAccessToken();
-          
-          // Refresh thành công, xử lý queue và retry request ban đầu
-          processQueue(null, true);
-          isRefreshing = false;
-          
-          return api(originalRequest);
-        } catch (refreshError) {
-          // Refresh thất bại → xử lý queue và logout
-          processQueue(refreshError, null);
-          isRefreshing = false;
-          
-          // Chỉ logout nếu không phải đang ở trang login
-          if (window.location.pathname !== '/login') {
-            console.warn('Refresh token thất bại → tự động đăng xuất');
-            logout();
-          }
-          
-          return Promise.reject(refreshError);
-        }
-      } else {
-        // Lỗi 401 khác (không phải TOKEN_EXPIRED) → logout
+      try {
+        await refreshAccessToken();
+
+        // Refresh thành công, xử lý queue và retry request ban đầu
+        processQueue(null, true);
+        isRefreshing = false;
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Refresh thất bại → xử lý queue và logout
+        processQueue(refreshError, null);
+        isRefreshing = false;
+
+        // Chỉ logout nếu không phải đang ở trang login
         if (window.location.pathname !== '/login') {
-          console.warn('Token không hợp lệ → tự động đăng xuất');
+          console.warn('Refresh token thất bại → tự động đăng xuất');
           logout();
         }
-        return Promise.reject(error);
+
+        return Promise.reject(refreshError);
       }
     }
 
