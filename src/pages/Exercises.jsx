@@ -54,6 +54,7 @@ const Exercises = () => {
     skill: searchParams.get('skill') || '',
     grammarCategoryId: searchParams.get('grammarCategoryId') || '',
     grammarId: searchParams.get('grammarId') || '',
+    topicRef: searchParams.get('topicRef') || '',
   });
 
   useEffect(() => {
@@ -234,6 +235,25 @@ const Exercises = () => {
             skill: value,
             grammarCategoryId: value === 'grammar' ? prev.grammarCategoryId : '',
             grammarId: value === 'grammar' ? prev.grammarId : '',
+            topicRef: value !== 'grammar' ? prev.topicRef : '',
+          }));
+        },
+      },
+      {
+        name: 'topicRef',
+        label: 'Chủ đề',
+        type: 'select',
+        options: [
+          { value: '', label: 'Tất cả chủ đề' },
+          ...topics.map((t) => ({ value: t.name, label: t.name })),
+        ],
+        defaultValue: searchParams.get('topicRef') || '',
+        col: 3,
+        hideCondition: (values) => values.skill === 'grammar',
+        onChange: (value) => {
+          setFilterValues(prev => ({
+            ...prev,
+            topicRef: value,
           }));
         },
       },
@@ -285,7 +305,7 @@ const Exercises = () => {
         col: 3,
       },
     ],
-    [grammars, grammarCategories, searchParams, filterValues]
+    [grammars, grammarCategories, searchParams, filterValues, topics]
   );
 
   const formFields = useMemo(
@@ -936,7 +956,7 @@ const Exercises = () => {
       // Chạy song song 2 request
       const [regularRes, grammarRes] = await Promise.all([
         fetchExercises(filteredParams),
-        fetchGrammarExercises() // Fetch all grammar exercises for merging
+        !params.topicRef ? fetchGrammarExercises() : Promise.resolve({ data: [] }) // Fetch all grammar exercises only if no topic filter
       ]);
 
       const regularExercises = regularRes.data || regularRes.items || [];
