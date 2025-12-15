@@ -158,7 +158,19 @@ const Exercises = () => {
             : (item.topicRef || 'Không có topic');
           return (
             <div>
-              <div className="fw-semibold text-dark">{question}</div>
+              <div
+                className="fw-semibold text-dark"
+                title={question}
+                style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
+              >
+                {question}
+              </div>
               <small className="text-muted">{ref}</small>
             </div>
           );
