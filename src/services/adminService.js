@@ -51,7 +51,23 @@ export const updateExercise = (id, payload) => unwrap(api.put(`/api/edit_exercis
 export const deleteExercise = (id) => unwrap(api.delete(`/api/delet_exercise/${id}`));
 
 // ===== Grammar Exercises =====
-export const fetchGrammarExercises = (grammarId) => unwrap(api.get('/api/grammar-exercises', { params: { grammarId } }));
+export const fetchGrammarExercises = (grammarIdOrParams, params = {}) => {
+  // Support both (grammarId) and (grammarId, params) and ({ grammarCategoryId... }) signatures
+  let queryParams = {};
+
+  if (typeof grammarIdOrParams === 'object') {
+    // Called as fetchGrammarExercises({ grammarCategoryId: '...' })
+    queryParams = { ...grammarIdOrParams };
+  } else if (typeof grammarIdOrParams === 'string' && grammarIdOrParams) {
+    // Called as fetchGrammarExercises('123')
+    queryParams = { grammarId: grammarIdOrParams, ...params };
+  } else {
+    // Called as fetchGrammarExercises()
+    queryParams = { ...params };
+  }
+
+  return unwrap(api.get('/api/grammar-exercises', { params: queryParams }));
+};
 export const createGrammarExercise = (payload) => unwrap(api.post('/api/grammar-exercises/create', payload));
 export const updateGrammarExercise = (id, payload) => unwrap(api.put(`/api/grammar-exercises/update/${id}`, payload));
 export const deleteGrammarExercise = (id) => unwrap(api.delete(`/api/grammar-exercises/delete/${id}`));

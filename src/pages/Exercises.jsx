@@ -859,107 +859,148 @@ const Exercises = () => {
 
   // Wrapper functions to handle grammar exercises
   const listApiWrapper = React.useCallback(async (params = {}) => {
-    // If filtering by grammar skill OR if a specific grammar is selected (implying grammar skill)
-    if (params.skill === 'grammar' || params.grammarId) {
-      // If grammarId filter is provided, fetch grammar exercises for that grammar
-      if (params.grammarId) {
-        const res = await fetchGrammarExercises(params.grammarId);
+    // TRƯỜNG HỢP 1: Lọc theo Skill = Grammar HOẶC đang chọn cụ thể 1 bài Grammar (hoặc category)
+    if (params.skill === 'grammar' || params.grammarId || params.grammarCategoryId) {
+      try {
+        // Prepare params for grammar exercises API
+        const grammarParams = {};
+        if (params.grammarId) grammarParams.grammarId = params.grammarId;
+        if (params.grammarCategoryId) grammarParams.grammarCategoryId = params.grammarCategoryId;
+
+        const res = await fetchGrammarExercises(params.grammarId || '', grammarParams);
 
         let items = res.data || [];
-
-        // Client-side fallback filtering to ensure we only get exercises for this grammar
-        // This protects against backend ignoring the filter
-        items = items.filter(item => {
-          const gId = item.grammarId?._id || item.grammarId;
-          return String(gId) === String(params.grammarId);
-        });
 
         // Map grammar exercises to match UI format
         // Use ref to avoid dependency change
         const currentGrammars = grammarsRef.current;
-        const grammar = currentGrammars.find(g => String(g._id) === String(params.grammarId));
+
+        // Apply search filter if provided (Client-side search for grammar exercises)
+        if (params.search) {
+          const searchLower = params.search.toLowerCase();
+          items = items.filter(item =>
+            (item.question && item.question.toLowerCase().includes(searchLower)) ||
+            (item.explanation && item.explanation.toLowerCase().includes(searchLower))
+          );
+        }
+
         const mappedData = items.map((item) => {
           // Logic: Options empty -> 'fill_in_blank', else 'multiple_choice'
           const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
-          return {
-            ...item,
-            skill: 'grammar',
-            questionText: item.question,
-            grammarTitle: grammar?.title || item.grammarId?.title || '',
-            level: grammar?.level || item.grammarId?.level || 'A1', // Inherit level from grammar
-            type: computedType,
-          };
-        });
 
-        // Apply search filter if provided
-        let filteredData = mappedData;
-        if (params.search) {
-          const searchLower = params.search.toLowerCase();
-          filteredData = mappedData.filter(item =>
-            (item.questionText && item.questionText.toLowerCase().includes(searchLower)) ||
-            (item.explanation && item.explanation.toLowerCase().includes(searchLower))
-          );
-        }
-
-        return {
-          data: filteredData,
-          items: filteredData,
-          total: filteredData.length,
-          count: filteredData.length,
-        };
-      }
-      // If no grammarId but skill=grammar, fetch exercises from all grammars
-      try {
-        // Call API without grammarId to get all
-        const res = await fetchGrammarExercises();
-        const currentGrammars = grammarsRef.current;
-
-        const allExercises = (res.data || []).map((item) => {
-          // Find grammar title from the pre-loaded grammars list
+          // Ưu tiên lấy title từ populated grammarId (backend trả về)
+          // Fallback sang lookup từ list grammars nếu backend chưa populate
           const grammarIdStr = item.grammarId?._id || item.grammarId;
+          const populatedTitle = item.grammarId?.title;
+          const populatedLevel = item.grammarId?.level;
+
           const grammar = currentGrammars.find(g => String(g._id) === String(grammarIdStr));
 
-          // Logic: Options empty -> 'fill_in_blank', else 'multiple_choice'
-          const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
-
           return {
             ...item,
             skill: 'grammar',
             questionText: item.question,
-            grammarTitle: grammar?.title || 'Unknown Grammar',
-            level: grammar?.level || 'A1', // Inherit level from grammar
-            // Ensure grammarId is the string ID for consistency if needed
-            grammarId: grammarIdStr,
+            grammarTitle: populatedTitle || grammar?.title || 'Unknown Grammar',
+            level: populatedLevel || grammar?.level || 'A1',
             type: computedType,
+            grammarId: item.grammarId // Keep the object or string
           };
         });
 
-        // Apply search filter if provided
-        let filteredData = allExercises;
-        if (params.search) {
-          const searchLower = params.search.toLowerCase();
-          filteredData = allExercises.filter(item =>
-            (item.questionText && item.questionText.toLowerCase().includes(searchLower)) ||
-            (item.explanation && item.explanation.toLowerCase().includes(searchLower))
-          );
-        }
-
         return {
-          data: filteredData,
-          items: filteredData,
-          total: filteredData.length,
-          count: filteredData.length,
+          data: mappedData,
+          items: mappedData,
+          total: mappedData.length,
+          count: mappedData.length,
         };
       } catch (err) {
-        console.error('Error fetching all grammar exercises:', err);
+        console.error('Error fetching grammar exercises:', err);
         return { data: [], items: [], total: 0, count: 0 };
       }
     }
-    // For other skills, use regular API but exclude grammar exercises
-    const filteredParams = { ...params };
-    // Remove grammarId from params for regular exercises
-    delete filteredParams.grammarId;
-    return fetchExercises(filteredParams);
+
+    // TRƯỜNG HỢP 2: Lọc theo Skill khác (Vocab, Listening, Reading)
+    if (params.skill && params.skill !== 'grammar') {
+      const filteredParams = { ...params };
+      delete filteredParams.grammarId;
+      delete filteredParams.grammarCategoryId;
+      return fetchExercises(filteredParams);
+    }
+
+    // TRƯỜNG HỢP 3: Không chọn skill nào (Tất cả kỹ năng) -> Merge cả 2 nguồn
+    try {
+      const filteredParams = { ...params };
+      delete filteredParams.grammarId;
+      delete filteredParams.grammarCategoryId;
+
+      // Chạy song song 2 request
+      const [regularRes, grammarRes] = await Promise.all([
+        fetchExercises(filteredParams),
+        fetchGrammarExercises() // Fetch all grammar exercises for merging
+      ]);
+
+      const regularExercises = regularRes.data || regularRes.items || [];
+
+      // Xử lý grammar exercises
+      let grammarExercises = grammarRes.data || [];
+      const currentGrammars = grammarsRef.current; // Snapshot for mapping
+
+      // Nếu có search, phải filter grammar exercises client-side (vì API grammar chưa support search text)
+      if (params.search) {
+        const searchLower = params.search.toLowerCase();
+        grammarExercises = grammarExercises.filter(item =>
+          (item.question && item.question.toLowerCase().includes(searchLower)) ||
+          (item.explanation && item.explanation.toLowerCase().includes(searchLower))
+        );
+      }
+
+      const mappedGrammarExercises = grammarExercises.map((item) => {
+        const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
+        const grammarIdStr = item.grammarId?._id || item.grammarId;
+        const populatedTitle = item.grammarId?.title;
+        const populatedLevel = item.grammarId?.level;
+        const grammar = currentGrammars.find(g => String(g._id) === String(grammarIdStr));
+
+        return {
+          ...item,
+          skill: 'grammar',
+          questionText: item.question,
+          grammarTitle: populatedTitle || grammar?.title || 'Unknown Grammar',
+          level: populatedLevel || grammar?.level || 'A1',
+          type: computedType,
+          createdAt: item.createdAt // Ensure date for sorting
+        };
+      });
+
+      // Merge and sort
+      const allExercises = [...regularExercises, ...mappedGrammarExercises];
+
+      // Sort by createdAt desc
+      allExercises.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // Note: Pagination logic here is tricky because we merged a paginated list with a full list.
+      // Ideally backend should support unified querying. 
+      // For now we return the merged list. ResourceManager might slice it if client-side pagination is enabled, 
+      // but if server-side pagination is expected, this "All Skills" view might behave oddly regarding page numbers.
+      // However, usually for "All", user expects to see everything mixed. 
+
+      return {
+        data: allExercises,
+        items: allExercises,
+        total: (regularRes.total || 0) + mappedGrammarExercises.length,
+        count: allExercises.length,
+        // Recalculate pages if needed, or let client handle if we return all data (though regular is paginated)
+        // Adjusting limit to match returned data size effectively disables server pagination for this view
+        page: 1,
+        limit: allExercises.length,
+        totalPages: 1
+      };
+
+    } catch (err) {
+      console.error('Error fetching combined exercises:', err);
+      // Fallback to just regular exercises if grammar fetch fails
+      return fetchExercises(params);
+    }
   }, []);
 
   const createApiWrapper = React.useCallback(async (payload) => {
