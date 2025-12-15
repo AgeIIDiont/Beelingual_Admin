@@ -28,6 +28,7 @@ const typeOptions = [
   { value: '', label: 'Tất cả loại bài' },
   { value: 'multiple_choice', label: 'Trắc nghiệm' },
   { value: 'fill_in_blank', label: 'Điền vào chỗ trống' },
+  { value: 'cloze_test', label: 'Bài đục lỗ (Điền từ đoạn văn)' },
 ];
 
 const levelOptions = [
@@ -612,8 +613,8 @@ const Exercises = () => {
           </div>
         )}
 
-        {/* Fill in blank - correct answer only */}
-        {currentType === 'fill_in_blank' && (
+        {/* Fill in blank or Cloze Test - correct answer only */}
+        {(currentType === 'fill_in_blank' || currentType === 'cloze_test') && (
           <div className="col-12 mb-3">
             <label htmlFor="correctAnswer" className="form-label fw-medium text-muted">
               Đáp án đúng <span className="text-danger">*</span>
@@ -665,7 +666,7 @@ const Exercises = () => {
           payload.options = values.options.filter(opt => opt && opt.trim());
         }
       } else {
-        // fill_in_blank
+        // fill_in_blank or cloze_test
         payload.options = [];
       }
 
@@ -715,8 +716,8 @@ const Exercises = () => {
       }
     }
 
-    // Add correct answer for fill in blank
-    if (values.type === 'fill_in_blank' && values.correctAnswer) {
+    // Add correct answer for fill in blank or cloze test
+    if ((values.type === 'fill_in_blank' || values.type === 'cloze_test') && values.correctAnswer) {
       payload.correctAnswer = values.correctAnswer.trim();
     }
 
