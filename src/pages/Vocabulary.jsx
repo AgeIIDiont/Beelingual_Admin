@@ -302,7 +302,7 @@ const Vocabularys = () => {
         name: 'topic',
         label: 'Chủ đề',
         type: 'select',
-        options: topicOptions.slice(1),
+        options: [{ value: '', label: '-- Chọn chủ đề --' }, ...topicOptions.slice(1)],
         required: true,
         col: 12,
         placeholder: 'Ví dụ: Travel, Business...'

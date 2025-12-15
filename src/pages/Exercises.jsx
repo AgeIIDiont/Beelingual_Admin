@@ -506,7 +506,7 @@ const Exercises = () => {
         {currentType === 'multiple_choice' && currentSkill === 'grammar' && (
           <div className="col-12 mb-3">
             <label className="form-label fw-medium text-muted">
-              Danh sách đáp án <span className="text-danger">*</span>
+              Danh sách đáp án
             </label>
             <small className="text-muted d-block mb-2">
               Nhập 4 đáp án và tích chọn đáp án đúng
@@ -543,7 +543,6 @@ const Exercises = () => {
                       });
                     }}
                     placeholder={`Nhập đáp án ${letter}`}
-                    required
                   />
                   <div className="input-group-text">
                     <input
@@ -574,7 +573,7 @@ const Exercises = () => {
         {currentType === 'multiple_choice' && currentSkill !== 'grammar' && (
           <div className="col-12 mb-3">
             <label className="form-label fw-medium text-muted">
-              Danh sách đáp án <span className="text-danger">*</span>
+              Danh sách đáp án
             </label>
             <small className="text-muted d-block mb-2">
               Nhập 4 đáp án và chọn đáp án đúng bằng checkbox
@@ -597,7 +596,6 @@ const Exercises = () => {
                     value={answers[index]?.text || ''}
                     onChange={(e) => handleAnswerChange(index, 'text', e.target.value)}
                     placeholder={`Nhập đáp án ${letter}`}
-                    required
                   />
                   <div className="input-group-text">
                     <input
@@ -724,10 +722,19 @@ const Exercises = () => {
 
     // Remove empty fields
     Object.keys(payload).forEach((key) => {
+      // Don't auto-delete topicRef if we want to clear it (it might be null)
+      // But if it's undefined, we might want to delete it.
+      // Strategy: Let's clean up everything first, then handle topicRef null explicitly if needed.
       if (payload[key] === undefined || payload[key] === null || payload[key] === '') {
         delete payload[key];
       }
     });
+
+    // Explicitly set topicRef to null if it was cleared (empty string from form) and skill is NOT grammar
+    // We check if it's missing from payload (deleted above) but WAS present in values as empty string
+    if (values.skill !== 'grammar' && (!values.topicRef || values.topicRef.trim() === '')) {
+      payload.topicRef = null;
+    }
 
     return payload;
   };
