@@ -28,7 +28,7 @@ const typeOptions = [
   { value: '', label: 'Tất cả loại bài' },
   { value: 'multiple_choice', label: 'Trắc nghiệm' },
   { value: 'fill_in_blank', label: 'Điền vào chỗ trống' },
-  { value: 'cloze_test', label: 'Bài đục lỗ (Điền từ đoạn văn)' },
+  { value: 'cloze_test', label: 'Bài đục lỗ' },
 ];
 
 const levelOptions = [
@@ -626,7 +626,11 @@ const Exercises = () => {
               name="correctAnswer"
               value={formState.correctAnswer || ''}
               onChange={(e) => setFormState({ ...formState, correctAnswer: e.target.value })}
-              placeholder="Nhập đáp án đúng"
+              placeholder={
+                currentType === 'cloze_test'
+                  ? 'đáp án 1/ đáp án 2/...'
+                  : 'Nhập đáp án đúng'
+              }
               required
             />
           </div>
