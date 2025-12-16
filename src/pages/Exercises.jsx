@@ -18,9 +18,9 @@ import { usePage } from '../contexts/PageContext';
 
 const skillOptions = [
   { value: '', label: 'Tất cả kỹ năng' },
-  { value: 'grammar', label: 'Ngữ pháp' },
-  { value: 'listening', label: 'Nghe' },
   { value: 'reading', label: 'Đọc' },
+  { value: 'listening', label: 'Nghe' },
+  { value: 'grammar', label: 'Ngữ pháp' },
 ];
 
 const typeOptions = [
