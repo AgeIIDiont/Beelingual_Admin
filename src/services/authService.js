@@ -182,7 +182,7 @@ api.interceptors.response.use(
             originalRequest._retry = true;
             return api(originalRequest);
           })
-            .catch((err) => {
+          .catch((err) => {
             return Promise.reject(err);
           });
       }
