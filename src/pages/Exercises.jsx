@@ -314,8 +314,8 @@ const Exercises = () => {
         name: 'skill',
         label: 'Kỹ năng',
         type: 'select',
-        options: skillOptions.slice(1),
-        defaultValue: 'vocab',
+        options: skillOptions.filter(opt => opt.value !== 'vocab' && opt.value !== ''),
+        defaultValue: 'reading',
         col: 4,
         required: true,
       },
@@ -343,7 +343,7 @@ const Exercises = () => {
 
   const renderExerciseForm = ({ formState, setFormState, renderFormField }) => {
     const currentType = formState.type || 'multiple_choice';
-    const currentSkill = formState.skill || 'vocab';
+    const currentSkill = formState.skill || 'reading';
     const selectedCategoryId = formState.grammarCategoryId || '';
 
     // Use formGrammars state which is fetched from server based on category
@@ -723,7 +723,7 @@ const Exercises = () => {
 
     // Handle other exercises (vocab, listening, reading)
     const payload = {
-      skill: values.skill || 'vocab',
+      skill: values.skill || 'reading',
       type: values.type || 'multiple_choice',
       level: values.level || 'A',
       questionText: values.questionText?.trim(),
@@ -836,7 +836,7 @@ const Exercises = () => {
 
     // Handle regular exercises
     const formData = {
-      skill: item.skill || 'vocab',
+      skill: item.skill || 'reading',
       type: item.type || 'multiple_choice',
       level: item.level || 'A',
       questionText: item.questionText || '',
