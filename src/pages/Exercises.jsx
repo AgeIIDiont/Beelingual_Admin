@@ -58,7 +58,7 @@ const Exercises = () => {
 
   useEffect(() => {
     fetchTopics().then((res) => {
-      setTopics(res.data || res.items || []);
+      setTopics(Array.isArray(res) ? res : (res.data || res.items || []));
     }).catch(console.error);
 
     // Không fetch grammar lúc init nữa - sẽ fetch khi user chọn category
@@ -767,8 +767,13 @@ const Exercises = () => {
     });
 
     // Explicitly set topicId to null if it was cleared (empty string from form)
-    if (values.skill !== 'grammar' && (!values.topicId || values.topicId === '')) {
-      payload.topicId = null;
+    if (values.skill !== 'grammar') {
+      if (!values.topicId || values.topicId === '') {
+        payload.topicId = null;
+      } else {
+        // Ensure we send only the ID if it's an object (though form usually gives ID)
+        payload.topicId = typeof values.topicId === 'object' ? values.topicId._id : values.topicId;
+      }
     }
 
     return payload;
@@ -838,7 +843,7 @@ const Exercises = () => {
       type: item.type || 'multiple_choice',
       level: item.level || 'A',
       questionText: item.questionText || '',
-      topicId: item.topicId?._id || item.topicId || '',
+      topicId: item.topicId?._id || item.topicId?.id || item.topicId || '',
       explanation: item.explanation || '',
       audioText: item.audioUrl || item.audio || '', // Map 'audioUrl' or 'audio' (backend) to 'audioText' (frontend form)
       audio: item.audioUrl || item.audio || '',

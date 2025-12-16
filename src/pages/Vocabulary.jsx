@@ -41,9 +41,9 @@ const Vocabularys = () => {
     const loadTopics = async () => {
       try {
         const response = await fetchAllTopics();
-        const topicsData = response.data || [];
+        const topicsData = Array.isArray(response) ? response : (response.data || []);
         const options = topicsData.map((topic) => ({
-          value: topic._id || topic.id || topic.name,
+          value: topic._id || topic.id,
           label: `${topic.name}`,
         }));
         setTopicOptions([{ value: '', label: 'Tất cả' }, ...options]);
@@ -333,7 +333,7 @@ const Vocabularys = () => {
       level: values.level || 'A1',
       type: values.type || 'noun',
       pronunciation: values.pronunciation?.trim(),
-      topic: values.topic?.trim(),
+      topic: typeof values.topic === 'object' ? values.topic._id : values.topic?.trim(),
       imageUrl: values.imageUrl?.trim(),
       audioUrl: values.audioUrl?.trim(),
     };
@@ -361,9 +361,8 @@ const Vocabularys = () => {
             if (params.topic) {
               const wanted = String(params.topic).toLowerCase();
               items = items.filter((it) => {
-                const topicId = it.topic?._id || '';
-                const topicName = (it.topic?.name || it.topic || '').toString().toLowerCase();
-                return String(topicId) === wanted || topicName === wanted;
+                const topicId = it.topic?._id || it.topic || '';
+                return String(topicId) === wanted;
               });
             }
             if (params.search) {
@@ -387,6 +386,10 @@ const Vocabularys = () => {
       updateApi={updateVocabulary}
       deleteApi={deleteVocabulary}
       hideHeader={true}
+      mapItemToForm={(item) => ({
+        ...item,
+        topic: item.topic?._id || item.topic?.id || item.topic,
+      })}
       buildPayload={buildPayload}
     />
   );

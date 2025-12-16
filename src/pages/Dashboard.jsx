@@ -46,7 +46,10 @@ const Dashboard = () => {
         setProfile(profileRes);
         setUserChartData(newUsersRes);
 
-        const getTotal = (res) => (res && res.total ? res.total : 0);
+        const getTotal = (res) => {
+          if (Array.isArray(res)) return res.length;
+          return res && res.total ? res.total : 0;
+        };
 
         setStats({
           vocabulary: getTotal(vocabRes),

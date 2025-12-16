@@ -220,7 +220,7 @@ const Topics = () => {
       formFields={formFields}
       listApi={async (params) => {
         const res = await fetchTopics(params);
-        let items = res.data || res.items || [];
+        let items = Array.isArray(res) ? res : (res.data || res.items || []);
 
         try {
           if (params) {
