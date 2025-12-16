@@ -53,7 +53,7 @@ const Exercises = () => {
     skill: searchParams.get('skill') || '',
     grammarCategoryId: searchParams.get('grammarCategoryId') || '',
     grammarId: searchParams.get('grammarId') || '',
-    topicRef: searchParams.get('topicRef') || '',
+    topicId: searchParams.get('topicId') || '',
   });
 
   useEffect(() => {
@@ -155,7 +155,7 @@ const Exercises = () => {
           const question = item.questionText || item.question || '';
           const ref = item.skill === 'grammar'
             ? (item.grammarId?.title || item.grammarTitle || 'Không có grammar')
-            : (item.topicRef || 'Không có topic');
+            : (item.topicId?.name || 'Không có topic');
           return (
             <div>
               <div
@@ -234,25 +234,25 @@ const Exercises = () => {
             skill: value,
             grammarCategoryId: value === 'grammar' ? prev.grammarCategoryId : '',
             grammarId: value === 'grammar' ? prev.grammarId : '',
-            topicRef: value !== 'grammar' ? prev.topicRef : '',
+            topicId: value !== 'grammar' ? prev.topicId : '',
           }));
         },
       },
       {
-        name: 'topicRef',
+        name: 'topicId',
         label: 'Chủ đề',
         type: 'select',
         options: [
           { value: '', label: 'Tất cả chủ đề' },
-          ...topics.map((t) => ({ value: t.name, label: t.name })),
+          ...topics.map((t) => ({ value: t._id, label: t.name })),
         ],
-        defaultValue: searchParams.get('topicRef') || '',
+        defaultValue: searchParams.get('topicId') || '',
         col: 3,
         hideCondition: (values) => values.skill === 'grammar',
         onChange: (value) => {
           setFilterValues(prev => ({
             ...prev,
-            topicRef: value,
+            topicId: value,
           }));
         },
       },
@@ -493,19 +493,19 @@ const Exercises = () => {
         {/* Topic reference for non-grammar exercises */}
         {currentSkill !== 'grammar' && (
           <div className="col-md-6 mb-3">
-            <label htmlFor="topicRef" className="form-label fw-medium text-muted">
+            <label htmlFor="topicId" className="form-label fw-medium text-muted">
               Topic tham chiếu
             </label>
             <select
               className="form-select"
-              id="topicRef"
-              name="topicRef"
-              value={formState.topicRef || ''}
-              onChange={(e) => setFormState({ ...formState, topicRef: e.target.value })}
+              id="topicId"
+              name="topicId"
+              value={formState.topicId || ''}
+              onChange={(e) => setFormState({ ...formState, topicId: e.target.value })}
             >
               <option value="">-- Chọn Topic --</option>
               {topics.map((topic) => (
-                <option key={topic._id} value={topic.name}>
+                <option key={topic._id} value={topic._id}>
                   {topic.name}
                 </option>
               ))}
@@ -726,7 +726,7 @@ const Exercises = () => {
       type: values.type || 'multiple_choice',
       level: values.level || 'A',
       questionText: values.questionText?.trim(),
-      topicRef: values.topicRef?.trim(),
+      topicId: values.topicId,
       explanation: values.explanation?.trim(),
     };
 
@@ -766,10 +766,9 @@ const Exercises = () => {
       }
     });
 
-    // Explicitly set topicRef to null if it was cleared (empty string from form) and skill is NOT grammar
-    // We check if it's missing from payload (deleted above) but WAS present in values as empty string
-    if (values.skill !== 'grammar' && (!values.topicRef || values.topicRef.trim() === '')) {
-      payload.topicRef = null;
+    // Explicitly set topicId to null if it was cleared (empty string from form)
+    if (values.skill !== 'grammar' && (!values.topicId || values.topicId === '')) {
+      payload.topicId = null;
     }
 
     return payload;
@@ -839,7 +838,7 @@ const Exercises = () => {
       type: item.type || 'multiple_choice',
       level: item.level || 'A',
       questionText: item.questionText || '',
-      topicRef: item.topicRef || '',
+      topicId: item.topicId?._id || item.topicId || '',
       explanation: item.explanation || '',
       audioText: item.audioUrl || item.audio || '', // Map 'audioUrl' or 'audio' (backend) to 'audioText' (frontend form)
       audio: item.audioUrl || item.audio || '',
@@ -955,7 +954,7 @@ const Exercises = () => {
       // Chạy song song 2 request
       const [regularRes, grammarRes] = await Promise.all([
         fetchExercises(filteredParams),
-        !params.topicRef ? fetchGrammarExercises() : Promise.resolve({ data: [] }) // Fetch all grammar exercises only if no topic filter
+        !params.topicId ? fetchGrammarExercises() : Promise.resolve({ data: [] }) // Fetch all grammar exercises only if no topic filter
       ]);
 
       const regularExercises = regularRes.data || regularRes.items || [];
