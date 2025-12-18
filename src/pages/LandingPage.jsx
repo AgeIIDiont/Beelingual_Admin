@@ -858,7 +858,7 @@ const LandingPage = () => {
                 <div className="col-lg-6 mb-4">
                     <div className="card shadow-sm border-0 sticky-top" style={{
                         top: '24px',
-                        height: 'calc(100vh - 160px)',
+                        height: 'calc(100vh - 50px)',
                         overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
