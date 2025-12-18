@@ -4,7 +4,9 @@ import {
     fetchLandingPageTheme,
     fetchLandingPageStatistics,
     updateLandingPageSection,
-    updateLandingPageTheme
+    updateLandingPageTheme,
+    fetchChatbotConfig,
+    updateChatbotConfig
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
 
@@ -18,6 +20,14 @@ const LandingPage = () => {
     const [theme, setTheme] = useState({});
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [chatConfig, setChatConfig] = useState({
+        botName: '',
+        personality: '',
+        suggestedQuestions: [],
+        errorMessage: '',
+        rateLimitMessage: '',
+        modelNotFoundMessage: ''
+    });
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
     const [activeTab, setActiveTab] = useState('hero');
@@ -76,14 +86,16 @@ const LandingPage = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [contentData, themeData, statsData] = await Promise.all([
+            const [contentData, themeData, statsData, chatData] = await Promise.all([
                 fetchLandingPageContent(),
                 fetchLandingPageTheme(),
-                fetchLandingPageStatistics()
+                fetchLandingPageStatistics(),
+                fetchChatbotConfig()
             ]);
             setContent(contentData.data || {});
             setTheme(themeData.data || {});
             setStats(statsData.data || null);
+            setChatConfig(chatData.data || {});
         } catch (error) {
             showMessage('danger', 'Lỗi khi tải dữ liệu: ' + error.message);
         } finally {
@@ -120,12 +132,24 @@ const LandingPage = () => {
         }
     };
 
-    const updateContent = (section, field, value) => {
+    const handleSaveChatbotConfig = async () => {
+        try {
+            setSaving(true);
+            await updateChatbotConfig(chatConfig);
+            showMessage('success', 'Đã lưu cấu hình chatbot thành công hihi!');
+        } catch (error) {
+            showMessage('danger', 'Lỗi khi lưu cấu hình chatbot: ' + error.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const updateContent = (section, key, value) => {
         setContent(prev => ({
             ...prev,
             [section]: {
                 ...prev[section],
-                [field]: value
+                [key]: value
             }
         }));
     };
@@ -165,10 +189,10 @@ const LandingPage = () => {
                 </div>
             )}
 
-            <div className="row">
+            <div className="row g-4">
                 {/* Editor Column */}
                 <div className="col-lg-6 mb-4">
-                    <div className="card h-100">
+                    <div className="card shadow-sm border-0">
                         <div className="card-header bg-white">
                             <h5 className="mb-0">Chỉnh sửa nội dung</h5>
                         </div>
@@ -213,6 +237,14 @@ const LandingPage = () => {
                                         onClick={() => setActiveTab('theme')}
                                     >
                                         Theme (Màu sắc)
+                                    </button>
+                                </li>
+                                <li className="nav-item">
+                                    <button
+                                        className={`nav-link ${activeTab === 'chatbot' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('chatbot')}
+                                    >
+                                        Chatbot AI
                                     </button>
                                 </li>
                             </ul>
@@ -670,14 +702,168 @@ const LandingPage = () => {
                                         </button>
                                     </div>
                                 )}
+
+                                {/* Chatbot AI Tab hihi */}
+                                {activeTab === 'chatbot' && (
+                                    <div className="tab-pane fade show active">
+                                        <div className="mb-3">
+                                            <label className="form-label">Tên Bot (Hiển thị)</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={chatConfig.botName || ''}
+                                                onChange={(e) => setChatConfig(prev => ({ ...prev, botName: e.target.value }))}
+                                                placeholder="Ví dụ: Bee-Bot"
+                                            />
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label">Lời chào mặc định (Welcome Message)</label>
+                                            <textarea
+                                                className="form-control"
+                                                rows="2"
+                                                value={chatConfig.welcomeMessage || ''}
+                                                onChange={(e) => setChatConfig(prev => ({ ...prev, welcomeMessage: e.target.value }))}
+                                                placeholder="Lời chào khi người dùng vừa mở chatbot..."
+                                            ></textarea>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label">Tính cách / Chỉ dẫn (Personality)</label>
+                                            <textarea
+                                                className="form-control"
+                                                rows="4"
+                                                value={chatConfig.personality || ''}
+                                                onChange={(e) => setChatConfig(prev => ({ ...prev, personality: e.target.value }))}
+                                                placeholder="Hướng dẫn cho AI biết nó là ai và trả lời như thế nào..."
+                                            ></textarea>
+                                        </div>
+
+                                        <hr />
+                                        <h6 className="mb-3">Thông báo lỗi (Custom Messages)</h6>
+                                        <div className="mb-3">
+                                            <label className="form-label">Lỗi hệ thống chung</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={chatConfig.errorMessage || ''}
+                                                onChange={(e) => setChatConfig(prev => ({ ...prev, errorMessage: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="form-label">Lỗi hết lượt dùng (Rate Limit)</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={chatConfig.rateLimitMessage || ''}
+                                                onChange={(e) => setChatConfig(prev => ({ ...prev, rateLimitMessage: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="form-label">Lỗi không tìm thấy Model</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={chatConfig.modelNotFoundMessage || ''}
+                                                onChange={(e) => setChatConfig(prev => ({ ...prev, modelNotFoundMessage: e.target.value }))}
+                                            />
+                                        </div>
+
+                                        <hr />
+                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                            <h6 className="mb-0">Câu hỏi gợi ý</h6>
+                                            <button
+                                                className="btn btn-sm btn-outline-primary"
+                                                onClick={() => setChatConfig(prev => ({
+                                                    ...prev,
+                                                    suggestedQuestions: [...(prev.suggestedQuestions || []), { text: '', label: '' }]
+                                                }))}
+                                            >
+                                                <i className="fas fa-plus me-1"></i> Thêm câu hỏi
+                                            </button>
+                                        </div>
+
+                                        {(chatConfig.suggestedQuestions || []).map((q, idx) => (
+                                            <div key={idx} className="card bg-light mb-3 p-3 position-relative">
+                                                <button
+                                                    className="btn-close position-absolute top-0 end-0 m-2"
+                                                    style={{ fontSize: '0.7rem' }}
+                                                    onClick={() => setChatConfig(prev => ({
+                                                        ...prev,
+                                                        suggestedQuestions: prev.suggestedQuestions.filter((_, i) => i !== idx)
+                                                    }))}
+                                                ></button>
+                                                <div className="row g-2">
+                                                    <div className="col-md-5">
+                                                        <label className="small text-muted">Nhãn nút (Label)</label>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control form-control-sm"
+                                                            value={q.label}
+                                                            onChange={(e) => {
+                                                                const newQs = [...chatConfig.suggestedQuestions];
+                                                                newQs[idx].label = e.target.value;
+                                                                setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
+                                                            }}
+                                                            placeholder="Ví dụ: Khám phá app"
+                                                        />
+                                                    </div>
+                                                    <div className="col-md-7">
+                                                        <label className="small text-muted">Câu hỏi gửi đi (Text)</label>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control form-control-sm"
+                                                            value={q.text}
+                                                            onChange={(e) => {
+                                                                const newQs = [...chatConfig.suggestedQuestions];
+                                                                newQs[idx].text = e.target.value;
+                                                                setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
+                                                            }}
+                                                            placeholder="Ví dụ: App này có gì hay cụ?"
+                                                        />
+                                                    </div>
+                                                    <div className="col-12 mt-2">
+                                                        <label className="small text-muted">Câu trả lời đúng (Factual Response - Để Bot dựa vào trả lời)</label>
+                                                        <textarea
+                                                            className="form-control form-control-sm"
+                                                            rows="2"
+                                                            value={q.response || ''}
+                                                            onChange={(e) => {
+                                                                const newQs = [...chatConfig.suggestedQuestions];
+                                                                newQs[idx].response = e.target.value;
+                                                                setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
+                                                            }}
+                                                            placeholder="Thông tin thật bạn muốn bot cung cấp (VD: Link tải là render.com/...)"
+                                                        ></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        <button
+                                            className="btn btn-warning mt-3"
+                                            onClick={handleSaveChatbotConfig}
+                                            disabled={saving}
+                                        >
+                                            {saving ? 'Đang lưu...' : 'Lưu cấu hình Chatbot'}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Live Preview Column */}
-                <div className="col-lg-6">
-                    <div className="card h-100 sticky-top" style={{ top: '20px', maxHeight: 'calc(100vh - 40px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div className="col-lg-6 mb-4">
+                    <div className="card shadow-sm border-0 sticky-top" style={{
+                        top: '24px',
+                        height: 'calc(100vh - 160px)',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        zIndex: 10
+                    }}>
                         <div className="card-header bg-white d-flex justify-content-between align-items-center">
                             <h5 className="mb-0">Live Preview</h5>
                             <div className="d-flex align-items-center gap-2">

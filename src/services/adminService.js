@@ -105,3 +105,7 @@ export const updateLandingPageSection = (section, content) =>
 export const updateLandingPageTheme = (themeData) =>
   unwrap(api.put('/api/landing-page/theme', themeData));
 
+//============= AI / Chatbot =============
+export const fetchChatbotConfig = () => unwrap(api.get('/api/ai/config'));
+export const updateChatbotConfig = (payload) => unwrap(api.put('/api/ai/config', payload));
+
