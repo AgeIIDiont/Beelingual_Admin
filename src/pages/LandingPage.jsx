@@ -557,7 +557,7 @@ const LandingPage = () => {
                                         <div className="row">
                                             <div className="col-md-6">
                                                 <div className="mb-3">
-                                                    <label className="form-label">Màu chủ đạo (Primary)</label>
+                                                    <label className="form-label">Màu chi tiết & Nút bấm (Primary)</label>
                                                     <div className="d-flex gap-2">
                                                         <input
                                                             type="color"
@@ -576,7 +576,7 @@ const LandingPage = () => {
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="mb-3">
-                                                    <label className="form-label">Màu phụ (Accent/Warning)</label>
+                                                    <label className="form-label">Màu nhấn & Trang trí (Accent)</label>
                                                     <div className="d-flex gap-2">
                                                         <input
                                                             type="color"
@@ -595,7 +595,7 @@ const LandingPage = () => {
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="mb-3">
-                                                    <label className="form-label">Màu phụ 2 (Secondary/Navy)</label>
+                                                    <label className="form-label">Màu trang trí & Điểm nhấn (Accent)</label>
                                                     <div className="d-flex gap-2">
                                                         <input
                                                             type="color"
@@ -614,7 +614,7 @@ const LandingPage = () => {
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="mb-3">
-                                                    <label className="form-label">Màu nền (Background)</label>
+                                                    <label className="form-label">Màu nền trang (Background)</label>
                                                     <div className="d-flex gap-2">
                                                         <input
                                                             type="color"
@@ -633,7 +633,7 @@ const LandingPage = () => {
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="mb-3">
-                                                    <label className="form-label">Màu chữ (Text)</label>
+                                                    <label className="form-label">Màu chữ chính (Global Text)</label>
                                                     <div className="d-flex gap-2">
                                                         <input
                                                             type="color"
@@ -646,6 +646,258 @@ const LandingPage = () => {
                                                             className="form-control"
                                                             value={theme.textColor || '#ffffff'}
                                                             onChange={(e) => setTheme(prev => ({ ...prev, textColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Màu chân trang (Footer BG)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.footerColor || '#0f1117'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, footerColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.footerColor || '#0f1117'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, footerColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Tiêu đề Hero (Nổi bật nhất)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.heroHeadlineColor || '#ffc107'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, heroHeadlineColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.heroHeadlineColor || '#ffc107'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, heroHeadlineColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Nền các khối nội dung (Card BG)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.cardColor?.startsWith('#') ? theme.cardColor : '#1a1d29'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, cardColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.cardColor || 'rgba(26, 29, 41, 0.7)'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, cardColor: e.target.value }))}
+                                                            placeholder="VD: rgba(26, 29, 41, 0.7)"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Nền ô nhập liệu (Input Area)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.inputBackgroundColor?.startsWith('#') ? theme.inputBackgroundColor : '#ffffff'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, inputBackgroundColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.inputBackgroundColor || 'rgba(255, 255, 255, 0.05)'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, inputBackgroundColor: e.target.value }))}
+                                                            placeholder="VD: rgba(255, 255, 255, 0.05)"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Thông báo thành công (Success)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.successColor || '#28a745'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, successColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.successColor || '#28a745'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, successColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Thông báo lỗi (Error/Warning)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.errorColor || '#dc3545'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, errorColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.errorColor || '#dc3545'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, errorColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Chatbot specific colors */}
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Nền khung chat (Chat BG)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.chatWindowColor || '#ffffff'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, chatWindowColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.chatWindowColor || '#ffffff'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, chatWindowColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Bóng tin nhắn của Bot (Bot Bubble)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.botBubbleColor || '#ffffff'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, botBubbleColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.botBubbleColor || '#ffffff'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, botBubbleColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Chữ tin nhắn của Bot (Bot Text)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.botTextColor || '#333333'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, botTextColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.botTextColor || '#333333'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, botTextColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Bóng tin nhắn của Bạn (User Bubble)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.userBubbleColor || '#1a1d29'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, userBubbleColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.userBubbleColor || '#1a1d29'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, userBubbleColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Chữ tin nhắn của Bạn (User Text)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.userTextColor || '#ffffff'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, userTextColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.userTextColor || '#ffffff'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, userTextColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Nền nút Gợi ý (Suggest BG)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.suggestedBgColor || '#ffffff'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, suggestedBgColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.suggestedBgColor || '#ffffff'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, suggestedBgColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Chữ nút Gợi ý (Suggest Text)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.suggestedTextColor || '#1a1d29'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, suggestedTextColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.suggestedTextColor || '#1a1d29'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, suggestedTextColor: e.target.value }))}
                                                         />
                                                     </div>
                                                 </div>
@@ -881,7 +1133,7 @@ const LandingPage = () => {
                                         <i className="bi bi-smartphone me-1"></i> Mobile
                                     </button>
                                 </div>
-                                <span className="badge bg-success ms-2">Live Updates</span>
+                                <span className="badge ms-2" style={{ backgroundColor: theme.successColor || '#28a745' }}>Live Updates</span>
                             </div>
                         </div>
                         <div className="card-body p-0" style={{
