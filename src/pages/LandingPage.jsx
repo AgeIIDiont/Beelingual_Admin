@@ -74,7 +74,7 @@ const LandingPage = () => {
                 iframe.contentWindow.postMessage({
                     type: 'BEELINGUAL_PREVIEW_UPDATE',
                     data: { content, theme }
-                }, '*'); // Use '*' for development
+                }, LANDING_PAGE_URL || '*'); // Chỉ gửi đến địa chỉ trang Landing Page thụ hưởng
             }
         };
 
