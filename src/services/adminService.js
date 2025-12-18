@@ -99,6 +99,7 @@ export const fetchMyStreak = () => unwrap(api.get('/api/my-streak'));
 //============= Landing Page =============
 export const fetchLandingPageContent = () => unwrap(api.get('/api/landing-page/content'));
 export const fetchLandingPageTheme = () => unwrap(api.get('/api/landing-page/theme'));
+export const fetchLandingPageStatistics = () => unwrap(api.get('/api/landing-page/statistics'));
 export const updateLandingPageSection = (section, content) =>
   unwrap(api.put(`/api/landing-page/content/${section}`, { content }));
 export const updateLandingPageTheme = (themeData) =>
