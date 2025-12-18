@@ -886,7 +886,7 @@ const Exercises = () => {
     if (params.skill === 'grammar' || params.grammarId || params.grammarCategoryId) {
       try {
         // Prepare params for grammar exercises API
-        const grammarParams = {};
+        const grammarParams = { ...params }; // Copy all params including page/limit
         if (params.grammarId) grammarParams.grammarId = params.grammarId;
         if (params.grammarCategoryId) grammarParams.grammarCategoryId = params.grammarCategoryId;
 
@@ -957,9 +957,15 @@ const Exercises = () => {
       delete filteredParams.grammarCategoryId;
 
       // Chạy song song 2 request
+      // Khi merge 2 nguồn, ta buộc phải lấy HẾT dữ liệu (không phân trang server)
+      // sau đó merge lại rồi mới phân trang client-side để đảm bảo sort đúng.
+      const noPaginationParams = { ...filteredParams };
+      delete noPaginationParams.page;
+      delete noPaginationParams.limit;
+
       const [regularRes, grammarRes] = await Promise.all([
-        fetchExercises(filteredParams),
-        !params.topicId ? fetchGrammarExercises() : Promise.resolve({ data: [] }) // Fetch all grammar exercises only if no topic filter
+        fetchExercises(noPaginationParams),
+        !params.topicId ? fetchGrammarExercises('', noPaginationParams) : Promise.resolve({ data: [] })
       ]);
 
       const regularExercises = regularRes.data || regularRes.items || [];
@@ -1012,11 +1018,10 @@ const Exercises = () => {
         items: allExercises,
         total: (regularRes.total || 0) + mappedGrammarExercises.length,
         count: allExercises.length,
-        // Recalculate pages if needed, or let client handle if we return all data (though regular is paginated)
-        // Adjusting limit to match returned data size effectively disables server pagination for this view
-        page: 1,
-        limit: allExercises.length,
-        totalPages: 1
+        // Quan trọng: Trả về page/limit mà Client yêu cầu để ResourceManager biết mà cắt trang (Client-side slicing)
+        page: params.page ? parseInt(params.page) : 1,
+        limit: params.limit ? parseInt(params.limit) : 10,
+        totalPages: Math.ceil(allExercises.length / (params.limit || 10))
       };
 
     } catch (err) {

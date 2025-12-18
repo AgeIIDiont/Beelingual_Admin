@@ -189,15 +189,26 @@ const ResourceManager = forwardRef(({
         limit,
       };
       const response = await listApi(params);
-      setRecords(response.data || response.items || []);
+      let fetchedRecords = response.data || response.items || [];
       const totalRecords = response.total ?? response.count ?? 0;
       const limitValue = response.limit ?? limit ?? defaultLimit;
+
+      // LOGIC MỚI: Hỗ trợ phân trang Client-side khi API trả về Full list (dành cho trường hợp Merge nhiều nguồn)
+      // Nếu số lượng bản ghi trả về > limit VÀ khớp với tổng số lượng -> Có nghĩa là chưa được phân trang server
+      if (fetchedRecords.length > limitValue && fetchedRecords.length === totalRecords) {
+        const startIndex = (page - 1) * limitValue;
+        const endIndex = startIndex + limitValue;
+        fetchedRecords = fetchedRecords.slice(startIndex, endIndex);
+      }
+
+      setRecords(fetchedRecords);
+
       const computedPages =
         response.totalPages ?? Math.max(1, Math.ceil(totalRecords / Math.max(1, limitValue)));
 
       setMeta({
         total: totalRecords,
-        page: response.page ?? page,
+        page: response.page ?? page, // warning: response.page might be undefined for full list
         limit: limitValue,
         totalPages: computedPages,
       });
