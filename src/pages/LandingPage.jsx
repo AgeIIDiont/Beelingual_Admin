@@ -8,9 +8,9 @@ import {
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
 
-const LANDING_PAGE_URL = 'https://beelingual.onrender.com';
+const LANDING_PAGE_URL = import.meta.env.VITE_LANDING_PAGE_URL;
 
-// Cập nhật: Sử dụng link Render trực tiếp theo yêu cầu của bạn. hihi!
+// Cập nhật: Sử dụng biến môi trường cho an toàn và linh hoạt. hihi!
 
 const LandingPage = () => {
     const { setPageInfo } = usePage();
