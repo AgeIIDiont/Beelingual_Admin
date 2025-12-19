@@ -775,7 +775,6 @@ const LandingPage = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Chatbot specific colors */}
                                             <div className="col-md-6">
                                                 <div className="mb-3">
                                                     <label className="form-label">Nền khung chat (Chat BG)</label>
@@ -791,6 +790,25 @@ const LandingPage = () => {
                                                             className="form-control"
                                                             value={theme.chatWindowColor || '#ffffff'}
                                                             onChange={(e) => setTheme(prev => ({ ...prev, chatWindowColor: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Màu chữ Header Chat (Name & Status)</label>
+                                                    <div className="d-flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color"
+                                                            value={theme.chatHeaderTextColor || '#1a1d29'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, chatHeaderTextColor: e.target.value }))}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={theme.chatHeaderTextColor || '#1a1d29'}
+                                                            onChange={(e) => setTheme(prev => ({ ...prev, chatHeaderTextColor: e.target.value }))}
                                                         />
                                                     </div>
                                                 </div>
@@ -1043,7 +1061,12 @@ const LandingPage = () => {
                                         </div>
 
                                         {(chatConfig.suggestedQuestions || []).map((q, idx) => (
-                                            <div key={idx} className="card bg-light mb-3 p-3 position-relative">
+                                            <div key={idx} className="card mb-3 p-3 position-relative" style={{
+                                                backgroundColor: theme.primaryColor || '#ffc107',
+                                                color: '#1a1d29',
+                                                border: 'none',
+                                                borderRadius: '15px'
+                                            }}>
                                                 <button
                                                     className="btn-close position-absolute top-0 end-0 m-2"
                                                     style={{ fontSize: '0.7rem' }}
@@ -1054,35 +1077,37 @@ const LandingPage = () => {
                                                 ></button>
                                                 <div className="row g-2">
                                                     <div className="col-md-5">
-                                                        <label className="small text-muted">Nhãn nút (Label)</label>
+                                                        <label className="small" style={{ opacity: 0.8 }}>Nhãn nút (Label)</label>
                                                         <input
                                                             type="text"
                                                             className="form-control form-control-sm"
-                                                            value={q.label}
+                                                            value={q.label || ''}
                                                             onChange={(e) => {
                                                                 const newQs = [...chatConfig.suggestedQuestions];
                                                                 newQs[idx].label = e.target.value;
                                                                 setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
                                                             }}
                                                             placeholder="Ví dụ: Khám phá app"
+                                                            style={{ backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(0,0,0,0.1)', color: '#1a1d29' }}
                                                         />
                                                     </div>
                                                     <div className="col-md-7">
-                                                        <label className="small text-muted">Câu hỏi gửi đi (Text)</label>
+                                                        <label className="small" style={{ opacity: 0.8 }}>Câu hỏi gửi đi (Text)</label>
                                                         <input
                                                             type="text"
                                                             className="form-control form-control-sm"
-                                                            value={q.text}
+                                                            value={q.text || ''}
                                                             onChange={(e) => {
                                                                 const newQs = [...chatConfig.suggestedQuestions];
                                                                 newQs[idx].text = e.target.value;
                                                                 setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
                                                             }}
                                                             placeholder="Ví dụ: App này có gì hay cụ?"
+                                                            style={{ backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(0,0,0,0.1)', color: '#1a1d29' }}
                                                         />
                                                     </div>
                                                     <div className="col-12 mt-2">
-                                                        <label className="small text-muted">Câu trả lời đúng (Factual Response - Để Bot dựa vào trả lời)</label>
+                                                        <label className="small" style={{ opacity: 0.8 }}>Câu trả lời đúng (Factual Response)</label>
                                                         <textarea
                                                             className="form-control form-control-sm"
                                                             rows="2"
@@ -1092,7 +1117,8 @@ const LandingPage = () => {
                                                                 newQs[idx].response = e.target.value;
                                                                 setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
                                                             }}
-                                                            placeholder="Thông tin thật bạn muốn bot cung cấp (VD: Link tải là render.com/...)"
+                                                            placeholder="Thông tin thật bạn muốn bot cung cấp..."
+                                                            style={{ backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(0,0,0,0.1)', color: '#1a1d29' }}
                                                         ></textarea>
                                                     </div>
                                                 </div>
