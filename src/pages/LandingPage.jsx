@@ -602,7 +602,7 @@ const LandingPage = () => {
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="mb-3">
-                                                    <label className="form-label">Màu trang trí & Điểm nhấn (Accent)</label>
+                                                    <label className="form-label">Màu nền trang Features</label>
                                                     <div className="d-flex gap-2">
                                                         <input
                                                             type="color"
