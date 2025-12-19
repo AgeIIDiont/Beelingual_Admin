@@ -1,5 +1,7 @@
-import React, { useMemo, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchGrammarCategoriesAction, selectGrammarCategories } from '../store/slices/resourceSlice';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   createGrammar,
@@ -8,7 +10,6 @@ import {
   updateGrammar,
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
-import { fetchCategories } from '../services/adminService';
 
 const levelOptions = [
   { value: '', label: 'Tất cả' },
@@ -23,27 +24,22 @@ const levelOptions = [
 const Grammar = () => {
   const { setPageInfo } = usePage();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const resourceManagerRef = useRef(null);
 
-  const [categoryOptions, setCategoryOptions] = useState([]);
+  const categoriesData = useSelector(selectGrammarCategories);
 
   useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const response = await fetchCategories();
-        const categoriesData = Array.isArray(response) ? response : (response.data || []);
-        const options = categoriesData.map((categorie) => ({
-          value: categorie._id || categorie.id || categorie.name,
-          label: `${categorie.icon ? categorie.icon + ' ' : ''}${categorie.name}`,
-        }));
-        // add a default "Tất cả" option for filters
-        setCategoryOptions([{ value: '', label: 'Tất cả' }, ...options]);
-      } catch (error) {
-        console.error('Error fetching topics:', error);
-      }
-    };
-    loadCategories();
-  }, []);
+    dispatch(fetchGrammarCategoriesAction());
+  }, [dispatch]);
+
+  const categoryOptions = useMemo(() => {
+    const options = categoriesData.map((categorie) => ({
+      value: categorie._id || categorie.id || categorie.name,
+      label: `${categorie.icon ? categorie.icon + ' ' : ''}${categorie.name}`,
+    }));
+    return [{ value: '', label: 'Tất cả' }, ...options];
+  }, [categoriesData]);
 
 
   useEffect(() => {

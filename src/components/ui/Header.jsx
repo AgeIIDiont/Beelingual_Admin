@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../store/slices/userSlice';
 import { logout } from '../../services/authService';
 import { fetchProfile } from '../../services/adminService';
 import { usePage } from '../../contexts/PageContext';
@@ -20,28 +22,13 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { pageTitle, pageDescription, actionButtons } = usePage();
-  const [profile, setProfile] = useState(null);
+  const profile = useSelector(selectUser);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
   const currentTitle = pageTitle || routeTitles[location.pathname] || 'Dashboard';
 
   useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const data = await fetchProfile();
-        setProfile(data);
-      } catch (err) {
-        console.error('Error loading profile:', err);
-      }
-    };
-    loadProfile();
-
-    const handler = (e) => {
-      if (e.detail) setProfile(e.detail);
-    };
-    window.addEventListener('auth:userUpdated', handler);
-
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
@@ -50,7 +37,6 @@ const Header = () => {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      window.removeEventListener('auth:userUpdated', handler);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);

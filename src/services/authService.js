@@ -15,8 +15,6 @@ export const setToken = () => {
 export const setUser = (user) => {
   if (user) {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
-    // Dispatch event so components like Header can update immediately
-    window.dispatchEvent(new CustomEvent('auth:userUpdated', { detail: user }));
   }
 };
 

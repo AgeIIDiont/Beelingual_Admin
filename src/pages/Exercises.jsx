@@ -1,14 +1,19 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchTopicsAction,
+  fetchGrammarCategoriesAction,
+  selectTopics,
+  selectGrammarCategories
+} from '../store/slices/resourceSlice';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   createExercise,
   deleteExercise,
   fetchExercises,
   updateExercise,
-  fetchTopics,
   fetchGrammar,
-  fetchGrammarCategories,
   fetchGrammarExercises,
   createGrammarExercise,
   updateGrammarExercise,
@@ -42,12 +47,16 @@ const levelOptions = [
 
 const Exercises = () => {
   const { setPageInfo } = usePage();
+  const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const resourceManagerRef = useRef(null);
-  const [topics, setTopics] = React.useState([]);
+
+  const topicsData = useSelector(selectTopics);
+  const grammarCategories = useSelector(selectGrammarCategories);
+
   const [grammars, setGrammars] = React.useState([]); // For filter
   const [formGrammars, setFormGrammars] = React.useState([]); // For form dropdown
-  const [grammarCategories, setGrammarCategories] = React.useState([]);
+
   // State để track filter values cho real-time filtering
   const [filterValues, setFilterValues] = React.useState({
     skill: searchParams.get('skill') || '',
@@ -57,21 +66,9 @@ const Exercises = () => {
   });
 
   useEffect(() => {
-    fetchTopics().then((res) => {
-      setTopics(Array.isArray(res) ? res : (res.data || res.items || []));
-    }).catch(console.error);
-
-    // Không fetch grammar lúc init nữa - sẽ fetch khi user chọn category
-
-    fetchGrammarCategories({}).then((res) => {
-      // Backend trả về mảng trực tiếp, không phải object với thuộc tính data
-      const categories = Array.isArray(res) ? res : (res.data || res.items || []);
-      console.log('Grammar Categories:', categories); // Debug log
-      setGrammarCategories(categories);
-    }).catch((err) => {
-      console.error('Error fetching grammar categories:', err);
-    });
-  }, []);
+    dispatch(fetchTopicsAction());
+    dispatch(fetchGrammarCategoriesAction());
+  }, [dispatch]);
 
   // Fetch grammar khi user chọn category (server-side filtering)
   useEffect(() => {
@@ -244,7 +241,7 @@ const Exercises = () => {
         type: 'select',
         options: [
           { value: '', label: 'Tất cả chủ đề' },
-          ...topics.map((t) => ({ value: t._id, label: t.name })),
+          ...topicsData.map((t) => ({ value: t._id, label: t.name })),
         ],
         defaultValue: searchParams.get('topicId') || '',
         col: 3,
@@ -304,7 +301,7 @@ const Exercises = () => {
         col: 3,
       },
     ],
-    [grammars, grammarCategories, searchParams, filterValues, topics]
+    [grammars, grammarCategories, searchParams, filterValues, topicsData]
   );
 
   const formFields = useMemo(
@@ -504,7 +501,7 @@ const Exercises = () => {
               onChange={(e) => setFormState({ ...formState, topicId: e.target.value })}
             >
               <option value="">-- Chọn Topic --</option>
-              {topics.map((topic) => (
+              {topicsData.map((topic) => (
                 <option key={topic._id} value={topic._id}>
                   {topic.name}
                 </option>
@@ -910,6 +907,7 @@ const Exercises = () => {
         const mappedData = items.map((item) => {
           // Logic: Options empty -> 'fill_in_blank', else 'multiple_choice'
           const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
+          const typeValue = (item.options && item.options.length > 0) ? 'multiple_choice' : 'fill_in_blank';
 
           // Ưu tiên lấy title từ populated grammarId (backend trả về)
           // Fallback sang lookup từ list grammars nếu backend chưa populate
@@ -926,15 +924,25 @@ const Exercises = () => {
             grammarTitle: populatedTitle || grammar?.title || 'Unknown Grammar',
             level: populatedLevel || grammar?.level || 'A1',
             type: computedType,
+            typeValue: typeValue, // Keep for filtering
             grammarId: item.grammarId // Keep the object or string
           };
         });
 
+        // Apply client-side filtering for Type and Level (since grammar API doesn't support them yet)
+        let filteredData = mappedData;
+        if (params.type) {
+          filteredData = filteredData.filter(item => item.typeValue === params.type);
+        }
+        if (params.level) {
+          filteredData = filteredData.filter(item => item.level === params.level);
+        }
+
         return {
-          data: mappedData,
-          items: mappedData,
-          total: mappedData.length,
-          count: mappedData.length,
+          data: filteredData,
+          items: filteredData,
+          total: filteredData.length,
+          count: filteredData.length,
         };
       } catch (err) {
         console.error('Error fetching grammar exercises:', err);
@@ -963,6 +971,9 @@ const Exercises = () => {
       delete noPaginationParams.page;
       delete noPaginationParams.limit;
 
+      // Phải gửi grammarCategoryId nếu có để backend filter ngay từ đầu (giảm tải client)
+      if (params.grammarCategoryId) noPaginationParams.grammarCategoryId = params.grammarCategoryId;
+
       const [regularRes, grammarRes] = await Promise.all([
         fetchExercises(noPaginationParams),
         !params.topicId ? fetchGrammarExercises('', noPaginationParams) : Promise.resolve({ data: [] })
@@ -985,6 +996,7 @@ const Exercises = () => {
 
       const mappedGrammarExercises = grammarExercises.map((item) => {
         const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
+        const typeValue = (item.options && item.options.length > 0) ? 'multiple_choice' : 'fill_in_blank';
         const grammarIdStr = item.grammarId?._id || item.grammarId;
         const populatedTitle = item.grammarId?.title;
         const populatedLevel = item.grammarId?.level;
@@ -997,12 +1009,22 @@ const Exercises = () => {
           grammarTitle: populatedTitle || grammar?.title || 'Unknown Grammar',
           level: populatedLevel || grammar?.level || 'A1',
           type: computedType,
+          typeValue: typeValue,
           createdAt: item.createdAt // Ensure date for sorting
         };
       });
 
+      // Apply client-side filtering for Type and Level for grammar exercises in mixed view
+      let filteredGrammarExercises = mappedGrammarExercises;
+      if (params.type) {
+        filteredGrammarExercises = filteredGrammarExercises.filter(item => item.typeValue === params.type);
+      }
+      if (params.level) {
+        filteredGrammarExercises = filteredGrammarExercises.filter(item => item.level === params.level);
+      }
+
       // Merge and sort
-      const allExercises = [...regularExercises, ...mappedGrammarExercises];
+      const allExercises = [...regularExercises, ...filteredGrammarExercises];
 
       // Sort by createdAt desc
       allExercises.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

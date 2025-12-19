@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../store/slices/userSlice';
 import StatsCard from '../components/ui/StatsCard';
 import AreaChartCard from '../components/ui/AreaChartCard';
 import LeaderboardCard from '../components/ui/LeaderboardCard';
 import {
-  fetchProfile,
   fetchVocabulary,
   fetchGrammar,
   fetchTopics,
@@ -14,7 +15,7 @@ import {
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
-  const [_profile, setProfile] = useState(null);
+  const reduxProfile = useSelector(selectUser);
   const [userChartData, setUserChartData] = useState([]);
   const [topUsers, setTopUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,14 +29,12 @@ const Dashboard = () => {
         setError(null);
 
         const [
-          profileRes,
           vocabRes,
           grammarRes,
           topicsRes,
           exercisesRes,
           newUsersRes
         ] = await Promise.all([
-          fetchProfile(),
           fetchVocabulary({ page: 1, limit: 1 }),
           fetchGrammar({ page: 1, limit: 1 }),
           fetchTopics({ page: 1, limit: 1 }),
@@ -43,7 +42,6 @@ const Dashboard = () => {
           fetchStatsNewUsers()
         ]);
 
-        setProfile(profileRes);
         setUserChartData(newUsersRes);
 
         const getTotal = (res) => {
@@ -90,13 +88,6 @@ const Dashboard = () => {
     };
 
     loadTopUsers();
-  }, []);
-
-  // Effect xử lý update profile
-  useEffect(() => {
-    const handler = (e) => { if (e.detail) setProfile(e.detail); };
-    window.addEventListener('auth:userUpdated', handler);
-    return () => window.removeEventListener('auth:userUpdated', handler);
   }, []);
 
   return (

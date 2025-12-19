@@ -1,16 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateProfile as updateProfileState, selectUser } from '../store/slices/userSlice';
 import { changePassword, fetchProfile, updateProfile } from '../services/adminService';
-import { setUser } from '../services/authService';
 import { usePage } from '../contexts/PageContext';
 import ProfileCard from '../components/ui/ProfileCard';
 
 const Settings = () => {
-  // Các biến logic cũ của bạn giữ nguyên
+  const dispatch = useDispatch();
+  const reduxUser = useSelector(selectUser);
   const { setPageInfo } = usePage();
-  const [profile, setProfile] = useState(null);
-  const [profileForm, setProfileForm] = useState({ fullname: '', email: '', level: 'A', avatarUrl: '' });
+  const [profile, setProfile] = useState(reduxUser);
+  const [profileForm, setProfileForm] = useState({
+    fullname: reduxUser?.fullname || '',
+    email: reduxUser?.email || '',
+    level: reduxUser?.level || 'A',
+    avatarUrl: reduxUser?.avatarUrl || ''
+  });
+  // ... rest of the state
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!reduxUser);
   const [savingProfile, setSavingProfile] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +38,7 @@ const Settings = () => {
   };
 
   const loadProfile = async () => {
-    setLoading(true);
+    if (!reduxUser) setLoading(true);
     try {
       const data = await fetchProfile();
       setProfile(data);
@@ -40,9 +48,9 @@ const Settings = () => {
         level: data.level || 'A',
         avatarUrl: data.avatarUrl || '',
       });
-      setUser(data);
+      dispatch(updateProfileState(data));
     } finally {
-      setLoading(false);
+      if (!reduxUser) setLoading(false);
     }
   };
 
@@ -71,7 +79,7 @@ const Settings = () => {
       showToast('success', 'Cập nhật thông tin thành công!');
       const updatedData = await fetchProfile();
       setProfile(updatedData);
-      setUser(updatedData);
+      dispatch(updateProfileState(updatedData));
       setIsEditing(false);
     } catch (err) {
       showToast('danger', err.message);

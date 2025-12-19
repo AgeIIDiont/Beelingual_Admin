@@ -1,4 +1,6 @@
-import React, { useMemo, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchTopicsAction, selectTopics } from '../store/slices/resourceSlice';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   fetchVocabulary,
@@ -6,7 +8,7 @@ import {
   updateVocabulary,
   deleteVocabulary,
 } from '../services/adminService';
-import { fetchTopics as fetchAllTopics } from '../services/adminService';
+
 const levelOptions = [
   { value: '', label: 'Tất cả' },
   { value: 'A1', label: 'Level A1' },
@@ -34,25 +36,21 @@ const typeOptions = [
 import { usePage } from '../contexts/PageContext';
 const Vocabularys = () => {
   const { setPageInfo } = usePage();
+  const dispatch = useDispatch();
   const resourceManagerRef = useRef(null);
-  const [topicOptions, setTopicOptions] = useState([]);
+  const topicsData = useSelector(selectTopics);
 
   useEffect(() => {
-    const loadTopics = async () => {
-      try {
-        const response = await fetchAllTopics();
-        const topicsData = Array.isArray(response) ? response : (response.data || []);
-        const options = topicsData.map((topic) => ({
-          value: topic._id || topic.id,
-          label: `${topic.name}`,
-        }));
-        setTopicOptions([{ value: '', label: 'Tất cả' }, ...options]);
-      } catch (error) {
-        console.error('Error fetching topics:', error);
-      }
-    };
-    loadTopics();
-  }, []);
+    dispatch(fetchTopicsAction());
+  }, [dispatch]);
+
+  const topicOptions = useMemo(() => {
+    const options = topicsData.map((topic) => ({
+      value: topic._id || topic.id,
+      label: `${topic.name}`,
+    }));
+    return [{ value: '', label: 'Tất cả' }, ...options];
+  }, [topicsData]);
 
   useEffect(() => {
     const handleRefresh = () => {
