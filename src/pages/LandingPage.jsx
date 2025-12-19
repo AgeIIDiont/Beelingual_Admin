@@ -1061,10 +1061,8 @@ const LandingPage = () => {
                                         </div>
 
                                         {(chatConfig.suggestedQuestions || []).map((q, idx) => (
-                                            <div key={idx} className="card mb-3 p-3 position-relative" style={{
-                                                backgroundColor: theme.primaryColor || '#ffc107',
-                                                color: '#1a1d29',
-                                                border: 'none',
+                                            <div key={idx} className="card bg-light mb-3 p-3 position-relative" style={{
+                                                border: '1px solid #dee2e6',
                                                 borderRadius: '15px'
                                             }}>
                                                 <button
@@ -1088,7 +1086,6 @@ const LandingPage = () => {
                                                                 setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
                                                             }}
                                                             placeholder="Ví dụ: Khám phá app"
-                                                            style={{ backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(0,0,0,0.1)', color: '#1a1d29' }}
                                                         />
                                                     </div>
                                                     <div className="col-md-7">
@@ -1103,7 +1100,6 @@ const LandingPage = () => {
                                                                 setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
                                                             }}
                                                             placeholder="Ví dụ: App này có gì hay cụ?"
-                                                            style={{ backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(0,0,0,0.1)', color: '#1a1d29' }}
                                                         />
                                                     </div>
                                                     <div className="col-12 mt-2">
@@ -1118,7 +1114,6 @@ const LandingPage = () => {
                                                                 setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
                                                             }}
                                                             placeholder="Thông tin thật bạn muốn bot cung cấp..."
-                                                            style={{ backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(0,0,0,0.1)', color: '#1a1d29' }}
                                                         ></textarea>
                                                     </div>
                                                 </div>
