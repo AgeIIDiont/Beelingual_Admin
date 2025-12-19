@@ -192,11 +192,18 @@ const LandingPage = () => {
             <div className="row g-4">
                 {/* Editor Column */}
                 <div className="col-lg-6 mb-4">
-                    <div className="card shadow-sm border-0">
+                    <div className="card shadow-sm border-0 sticky-top" style={{
+                        top: '24px',
+                        height: 'calc(100vh - 50px)',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        zIndex: 10
+                    }}>
                         <div className="card-header bg-white">
                             <h5 className="mb-0">Chỉnh sửa nội dung</h5>
                         </div>
-                        <div className="card-body">
+                        <div className="card-body" style={{ flex: 1, overflowY: 'auto' }}>
                             {/* Tabs Navigation */}
                             <ul className="nav nav-tabs mb-4" role="tablist">
                                 <li className="nav-item">
