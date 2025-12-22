@@ -108,7 +108,7 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="container-fluid py-5 px-4 px-lg-5">
+    <div className="container-fluid py-4">
       {/* Loading */}
       {loading && (
         <div className="text-center py-5">

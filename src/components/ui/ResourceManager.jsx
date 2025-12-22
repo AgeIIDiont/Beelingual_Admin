@@ -433,7 +433,7 @@ const ResourceManager = forwardRef(({
   const hasActions = Boolean((updateApi || deleteApi) && !hideActionsColumn);
 
   return (
-    <div className="container-fluid py-5 px-4 px-lg-5 rm-container">
+    <div className="container-fluid py-4 rm-container">
       {/* Inject custom styles */}
       <style>{customStyles}</style>
 

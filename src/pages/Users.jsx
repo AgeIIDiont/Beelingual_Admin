@@ -359,11 +359,24 @@ const Users = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {(userStats?.levelStats || []).map((item, idx) => (
+                      {(() => {
+                        // Sắp xếp theo thứ tự A1 → C2
+                        const levelOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+                        const sortedStats = [...(userStats?.levelStats || [])].sort((a, b) => {
+                          const indexA = levelOrder.indexOf(a._id);
+                          const indexB = levelOrder.indexOf(b._id);
+                          // Nếu không tìm thấy trong levelOrder, đẩy xuống cuối
+                          if (indexA === -1 && indexB === -1) return 0;
+                          if (indexA === -1) return 1;
+                          if (indexB === -1) return -1;
+                          return indexA - indexB;
+                        });
+                        
+                        return sortedStats.map((item, idx) => (
                         <tr 
                           key={item._id || 'unknown'} 
                           style={{ 
-                            borderBottom: idx < (userStats?.levelStats?.length - 1) ? '1px solid #f1f3f5' : 'none',
+                            borderBottom: idx < (sortedStats.length - 1) ? '1px solid #f1f3f5' : 'none',
                             transition: 'background 0.2s'
                           }}
                           onMouseEnter={(e) => e.currentTarget.style.background = '#fffbeb'}
@@ -373,12 +386,12 @@ const Users = () => {
                             <span 
                               className="badge rounded-pill px-3 py-2"
                               style={{
-                                background: item._id?.startsWith('A') ? '#dcfce7' : 
-                                           item._id?.startsWith('B') ? '#fef9c3' : 
-                                           item._id?.startsWith('C') ? '#fee2e2' : '#f1f5f9',
-                                color: item._id?.startsWith('A') ? '#166534' : 
-                                       item._id?.startsWith('B') ? '#854d0e' : 
-                                       item._id?.startsWith('C') ? '#991b1b' : '#475569',
+                                background: item._id?.startsWith('A') ? '#77f9a4ff' : 
+                                           item._id?.startsWith('B') ? '#fff04dff' : 
+                                           item._id?.startsWith('C') ? '#f76161ff' : '#f1f5f9',
+                                color: item._id?.startsWith('A') ? '#066229ff' : 
+                                       item._id?.startsWith('B') ? '#442605ff' : 
+                                       item._id?.startsWith('C') ? '#630b0bff' : '#475569',
                                 fontWeight: 600
                               }}
                             >
@@ -390,7 +403,8 @@ const Users = () => {
                             <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}> người</span>
                           </td>
                         </tr>
-                      ))}
+                        ));
+                      })()}
                       {!userStats?.levelStats?.length && (
                         <tr>
                           <td colSpan={2} className="text-center py-4" style={{ color: '#94a3b8' }}>
