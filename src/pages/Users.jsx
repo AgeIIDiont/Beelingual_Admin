@@ -188,7 +188,6 @@ const Users = () => {
         name: 'level',
         label: 'Trình độ',
         type: 'select',
-        type: 'select',
         options: levelOptions.slice(1),
         defaultValue: 'A1',
         col: 3,
@@ -280,6 +279,7 @@ const Users = () => {
       {/* Stats Section */}
       {!statsLoading && userStats && (
         <div className="mb-5">
+          {/* Stats Cards Row */}
           <div className="row g-4 mb-4">
             <div className="col-md-4 col-sm-6">
               <StatsCard
@@ -307,55 +307,217 @@ const Users = () => {
             </div>
           </div>
 
+          {/* Detail Cards Row */}
           <div className="row g-4">
+            {/* Level Distribution Card */}
             <div className="col-lg-6">
-              <div className="bg-white rounded-4 shadow p-4 h-100">
-                <h5 className="fw-bold text-dark mb-3">Phân bổ cấp độ</h5>
-                <table className="table table-borderless align-middle">
-                  <thead>
-                    <tr className="text-muted">
-                      <th>Cấp độ</th>
-                      <th className="text-end">Số lượng</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(userStats?.levelStats || []).map((item) => (
-                      <tr key={item._id || 'unknown'}>
-                        <td className="fw-medium">{item._id || 'Chưa xác định'}</td>
-                        <td className="text-end">{item.count}</td>
+              <div 
+                className="h-100"
+                style={{
+                  background: '#ffffff',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(0,0,0,0.05)',
+                  boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.05)',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div 
+                  style={{
+                    padding: '1rem 1.25rem',
+                    background: 'linear-gradient(135deg, #f8f9fa 0%, #fff8e1 100%)',
+                    borderBottom: '1px solid rgba(255,193,7,0.1)'
+                  }}
+                >
+                  <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                    <span 
+                      style={{
+                        width: '32px', 
+                        height: '32px', 
+                        background: 'linear-gradient(135deg, #FFB75E 0%, #ED8F03 100%)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <i className="fas fa-chart-pie text-white" style={{ fontSize: '0.9rem' }}></i>
+                    </span>
+                    Phân bổ cấp độ
+                  </h5>
+                </div>
+                <div style={{ padding: '1rem 1.25rem' }}>
+                  <table className="table table-borderless align-middle mb-0">
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #f1f3f5' }}>
+                        <th style={{ color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0.75rem 0' }}>
+                          Cấp độ
+                        </th>
+                        <th style={{ color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0.75rem 0', textAlign: 'right' }}>
+                          Số lượng
+                        </th>
                       </tr>
-                    ))}
-                    {!userStats?.levelStats?.length && (
-                      <tr>
-                        <td colSpan={2} className="text-center text-muted py-3">
-                          Chưa có dữ liệu.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {(userStats?.levelStats || []).map((item, idx) => (
+                        <tr 
+                          key={item._id || 'unknown'} 
+                          style={{ 
+                            borderBottom: idx < (userStats?.levelStats?.length - 1) ? '1px solid #f1f3f5' : 'none',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#fffbeb'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <td style={{ padding: '0.875rem 0' }}>
+                            <span 
+                              className="badge rounded-pill px-3 py-2"
+                              style={{
+                                background: item._id?.startsWith('A') ? '#dcfce7' : 
+                                           item._id?.startsWith('B') ? '#fef9c3' : 
+                                           item._id?.startsWith('C') ? '#fee2e2' : '#f1f5f9',
+                                color: item._id?.startsWith('A') ? '#166534' : 
+                                       item._id?.startsWith('B') ? '#854d0e' : 
+                                       item._id?.startsWith('C') ? '#991b1b' : '#475569',
+                                fontWeight: 600
+                              }}
+                            >
+                              {item._id || 'Chưa xác định'}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'right', padding: '0.875rem 0' }}>
+                            <span className="fw-bold text-dark">{item.count}</span>
+                            <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}> người</span>
+                          </td>
+                        </tr>
+                      ))}
+                      {!userStats?.levelStats?.length && (
+                        <tr>
+                          <td colSpan={2} className="text-center py-4" style={{ color: '#94a3b8' }}>
+                            <i className="fas fa-inbox fa-2x mb-2 d-block" style={{ opacity: 0.5 }}></i>
+                            Chưa có dữ liệu
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
+            {/* Recent Users Card */}
             <div className="col-lg-6">
-              <div className="bg-white rounded-4 shadow p-4 h-100">
-                <h5 className="fw-bold text-dark mb-3">Người dùng đăng ký gần đây</h5>
-                <ul className="list-group list-group-flush">
+              <div 
+                className="h-100"
+                style={{
+                  background: '#ffffff',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(0,0,0,0.05)',
+                  boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.05)',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div 
+                  style={{
+                    padding: '1rem 1.25rem',
+                    background: 'linear-gradient(135deg, #f8f9fa 0%, #e0f2fe 100%)',
+                    borderBottom: '1px solid rgba(59,130,246,0.1)'
+                  }}
+                >
+                  <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                    <span 
+                      style={{
+                        width: '32px', 
+                        height: '32px', 
+                        background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <i className="fas fa-user-plus text-white" style={{ fontSize: '0.9rem' }}></i>
+                    </span>
+                    Đăng ký gần đây
+                  </h5>
+                </div>
+                <div style={{ padding: '0.5rem' }}>
                   {(userStats?.recentUsers || []).map((user) => (
-                    <li className="list-group-item d-flex justify-content-between align-items-center" key={user._id}>
-                      <div>
-                        <div className="fw-semibold">{user.fullname || user.username}</div>
-                        <small className="text-muted">
-                          {user.role} • {formatDate(user.createdAt)}
-                        </small>
+                    <div 
+                      key={user._id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.875rem 1rem',
+                        borderRadius: '10px',
+                        margin: '0.25rem 0',
+                        transition: 'all 0.2s',
+                        cursor: 'default'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f8fafc';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <div className="d-flex align-items-center gap-3">
+                        <div 
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            background: `linear-gradient(135deg, ${user.role === 'admin' ? '#fbbf24' : '#60a5fa'} 0%, ${user.role === 'admin' ? '#f59e0b' : '#3b82f6'} 100%)`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontWeight: 700,
+                            fontSize: '0.9rem',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {(user.fullname || user.username || 'U').charAt(0)}
+                        </div>
+                        <div>
+                          <div className="fw-semibold text-dark">{user.fullname || user.username}</div>
+                          <small style={{ color: '#94a3b8' }}>
+                            <span 
+                              className="badge me-1"
+                              style={{
+                                background: user.role === 'admin' ? '#fef3c7' : '#e0f2fe',
+                                color: user.role === 'admin' ? '#92400e' : '#1e40af',
+                                fontWeight: 500,
+                                fontSize: '0.7rem'
+                              }}
+                            >
+                              {user.role === 'admin' ? 'Admin' : 'Học viên'}
+                            </span>
+                            {formatDate(user.createdAt)}
+                          </small>
+                        </div>
                       </div>
-                      <span className="badge bg-light text-dark">{user.level || '—'}</span>
-                    </li>
+                      <span 
+                        className="badge rounded-pill px-2 py-1"
+                        style={{
+                          background: '#f1f5f9',
+                          color: '#475569',
+                          fontWeight: 500
+                        }}
+                      >
+                        {user.level || '—'}
+                      </span>
+                    </div>
                   ))}
                   {!userStats?.recentUsers?.length && (
-                    <li className="list-group-item text-center text-muted">Chưa có dữ liệu.</li>
+                    <div className="text-center py-4" style={{ color: '#94a3b8' }}>
+                      <i className="fas fa-user-slash fa-2x mb-2 d-block" style={{ opacity: 0.5 }}></i>
+                      Chưa có dữ liệu
+                    </div>
                   )}
-                </ul>
+                </div>
               </div>
             </div>
           </div>

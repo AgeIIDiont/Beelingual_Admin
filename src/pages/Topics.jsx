@@ -167,8 +167,6 @@ const Topics = () => {
         label: 'Trình độ',
         type: 'select',
         options: levelOptions.slice(1),
-        type: 'select',
-        options: levelOptions.slice(1),
         defaultValue: 'A1',
         col: 4,
       },
@@ -195,9 +193,7 @@ const Topics = () => {
   const buildPayload = (values) => {
     const payload = {
       name: values.name?.trim(),
-      name: values.name?.trim(),
       level: values.level || 'A1',
-      description: values.description?.trim(),
       description: values.description?.trim(),
       imageUrl: values.imageUrl?.trim(),
     };

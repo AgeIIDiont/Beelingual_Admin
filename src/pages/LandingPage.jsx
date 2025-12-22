@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
     fetchLandingPageContent,
     fetchLandingPageTheme,
@@ -10,15 +10,26 @@ import {
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
 
-const LANDING_PAGE_URL = import.meta.env.VITE_LANDING_PAGE_URL;
+// Import sub-components
+import {
+    SkeletonLoading,
+    TabNavigation,
+    HeroSection,
+    FeaturesSection,
+    DownloadSection,
+    FooterSection,
+    ThemeSection,
+    ChatbotSection,
+    PreviewPanel
+} from '../components/LandingPage';
+import '../components/LandingPage/styles/landing-page.scss';
 
-// Cập nhật: Sử dụng biến môi trường cho an toàn và linh hoạt. hihi!
+const LANDING_PAGE_URL = import.meta.env.VITE_LANDING_PAGE_URL;
 
 const LandingPage = () => {
     const { setPageInfo } = usePage();
     const [content, setContent] = useState({});
     const [theme, setTheme] = useState({});
-    const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [chatConfig, setChatConfig] = useState({
         botName: '',
@@ -33,16 +44,26 @@ const LandingPage = () => {
     const [activeTab, setActiveTab] = useState('hero');
     const [isMobilePreview, setIsMobilePreview] = useState(false);
 
-    // Preview Ref
     const previewWrapperRef = useRef(null);
 
-    // Dummy stats for preview
-    const dummyStats = {
-        totalUsers: 1250,
-        totalTopics: 45,
-        totalVocabulary: 3200,
-        totalGrammar: 150
-    };
+    const loadData = useCallback(async () => {
+        try {
+            setLoading(true);
+            const [contentData, themeData, _statsData, chatData] = await Promise.all([
+                fetchLandingPageContent(),
+                fetchLandingPageTheme(),
+                fetchLandingPageStatistics(),
+                fetchChatbotConfig()
+            ]);
+            setContent(contentData.data || {});
+            setTheme(themeData.data || {});
+            setChatConfig(chatData.data || {});
+        } catch (error) {
+            showMessage('danger', 'Lỗi khi tải dữ liệu: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         setPageInfo({
@@ -61,47 +82,24 @@ const LandingPage = () => {
         });
         loadData();
         return () => setPageInfo({ title: '', description: '', actions: null });
-    }, [setPageInfo]);
+    }, [setPageInfo, loadData]);
 
     // Send updates to iframe whenever content or theme changes
     useEffect(() => {
         if (!previewWrapperRef.current) return;
-
         const iframe = previewWrapperRef.current;
-
         const sendMessage = () => {
             if (iframe.contentWindow) {
                 iframe.contentWindow.postMessage({
                     type: 'BEELINGUAL_PREVIEW_UPDATE',
                     data: { content, theme }
-                }, LANDING_PAGE_URL || '*'); // Chỉ gửi đến địa chỉ trang Landing Page thụ hưởng
+                }, LANDING_PAGE_URL || '*');
             }
         };
-
         sendMessage();
         iframe.addEventListener('load', sendMessage);
         return () => iframe.removeEventListener('load', sendMessage);
     }, [content, theme]);
-
-    const loadData = async () => {
-        try {
-            setLoading(true);
-            const [contentData, themeData, statsData, chatData] = await Promise.all([
-                fetchLandingPageContent(),
-                fetchLandingPageTheme(),
-                fetchLandingPageStatistics(),
-                fetchChatbotConfig()
-            ]);
-            setContent(contentData.data || {});
-            setTheme(themeData.data || {});
-            setStats(statsData.data || null);
-            setChatConfig(chatData.data || {});
-        } catch (error) {
-            showMessage('danger', 'Lỗi khi tải dữ liệu: ' + error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const showMessage = (type, text) => {
         setMessage({ type, text });
@@ -136,7 +134,7 @@ const LandingPage = () => {
         try {
             setSaving(true);
             await updateChatbotConfig(chatConfig);
-            showMessage('success', 'Đã lưu cấu hình chatbot thành công hihi!');
+            showMessage('success', 'Đã lưu cấu hình chatbot thành công!');
         } catch (error) {
             showMessage('danger', 'Lỗi khi lưu cấu hình chatbot: ' + error.message);
         } finally {
@@ -166,33 +164,94 @@ const LandingPage = () => {
         }));
     };
 
+    // Show skeleton loading
     if (loading) {
-        return (
-            <div className="container py-4">
-                <div className="text-center">
-                    <div className="spinner-border text-warning" role="status">
-                        <span className="visually-hidden">Đang tải...</span>
-                    </div>
-                </div>
-            </div>
-        );
+        return <SkeletonLoading />;
     }
+
+    // Render active tab content
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'hero':
+                return (
+                    <HeroSection
+                        content={content}
+                        onContentChange={updateContent}
+                        onSave={handleSaveSection}
+                        saving={saving}
+                    />
+                );
+            case 'features':
+                return (
+                    <FeaturesSection
+                        content={content}
+                        onFeatureChange={updateFeature}
+                        onSave={handleSaveSection}
+                        saving={saving}
+                    />
+                );
+            case 'download':
+                return (
+                    <DownloadSection
+                        content={content}
+                        onContentChange={updateContent}
+                        onSave={handleSaveSection}
+                        saving={saving}
+                    />
+                );
+            case 'footer':
+                return (
+                    <FooterSection
+                        content={content}
+                        setContent={setContent}
+                        onContentChange={updateContent}
+                        onSave={handleSaveSection}
+                        saving={saving}
+                    />
+                );
+            case 'theme':
+                return (
+                    <ThemeSection
+                        theme={theme}
+                        setTheme={setTheme}
+                        onSave={handleSaveTheme}
+                        saving={saving}
+                    />
+                );
+            case 'chatbot':
+                return (
+                    <ChatbotSection
+                        chatConfig={chatConfig}
+                        setChatConfig={setChatConfig}
+                        onSave={handleSaveChatbotConfig}
+                        saving={saving}
+                    />
+                );
+            default:
+                return null;
+        }
+    };
 
     return (
         <div className="container-fluid py-4">
-
-
+            {/* Alert Message */}
             {message.text && (
-                <div className={`alert alert-${message.type} alert-dismissible fade show`} role="alert">
-                    {message.text}
-                    <button type="button" className="btn-close" onClick={() => setMessage({ type: '', text: '' })}></button>
+                <div className={`lp-alert lp-alert-${message.type}`}>
+                    <i className={`fas fa-${message.type === 'success' ? 'check-circle' : 'exclamation-circle'}`}></i>
+                    <span>{message.text}</span>
+                    <button
+                        className="lp-alert-close"
+                        onClick={() => setMessage({ type: '', text: '' })}
+                    >
+                        ×
+                    </button>
                 </div>
             )}
 
             <div className="row g-4">
                 {/* Editor Column */}
                 <div className="col-lg-6 mb-4">
-                    <div className="card shadow-sm border-0 sticky-top" style={{
+                    <div className="lp-card sticky-top" style={{
                         top: '24px',
                         height: 'calc(100vh - 50px)',
                         overflow: 'hidden',
@@ -200,994 +259,35 @@ const LandingPage = () => {
                         flexDirection: 'column',
                         zIndex: 10
                     }}>
-                        <div className="card-header bg-white">
-                            <h5 className="mb-0">Chỉnh sửa nội dung</h5>
+                        <div className="lp-card-header">
+                            <h5>
+                                <i className="fas fa-edit text-warning me-2"></i>
+                                Chỉnh sửa nội dung
+                            </h5>
                         </div>
-                        <div className="card-body" style={{ flex: 1, overflowY: 'auto' }}>
-                            {/* Tabs Navigation */}
-                            <ul className="nav nav-tabs mb-4" role="tablist">
-                                <li className="nav-item">
-                                    <button
-                                        className={`nav-link ${activeTab === 'hero' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('hero')}
-                                    >
-                                        Hero Section
-                                    </button>
-                                </li>
-                                <li className="nav-item">
-                                    <button
-                                        className={`nav-link ${activeTab === 'features' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('features')}
-                                    >
-                                        Features
-                                    </button>
-                                </li>
-                                <li className="nav-item">
-                                    <button
-                                        className={`nav-link ${activeTab === 'download' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('download')}
-                                    >
-                                        Download
-                                    </button>
-                                </li>
-                                <li className="nav-item">
-                                    <button
-                                        className={`nav-link ${activeTab === 'footer' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('footer')}
-                                    >
-                                        Footer
-                                    </button>
-                                </li>
-                                <li className="nav-item">
-                                    <button
-                                        className={`nav-link ${activeTab === 'theme' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('theme')}
-                                    >
-                                        Theme (Màu sắc)
-                                    </button>
-                                </li>
-                                <li className="nav-item">
-                                    <button
-                                        className={`nav-link ${activeTab === 'chatbot' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('chatbot')}
-                                    >
-                                        Chatbot AI
-                                    </button>
-                                </li>
-                            </ul>
+                        <div className="lp-card-body" style={{ flex: 1, overflowY: 'auto' }}>
+                            {/* Tab Navigation */}
+                            <TabNavigation
+                                activeTab={activeTab}
+                                onTabChange={setActiveTab}
+                            />
 
                             {/* Tab Content */}
                             <div className="tab-content">
-                                {/* Hero Tab */}
-                                {activeTab === 'hero' && (
-                                    <div className="tab-pane fade show active">
-                                        <div className="mb-3">
-                                            <label className="form-label">Tiêu đề chính</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={content.hero?.heroTitle || ''}
-                                                onChange={(e) => updateContent('hero', 'heroTitle', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">Phụ đề</label>
-                                            <textarea
-                                                className="form-control"
-                                                rows={3}
-                                                value={content.hero?.heroSubtitle || ''}
-                                                onChange={(e) => updateContent('hero', 'heroSubtitle', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">URL hình ảnh</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={content.hero?.heroImageUrl || ''}
-                                                onChange={(e) => updateContent('hero', 'heroImageUrl', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">Text nút CTA</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={content.hero?.heroCtaText || ''}
-                                                onChange={(e) => updateContent('hero', 'heroCtaText', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <button
-                                            className="btn btn-warning"
-                                            onClick={() => handleSaveSection('hero')}
-                                            disabled={saving}
-                                        >
-                                            {saving ? 'Đang lưu...' : 'Lưu Hero Section'}
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Features Tab */}
-                                {activeTab === 'features' && (
-                                    <div className="tab-pane fade show active">
-                                        <h5 className="mb-3">Danh sách tính năng</h5>
-                                        {content.features?.features?.map((feature, index) => (
-                                            <div key={index} className="card mb-3 bg-light border">
-                                                <div className="card-body">
-                                                    <h6>Tính năng #{index + 1}</h6>
-                                                    <div className="mb-2">
-                                                        <label className="form-label">Icon (emoji)</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={feature.icon || ''}
-                                                            onChange={(e) => updateFeature(index, 'icon', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="mb-2">
-                                                        <label className="form-label">Tiêu đề</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={feature.title || ''}
-                                                            onChange={(e) => updateFeature(index, 'title', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="mb-2">
-                                                        <label className="form-label">Mô tả</label>
-                                                        <textarea
-                                                            className="form-control"
-                                                            rows={2}
-                                                            value={feature.description || ''}
-                                                            onChange={(e) => updateFeature(index, 'description', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="mb-2">
-                                                        <label className="form-label">URL hình ảnh</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={feature.imageUrl || ''}
-                                                            onChange={(e) => updateFeature(index, 'imageUrl', e.target.value)}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        <button
-                                            className="btn btn-warning"
-                                            onClick={() => handleSaveSection('features')}
-                                            disabled={saving}
-                                        >
-                                            {saving ? 'Đang lưu...' : 'Lưu Features'}
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Download Tab */}
-                                {activeTab === 'download' && (
-                                    <div className="tab-pane fade show active">
-                                        <div className="mb-3">
-                                            <label className="form-label">Tiêu đề</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={content.download?.downloadTitle || ''}
-                                                onChange={(e) => updateContent('download', 'downloadTitle', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">Mô tả</label>
-                                            <textarea
-                                                className="form-control"
-                                                rows={2}
-                                                value={content.download?.downloadDescription || ''}
-                                                onChange={(e) => updateContent('download', 'downloadDescription', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">Link iOS</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={content.download?.iosLink || ''}
-                                                onChange={(e) => updateContent('download', 'iosLink', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">Link Android</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={content.download?.androidLink || ''}
-                                                onChange={(e) => updateContent('download', 'androidLink', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">Link APK</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={content.download?.apkLink || ''}
-                                                onChange={(e) => updateContent('download', 'apkLink', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <button
-                                            className="btn btn-warning"
-                                            onClick={() => handleSaveSection('download')}
-                                            disabled={saving}
-                                        >
-                                            {saving ? 'Đang lưu...' : 'Lưu Download Section'}
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Footer Tab */}
-                                {activeTab === 'footer' && (
-                                    <div className="tab-pane fade show active">
-                                        <div className="mb-3">
-                                            <label className="form-label">Mô tả Footer</label>
-                                            <textarea
-                                                className="form-control"
-                                                rows={3}
-                                                value={content.footer?.footerDescription || ''}
-                                                onChange={(e) => updateContent('footer', 'footerDescription', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <h6>Social Links</h6>
-                                        <div className="row">
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Facebook</label>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        value={content.footer?.socialLinks?.facebook || ''}
-                                                        onChange={(e) => setContent(prev => ({
-                                                            ...prev,
-                                                            footer: {
-                                                                ...prev.footer,
-                                                                socialLinks: {
-                                                                    ...prev.footer?.socialLinks,
-                                                                    facebook: e.target.value
-                                                                }
-                                                            }
-                                                        }))}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Instagram</label>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        value={content.footer?.socialLinks?.instagram || ''}
-                                                        onChange={(e) => setContent(prev => ({
-                                                            ...prev,
-                                                            footer: {
-                                                                ...prev.footer,
-                                                                socialLinks: {
-                                                                    ...prev.footer?.socialLinks,
-                                                                    instagram: e.target.value
-                                                                }
-                                                            }
-                                                        }))}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Twitter</label>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        value={content.footer?.socialLinks?.twitter || ''}
-                                                        onChange={(e) => setContent(prev => ({
-                                                            ...prev,
-                                                            footer: {
-                                                                ...prev.footer,
-                                                                socialLinks: {
-                                                                    ...prev.footer?.socialLinks,
-                                                                    twitter: e.target.value
-                                                                }
-                                                            }
-                                                        }))}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Youtube</label>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        value={content.footer?.socialLinks?.youtube || ''}
-                                                        onChange={(e) => setContent(prev => ({
-                                                            ...prev,
-                                                            footer: {
-                                                                ...prev.footer,
-                                                                socialLinks: {
-                                                                    ...prev.footer?.socialLinks,
-                                                                    youtube: e.target.value
-                                                                }
-                                                            }
-                                                        }))}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">Email</label>
-                                            <input
-                                                type="email"
-                                                className="form-control"
-                                                value={content.footer?.contactEmail || ''}
-                                                onChange={(e) => updateContent('footer', 'contactEmail', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">Số điện thoại</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={content.footer?.contactPhone || ''}
-                                                onChange={(e) => updateContent('footer', 'contactPhone', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <button
-                                            className="btn btn-warning"
-                                            onClick={() => handleSaveSection('footer')}
-                                            disabled={saving}
-                                        >
-                                            {saving ? 'Đang lưu...' : 'Lưu Footer'}
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Theme Tab */}
-                                {activeTab === 'theme' && (
-                                    <div className="tab-pane fade show active">
-                                        <div className="row">
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Màu chi tiết & Nút bấm (Primary)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.primaryColor || '#ffc107'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.primaryColor || '#ffc107'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Màu nhấn & Trang trí (Accent)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.accentColor || '#ffdb4d'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, accentColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.accentColor || '#ffdb4d'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, accentColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Màu nền trang Features</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.secondaryColor || '#1a1d29'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.secondaryColor || '#1a1d29'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Màu nền trang (Background)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.backgroundColor || '#0f1117'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, backgroundColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.backgroundColor || '#0f1117'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, backgroundColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Màu chữ chính (Global Text)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.textColor || '#ffffff'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, textColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.textColor || '#ffffff'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, textColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Màu chân trang (Footer BG)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.footerColor || '#0f1117'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, footerColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.footerColor || '#0f1117'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, footerColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Tiêu đề Hero (Nổi bật nhất)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.heroHeadlineColor || '#ffc107'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, heroHeadlineColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.heroHeadlineColor || '#ffc107'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, heroHeadlineColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Nền các khối nội dung (Card BG)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.cardColor?.startsWith('#') ? theme.cardColor : '#1a1d29'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, cardColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.cardColor || 'rgba(26, 29, 41, 0.7)'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, cardColor: e.target.value }))}
-                                                            placeholder="VD: rgba(26, 29, 41, 0.7)"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Nền ô nhập liệu (Input Area)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.inputBackgroundColor?.startsWith('#') ? theme.inputBackgroundColor : '#ffffff'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, inputBackgroundColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.inputBackgroundColor || 'rgba(255, 255, 255, 0.05)'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, inputBackgroundColor: e.target.value }))}
-                                                            placeholder="VD: rgba(255, 255, 255, 0.05)"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Thông báo thành công (Success)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.successColor || '#28a745'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, successColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.successColor || '#28a745'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, successColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Thông báo lỗi (Error/Warning)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.errorColor || '#dc3545'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, errorColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.errorColor || '#dc3545'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, errorColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Nền khung chat (Chat BG)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.chatWindowColor || '#ffffff'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, chatWindowColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.chatWindowColor || '#ffffff'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, chatWindowColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Màu chữ Header Chat (Name & Status)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.chatHeaderTextColor || '#1a1d29'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, chatHeaderTextColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.chatHeaderTextColor || '#1a1d29'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, chatHeaderTextColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Bóng tin nhắn của Bot (Bot Bubble)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.botBubbleColor || '#ffffff'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, botBubbleColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.botBubbleColor || '#ffffff'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, botBubbleColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Chữ tin nhắn của Bot (Bot Text)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.botTextColor || '#333333'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, botTextColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.botTextColor || '#333333'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, botTextColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Bóng tin nhắn của Bạn (User Bubble)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.userBubbleColor || '#1a1d29'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, userBubbleColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.userBubbleColor || '#1a1d29'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, userBubbleColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Chữ tin nhắn của Bạn (User Text)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.userTextColor || '#ffffff'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, userTextColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.userTextColor || '#ffffff'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, userTextColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Nền nút Gợi ý (Suggest BG)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.suggestedBgColor || '#ffffff'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, suggestedBgColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.suggestedBgColor || '#ffffff'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, suggestedBgColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Chữ nút Gợi ý (Suggest Text)</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.suggestedTextColor || '#1a1d29'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, suggestedTextColor: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.suggestedTextColor || '#1a1d29'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, suggestedTextColor: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="row">
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Gradient Start</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.gradientStart || '#ffc107'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, gradientStart: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.gradientStart || '#ffc107'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, gradientStart: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">Gradient End</label>
-                                                    <div className="d-flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            className="form-control form-control-color"
-                                                            value={theme.gradientEnd || '#ffdb4d'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, gradientEnd: e.target.value }))}
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={theme.gradientEnd || '#ffdb4d'}
-                                                            onChange={(e) => setTheme(prev => ({ ...prev, gradientEnd: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            className="btn btn-warning"
-                                            onClick={handleSaveTheme}
-                                            disabled={saving}
-                                        >
-                                            {saving ? 'Đang lưu...' : 'Lưu Theme'}
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Chatbot AI Tab hihi */}
-                                {activeTab === 'chatbot' && (
-                                    <div className="tab-pane fade show active">
-                                        <div className="mb-3">
-                                            <label className="form-label">Tên Bot (Hiển thị)</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={chatConfig.botName || ''}
-                                                onChange={(e) => setChatConfig(prev => ({ ...prev, botName: e.target.value }))}
-                                                placeholder="Ví dụ: Bee-Bot"
-                                            />
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">Lời chào mặc định (Welcome Message)</label>
-                                            <textarea
-                                                className="form-control"
-                                                rows="2"
-                                                value={chatConfig.welcomeMessage || ''}
-                                                onChange={(e) => setChatConfig(prev => ({ ...prev, welcomeMessage: e.target.value }))}
-                                                placeholder="Lời chào khi người dùng vừa mở chatbot..."
-                                            ></textarea>
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <label className="form-label">Tính cách / Chỉ dẫn (Personality)</label>
-                                            <textarea
-                                                className="form-control"
-                                                rows="4"
-                                                value={chatConfig.personality || ''}
-                                                onChange={(e) => setChatConfig(prev => ({ ...prev, personality: e.target.value }))}
-                                                placeholder="Hướng dẫn cho AI biết nó là ai và trả lời như thế nào..."
-                                            ></textarea>
-                                        </div>
-
-                                        <hr />
-                                        <h6 className="mb-3">Thông báo lỗi (Custom Messages)</h6>
-                                        <div className="mb-3">
-                                            <label className="form-label">Lỗi hệ thống chung</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={chatConfig.errorMessage || ''}
-                                                onChange={(e) => setChatConfig(prev => ({ ...prev, errorMessage: e.target.value }))}
-                                            />
-                                        </div>
-                                        <div className="mb-3">
-                                            <label className="form-label">Lỗi hết lượt dùng (Rate Limit)</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={chatConfig.rateLimitMessage || ''}
-                                                onChange={(e) => setChatConfig(prev => ({ ...prev, rateLimitMessage: e.target.value }))}
-                                            />
-                                        </div>
-                                        <div className="mb-3">
-                                            <label className="form-label">Lỗi không tìm thấy Model</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={chatConfig.modelNotFoundMessage || ''}
-                                                onChange={(e) => setChatConfig(prev => ({ ...prev, modelNotFoundMessage: e.target.value }))}
-                                            />
-                                        </div>
-
-                                        <hr />
-                                        <div className="d-flex justify-content-between align-items-center mb-3">
-                                            <h6 className="mb-0">Câu hỏi gợi ý</h6>
-                                            <button
-                                                className="btn btn-sm btn-outline-primary"
-                                                onClick={() => setChatConfig(prev => ({
-                                                    ...prev,
-                                                    suggestedQuestions: [...(prev.suggestedQuestions || []), { text: '', label: '' }]
-                                                }))}
-                                            >
-                                                <i className="fas fa-plus me-1"></i> Thêm câu hỏi
-                                            </button>
-                                        </div>
-
-                                        {(chatConfig.suggestedQuestions || []).map((q, idx) => (
-                                            <div key={idx} className="card bg-light mb-3 p-3 position-relative" style={{
-                                                border: '1px solid #dee2e6',
-                                                borderRadius: '15px'
-                                            }}>
-                                                <button
-                                                    className="btn-close position-absolute top-0 end-0 m-2"
-                                                    style={{ fontSize: '0.7rem' }}
-                                                    onClick={() => setChatConfig(prev => ({
-                                                        ...prev,
-                                                        suggestedQuestions: prev.suggestedQuestions.filter((_, i) => i !== idx)
-                                                    }))}
-                                                ></button>
-                                                <div className="row g-2">
-                                                    <div className="col-md-5">
-                                                        <label className="small" style={{ opacity: 0.8 }}>Nhãn nút (Label)</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control form-control-sm"
-                                                            value={q.label || ''}
-                                                            onChange={(e) => {
-                                                                const newQs = [...chatConfig.suggestedQuestions];
-                                                                newQs[idx].label = e.target.value;
-                                                                setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
-                                                            }}
-                                                            placeholder="Ví dụ: Khám phá app"
-                                                        />
-                                                    </div>
-                                                    <div className="col-md-7">
-                                                        <label className="small" style={{ opacity: 0.8 }}>Câu hỏi gửi đi (Text)</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control form-control-sm"
-                                                            value={q.text || ''}
-                                                            onChange={(e) => {
-                                                                const newQs = [...chatConfig.suggestedQuestions];
-                                                                newQs[idx].text = e.target.value;
-                                                                setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
-                                                            }}
-                                                            placeholder="Ví dụ: App này có gì hay cụ?"
-                                                        />
-                                                    </div>
-                                                    <div className="col-12 mt-2">
-                                                        <label className="small" style={{ opacity: 0.8 }}>Câu trả lời đúng (Factual Response)</label>
-                                                        <textarea
-                                                            className="form-control form-control-sm"
-                                                            rows="2"
-                                                            value={q.response || ''}
-                                                            onChange={(e) => {
-                                                                const newQs = [...chatConfig.suggestedQuestions];
-                                                                newQs[idx].response = e.target.value;
-                                                                setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
-                                                            }}
-                                                            placeholder="Thông tin thật bạn muốn bot cung cấp..."
-                                                        ></textarea>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-
-                                        <button
-                                            className="btn btn-warning mt-3"
-                                            onClick={handleSaveChatbotConfig}
-                                            disabled={saving}
-                                        >
-                                            {saving ? 'Đang lưu...' : 'Lưu cấu hình Chatbot'}
-                                        </button>
-                                    </div>
-                                )}
+                                {renderTabContent()}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Live Preview Column */}
+                {/* Preview Column */}
                 <div className="col-lg-6 mb-4">
-                    <div className="card shadow-sm border-0 sticky-top" style={{
-                        top: '24px',
-                        height: 'calc(100vh - 50px)',
-                        overflow: 'hidden',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        zIndex: 10
-                    }}>
-                        <div className="card-header bg-white d-flex justify-content-between align-items-center">
-                            <h5 className="mb-0">Live Preview</h5>
-                            <div className="d-flex align-items-center gap-2">
-                                <div className="btn-group btn-group-sm">
-                                    <button
-                                        className={`btn ${!isMobilePreview ? 'btn-primary' : 'btn-outline-primary'}`}
-                                        onClick={() => setIsMobilePreview(false)}
-                                    >
-                                        <i className="bi bi-laptop me-1"></i> Desktop
-                                    </button>
-                                    <button
-                                        className={`btn ${isMobilePreview ? 'btn-primary' : 'btn-outline-primary'}`}
-                                        onClick={() => setIsMobilePreview(true)}
-                                    >
-                                        <i className="bi bi-smartphone me-1"></i> Mobile
-                                    </button>
-                                </div>
-                                <span className="badge ms-2" style={{ backgroundColor: theme.successColor || '#28a745' }}>Live Updates</span>
-                            </div>
-                        </div>
-                        <div className="card-body p-0" style={{
-                            flex: 1,
-                            overflowY: 'auto',
-                            background: isMobilePreview ? '#f0f2f5' : 'transparent',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            padding: isMobilePreview ? '20px 0' : '0'
-                        }}>
-                            <iframe
-                                src={LANDING_PAGE_URL}
-                                ref={previewWrapperRef}
-                                style={{
-                                    width: isMobilePreview ? '375px' : '100%',
-                                    height: '100%',
-                                    border: 'none',
-                                    borderRadius: isMobilePreview ? '20px' : '0',
-                                    boxShadow: isMobilePreview ? '0 0 20px rgba(0,0,0,0.1)' : 'none',
-                                    transition: 'all 0.3s ease',
-                                    margin: '0 auto'
-                                }}
-                                title="Beelingual Landing Page Preview"
-                            />
-                        </div>
-                    </div>
+                    <PreviewPanel
+                        iframeRef={previewWrapperRef}
+                        isMobilePreview={isMobilePreview}
+                        setIsMobilePreview={setIsMobilePreview}
+                        previewUrl={LANDING_PAGE_URL}
+                    />
                 </div>
             </div>
         </div>

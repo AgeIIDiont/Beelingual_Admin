@@ -351,34 +351,41 @@ const Vocabularys = () => {
       filters={filters}
       formFields={formFields}
       listApi={async (params) => {
-        const res = await fetchVocabulary(params);
+        // Option 2: Fetch ALL data, filter client-side, let ResourceManager paginate
+        // Fetch all vocab (ignore page/limit from params, use high limit to get all)
+        const res = await fetchVocabulary({ limit: 10000 });
         let items = res.data || res.items || [];
 
-        try {
-          if (params) {
-            if (params.topic) {
-              const wanted = String(params.topic).toLowerCase();
-              items = items.filter((it) => {
-                const topicId = it.topic?._id || it.topic || '';
-                return String(topicId) === wanted;
-              });
-            }
-            if (params.search) {
-              const q = String(params.search).toLowerCase();
-              items = items.filter((it) => (it.word || '').toLowerCase().includes(q) || (it.meaning || '').toLowerCase().includes(q));
-            }
-            if (params.level) {
-              if (params.level !== '') items = items.filter((it) => it.level === params.level);
-            }
-            if (params.type) {
-              if (params.type !== '') items = items.filter((it) => it.type === params.type);
-            }
+        // Client-side filtering
+        if (params) {
+          if (params.topic && params.topic !== '') {
+            const wanted = String(params.topic).toLowerCase();
+            items = items.filter((it) => {
+              const topicId = it.topic?._id || it.topic || '';
+              return String(topicId).toLowerCase() === wanted;
+            });
           }
-        } catch (e) {
-          console.warn('Client-side filter fallback failed for Vocabulary', e);
+          if (params.search && params.search !== '') {
+            const q = String(params.search).toLowerCase();
+            items = items.filter((it) => 
+              (it.word || '').toLowerCase().includes(q) || 
+              (it.meaning || '').toLowerCase().includes(q)
+            );
+          }
+          if (params.level && params.level !== '') {
+            items = items.filter((it) => it.level === params.level);
+          }
+          if (params.type && params.type !== '') {
+            items = items.filter((it) => it.type === params.type);
+          }
         }
 
-        return { ...res, data: items, total: items.length };
+        // Return FULL filtered list - ResourceManager will handle pagination
+        // (see ResourceManager.jsx lines 192-198 for client-side pagination logic)
+        return { 
+          data: items, 
+          total: items.length 
+        };
       }}
       createApi={createVocabulary}
       updateApi={updateVocabulary}
