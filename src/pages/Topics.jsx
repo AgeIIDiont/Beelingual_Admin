@@ -74,7 +74,6 @@ const Topics = () => {
               />
             </div>
           ) : (
-            // Đồng bộ style "No Img" với trang Vocabulary
             <div className="bg-light d-flex align-items-center justify-content-center text-muted small border" style={{ width: '80px', height: '60px', borderRadius: '8px' }}>
               No Img
             </div>
@@ -88,7 +87,6 @@ const Topics = () => {
         render: (item) => (
           <div>
             <div className="fw-bold text-dark fs-6 mb-1">{item.name}</div>
-            {/* Hiển thị ID nhỏ giúp Admin dễ debug nếu cần */}
             <small className="text-muted fst-italic" style={{ fontSize: '0.75rem' }}>ID: {item._id?.slice(-6).toUpperCase()}</small>
           </div>
         ),
@@ -167,8 +165,6 @@ const Topics = () => {
         label: 'Trình độ',
         type: 'select',
         options: levelOptions.slice(1),
-        type: 'select',
-        options: levelOptions.slice(1),
         defaultValue: 'A1',
         col: 4,
       },
@@ -195,9 +191,7 @@ const Topics = () => {
   const buildPayload = (values) => {
     const payload = {
       name: values.name?.trim(),
-      name: values.name?.trim(),
       level: values.level || 'A1',
-      description: values.description?.trim(),
       description: values.description?.trim(),
       imageUrl: values.imageUrl?.trim(),
     };
