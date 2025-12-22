@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/slices/userSlice';
 import { logout } from '../../services/authService';
-import { fetchProfile } from '../../services/adminService';
 import { usePage } from '../../contexts/PageContext';
 import './styles/header.scss';
 
@@ -89,10 +88,10 @@ const Header = () => {
               {/* Text Info */}
               <div className="text-end d-none d-md-block">
                 <div className="fw-bold text-dark">
-                  {profile?.fullname || 'Admin User'}
+                  {profile?.fullname}
                 </div>
                 <div className="text-muted text-uppercase" style={{ fontSize: '10px' }}>
-                  {profile?.role || 'Administrator'}
+                  {profile?.role}
                 </div>
               </div>
 
@@ -130,13 +129,6 @@ const Header = () => {
                   >
                     <i className="fas fa-user-circle me-3 text-warning"></i>
                     Hồ sơ cá nhân
-                  </button>
-
-                  <button
-                    className="btn w-100 text-start px-3 py-2 border-0 bg-transparent dropdown-item-custom mb-1"
-                  >
-                    <i className="fas fa-cog me-3 text-secondary"></i>
-                    Cài đặt hệ thống
                   </button>
 
                   <div className="dropdown-divider my-2"></div>

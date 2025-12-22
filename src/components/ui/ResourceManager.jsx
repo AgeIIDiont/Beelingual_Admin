@@ -43,10 +43,6 @@ const customStyles = `
   }
   .rm-table-row:hover {
     background-color: #fff8e1 !important; /* Slight yellow tint on hover */
-    transform: scale(1.005);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    position: relative;
-    z-index: 1;
   }
   .rm-table-row td {
     padding: 16px;
