@@ -5,14 +5,17 @@ const TOKEN_KEY = 'beelingual_admin_token';
 const USER_KEY = 'beelingual_admin_user';
 
 // ====================== CÁC HÀM CƠ BẢN ======================
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
+// Token is stored as HttpOnly cookie by the backend. Do NOT persist token in localStorage.
+export const getToken = () => null;
 
-export const setToken = (token) => {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
+export const setToken = () => {
+  // noop: token should be set as HttpOnly cookie by backend
 };
 
 export const setUser = (user) => {
-  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+  if (user) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
 };
 
 export const getUser = () => {
@@ -27,11 +30,11 @@ export const getUser = () => {
 };
 
 export const clearAuth = () => {
-  localStorage.removeItem(TOKEN_KEY);
+  // Token cookie is cleared by backend (if necessary). Only remove local user copy.
   localStorage.removeItem(USER_KEY);
 };
 
-export const isAuthenticated = () => !!getToken();
+export const isAuthenticated = () => !!getUser();
 
 // ====================== ĐĂNG NHẬP ======================
 export const login = async (username, password) => {
@@ -41,16 +44,16 @@ export const login = async (username, password) => {
       password,
     });
 
-    const { token, user, message } = response.data;
+    const { user, message } = response.data;
 
-    if (!token || !user) {
+    if (!user) {
       throw new Error('Server trả về dữ liệu không hợp lệ');
     }
 
-    setToken(token);
+    // Backend should set HttpOnly cookie; frontend stores only user info for UI state
     setUser(user);
 
-    return { success: true, user, token, message };
+    return { success: true, user, message };
   } catch (error) {
     let message = 'Đăng nhập thất bại. Vui lòng thử lại.';
 
@@ -74,35 +77,142 @@ export const login = async (username, password) => {
 };
 
 // ====================== ĐĂNG XUẤT ======================
-export const logout = () => {
+export const logout = async () => {
+  try {
+    // Ask backend to clear auth cookie if endpoint exists
+    await api.post('/api/logout').catch(() => { });
+  } catch {
+    // ignore
+  }
   clearAuth();
-  // Dùng href để reload hoàn toàn trang → tránh bấm Back vào được trang cũ
+  // Full reload to ensure protected routes redirect
   window.location.href = '/login';
 };
 
-// ====================== INTERCEPTORS ======================
-// Thêm token vào mọi request
-api.interceptors.request.use(
-  (config) => {
-    const token = getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// ====================== REFRESH TOKEN ======================
+// Biến để theo dõi việc refresh token đang được thực hiện
+let isRefreshing = false;
+// Queue các request đang chờ refresh token hoàn thành
+let failedQueue = [];
 
-// Xử lý 401 toàn cục (token hết hạn / không hợp lệ)
+// Hàm xử lý queue các request đã fail
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Hàm refresh access token
+const refreshAccessToken = async () => {
+  try {
+    // Gọi API refresh token bằng fetch để tránh interceptor
+    // refreshToken cookie sẽ tự động được gửi với credentials: 'include'
+    const baseURL = api.defaults.baseURL || 'http://localhost:3000';
+    const response = await fetch(`${baseURL}/api/refresh-token`, {
+      method: 'POST',
+      credentials: 'include', // Quan trọng: gửi cookies
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Refresh token thất bại');
+    }
+
+    const data = await response.json();
+
+    // Backend tự động set accessToken cookie mới
+    // Cập nhật user info nếu có
+    if (data?.user) {
+      setUser(data.user);
+    }
+
+    return data?.accessToken || true;
+  } catch (error) {
+    // Refresh token cũng hết hạn hoặc không hợp lệ → cần đăng nhập lại
+    console.error('Refresh token thất bại:', error);
+    throw error;
+  }
+};
+
+// ====================== INTERCEPTORS ======================
+// When backend uses HttpOnly cookies, Authorization header is not required here.
+// Do not automatically inject local token into headers.
+
+// Response interceptor - tự động refresh token khi hết hạn
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Bỏ qua nếu request này là refresh token endpoint hoặc đã retry
+    const isRefreshEndpoint = originalRequest.url?.includes('/refresh-token');
+    if (isRefreshEndpoint || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    // Xử lý lỗi 401 - token hết hạn hoặc không hợp lệ
     if (error.response?.status === 401) {
-      if (window.location.pathname !== '/login') {
-        console.warn('Token hết hạn → tự động đăng xuất');
-        logout();
+      // Logic cũ: chỉ refresh nếu code === 'TOKEN_EXPIRED'
+      // Logic mới: Thử refresh cho mọi lỗi 401 (trừ login) để tránh logout oan khi backend trả lỗi chung chung
+      const isLoginRequest = originalRequest.url?.includes('/login');
+
+      // Nếu là request login bị 401 thì không refresh, trả về lỗi luôn để component Login xử lý
+      if (isLoginRequest) {
+        return Promise.reject(error);
+      }
+
+      // Với các request khác, nếu bị 401 thì thử refresh token
+      // Nếu đang refresh, thêm request vào queue
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            // Retry request ban đầu sau khi refresh thành công
+            originalRequest._retry = true;
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
+      // Bắt đầu refresh token
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        await refreshAccessToken();
+
+        // Refresh thành công, xử lý queue và retry request ban đầu
+        processQueue(null, true);
+        isRefreshing = false;
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Refresh thất bại → xử lý queue và logout
+        processQueue(refreshError, null);
+        isRefreshing = false;
+
+        // Chỉ logout nếu không phải đang ở trang login
+        if (window.location.pathname !== '/login') {
+          console.warn('Refresh token thất bại → tự động đăng xuất');
+          logout();
+        }
+
+        return Promise.reject(refreshError);
       }
     }
+
+    // Các lỗi khác
     return Promise.reject(error);
   }
 );

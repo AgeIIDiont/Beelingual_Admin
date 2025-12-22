@@ -1,0 +1,11 @@
+// ================================
+// MAIN SCSS ENTRY POINT
+// ================================
+
+// 1. Base System
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'animations' as *;
+
+// 2. Global Styles
+@use 'global' as *;

@@ -1,22 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateProfile as updateProfileState, selectUser } from '../store/slices/userSlice';
 import { changePassword, fetchProfile, updateProfile } from '../services/adminService';
-import {  setUser } from '../services/authService';
 import { usePage } from '../contexts/PageContext';
 import ProfileCard from '../components/ui/ProfileCard';
 
 const Settings = () => {
-  // Các biến logic cũ của bạn giữ nguyên
+  const dispatch = useDispatch();
+  const reduxUser = useSelector(selectUser);
   const { setPageInfo } = usePage();
-  const [profile, setProfile] = useState(null);
-  const [profileForm, setProfileForm] = useState({ fullname: '', email: '', level: 'A', avatarUrl: '' });
+  const [profile, setProfile] = useState(reduxUser);
+  const [profileForm, setProfileForm] = useState({
+    fullname: reduxUser?.fullname || '',
+    email: reduxUser?.email || '',
+    level: reduxUser?.level || 'A',
+    avatarUrl: reduxUser?.avatarUrl || ''
+  });
+  // ... rest of the state
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!reduxUser);
   const [savingProfile, setSavingProfile] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showCrPassword, setShowCrPassword] = useState(false);
   const [toast, setToast] = useState({ show: false, type: '', message: '' });
-  const [isEditing, setIsEditing] = useState(false); 
+  const [isEditing, setIsEditing] = useState(false);
   const [isPasswordExpanded, setIsPasswordExpanded] = useState(false);
 
   const showToast = (type, message) => {
@@ -30,7 +38,7 @@ const Settings = () => {
   };
 
   const loadProfile = async () => {
-    setLoading(true);
+    if (!reduxUser) setLoading(true);
     try {
       const data = await fetchProfile();
       setProfile(data);
@@ -40,9 +48,9 @@ const Settings = () => {
         level: data.level || 'A',
         avatarUrl: data.avatarUrl || '',
       });
-      setUser(data);
+      dispatch(updateProfileState(data));
     } finally {
-      setLoading(false);
+      if (!reduxUser) setLoading(false);
     }
   };
 
@@ -71,8 +79,8 @@ const Settings = () => {
       showToast('success', 'Cập nhật thông tin thành công!');
       const updatedData = await fetchProfile();
       setProfile(updatedData);
-      setUser(updatedData);
-      setIsEditing(false); 
+      dispatch(updateProfileState(updatedData));
+      setIsEditing(false);
     } catch (err) {
       showToast('danger', err.message);
     } finally {
@@ -83,13 +91,13 @@ const Settings = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) return showToast('danger', 'Mật khẩu xác nhận không khớp.');
-    
+
     setChangingPassword(true);
     try {
       await changePassword({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword });
       showToast('success', 'Đổi mật khẩu thành công!');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      setIsPasswordExpanded(false); 
+      setIsPasswordExpanded(false);
     } catch (err) {
       showToast('danger', err.message);
     } finally {
@@ -134,6 +142,12 @@ const Settings = () => {
             background-color: #6475843e;
             color: #f20000ff;
             box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+          }
+          /* Hide default password reveal button in Edge/IE */
+          input::-ms-reveal,
+          input::-ms-clear {
+            display: none;
+          }
         `}
       </style>
 
@@ -165,18 +179,18 @@ const Settings = () => {
             <div className="text-center text-md-start mb-35flex-grow-1">
               <h2 className="fw-bold text-dark mb-1">{profile?.fullname || 'Admin User'}</h2>
               <p className="text-muted mb-0">
-                <i className="fas fa-shield-alt text-primary me-2"></i>{profile?.role} 
-                <span className="mx-2">•</span> 
+                <i className="fas fa-shield-alt text-primary me-2"></i>{profile?.role}
+                <span className="mx-2">•</span>
                 <i className="fas fa-calendar-alt text-secondary me-2"></i>Tham gia: {formatDate(profile?.createdAt)}
               </p>
             </div>
             <div className="mb-3 ms-md-auto">
-               <button 
-                 className={`btn ${isEditing ? 'btn-pale-secondary' : 'btn-pale-success'} rounded-pill px-4 fw-bold shadow-sm transition-all`}
-                 onClick={toggleEditMode}
-               >
-                 {isEditing ? <><i className="fas fa-times me-2"></i> Hủy bỏ</> : <><i className="fas fa-pen me-2"></i> Chỉnh sửa</>}
-               </button>
+              <button
+                className={`btn ${isEditing ? 'btn-pale-secondary' : 'btn-pale-success'} rounded-pill px-4 fw-bold shadow-sm transition-all`}
+                onClick={toggleEditMode}
+              >
+                {isEditing ? <><i className="fas fa-times me-2"></i> Hủy bỏ</> : <><i className="fas fa-pen me-2"></i> Chỉnh sửa</>}
+              </button>
             </div>
           </div>
         </div>
@@ -185,35 +199,35 @@ const Settings = () => {
       {/* --- PHẦN CẬP NHẬT: Profile CARDS MỚI --- */}
       <div className="row g-4 mb-4">
         <div className="col-md-3 col-sm-6">
-          <ProfileCard 
-            title="Loại tài khoản" 
-            number={profile?.role || 'Admin'} 
-            subtitle="Quyền hạn" 
-            icon="fa-user-shield" 
+          <ProfileCard
+            title="Loại tài khoản"
+            number={profile?.role || 'Admin'}
+            subtitle="Quyền hạn"
+            icon="fa-user-shield"
           />
         </div>
         <div className="col-md-3 col-sm-6">
-          <ProfileCard 
-            title="Trạng thái" 
-            number="Hoạt động" 
-            subtitle="Tình trạng" 
-            icon="fa-check-circle" 
+          <ProfileCard
+            title="Trạng thái"
+            number="Hoạt động"
+            subtitle="Tình trạng"
+            icon="fa-check-circle"
           />
         </div>
         <div className="col-md-3 col-sm-6">
-          <ProfileCard 
-            title="Ngày tham gia" 
-            number={formatDate(profile?.createdAt)} 
-            subtitle="Thời gian" 
-            icon="fa-calendar-day" 
+          <ProfileCard
+            title="Ngày tham gia"
+            number={formatDate(profile?.createdAt)}
+            subtitle="Thời gian"
+            icon="fa-calendar-day"
           />
         </div>
         <div className="col-md-3 col-sm-6">
-          <ProfileCard 
-            title="XP" 
-            number={profile?.xp || 0} 
-            subtitle="Điểm kinh nghiệm" 
-            icon="fa-star" 
+          <ProfileCard
+            title="XP"
+            number={profile?.xp || 0}
+            subtitle="Điểm kinh nghiệm"
+            icon="fa-star"
           />
         </div>
       </div>
@@ -221,7 +235,7 @@ const Settings = () => {
 
       {/* SPLIT CONTENT - Giữ nguyên */}
       <div className="row g-4">
-        
+
         {/* LEFT COLUMN: EDIT INFO */}
         <div className="col-lg-8">
           <div className="card border-0 shadow rounded-4 h-100">
@@ -236,15 +250,15 @@ const Settings = () => {
                 <div className="row g-4">
                   <div className="col-12">
                     <label className="form-label fw-semibold text-secondary">Tên người dùng</label>
-                    <input type="text" className={`form-control ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.fullname} onChange={(e) => setProfileForm({...profileForm, fullname: e.target.value})} disabled={!isEditing} />
+                    <input type="text" className={`form-control ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.fullname} onChange={(e) => setProfileForm({ ...profileForm, fullname: e.target.value })} disabled={!isEditing} />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-semibold text-secondary">Email</label>
-                    <input type="email" className={`form-control ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.email} onChange={(e) => setProfileForm({...profileForm, email: e.target.value})} disabled={!isEditing} />
+                    <input type="email" className={`form-control ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.email} onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })} disabled={!isEditing} />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-semibold text-secondary">Cấp độ</label>
-                    <select className={`form-select ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.level} onChange={(e) => setProfileForm({...profileForm, level: e.target.value})} disabled={!isEditing}>
+                    <select className={`form-select ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.level} onChange={(e) => setProfileForm({ ...profileForm, level: e.target.value })} disabled={!isEditing}>
                       <option value="A">Sơ cấp (A)</option>
                       <option value="B">Trung cấp (B)</option>
                       <option value="C">Cao cấp (C)</option>
@@ -252,7 +266,7 @@ const Settings = () => {
                   </div>
                   <div className="col-12">
                     <label className="form-label fw-semibold text-secondary">Avatar URL</label>
-                    <input type="text" className={`form-control ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.avatarUrl} onChange={(e) => setProfileForm({...profileForm, avatarUrl: e.target.value})} disabled={!isEditing} />
+                    <input type="text" className={`form-control ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.avatarUrl} onChange={(e) => setProfileForm({ ...profileForm, avatarUrl: e.target.value })} disabled={!isEditing} />
                   </div>
                   {isEditing && (
                     <div className="col-12 pt-3 d-flex gap-2">
@@ -268,10 +282,10 @@ const Settings = () => {
 
         {/* RIGHT COLUMN: SECURITY */}
         <div className="col-lg-4">
-          
+
           <div className="card border-0 shadow rounded-4 mb-4">
             <div className="card-header bg-white border-0 pt-4 px-4">
-               <div className="d-flex align-items-center border-start border-4 border-warning ps-3">
+              <div className="d-flex align-items-center border-start border-4 border-warning ps-3">
                 <h5 className="fw-bold text-dark mb-0">Tài sản</h5>
               </div>
             </div>
@@ -297,9 +311,9 @@ const Settings = () => {
               <p className="small text-muted mb-3">
                 Giữ tài khoản an toàn bằng mật khẩu mạnh.
               </p>
-              
+
               {!isPasswordExpanded && (
-                <button 
+                <button
                   className="btn btn-outline-danger w-100 fw-bold py-2 shadow-sm"
                   onClick={() => setIsPasswordExpanded(true)}
                 >
@@ -309,7 +323,7 @@ const Settings = () => {
 
               <div className={`password-collapse ${isPasswordExpanded ? 'open' : ''}`}>
                 <form onSubmit={handlePasswordSubmit}>
-                  
+
                   <div className="mb-4">
                     <div className="input-group">
                       <input

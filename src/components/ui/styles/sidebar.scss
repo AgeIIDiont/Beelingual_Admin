@@ -1,0 +1,54 @@
+// ================================
+// SIDEBAR COMPONENT STYLES
+// ================================
+
+.sidebar-container {
+    width: 280px;
+    transition: width 0.3s;
+    position: fixed;
+    height: 100%;
+    z-index: 1020;
+}
+
+.sidebar-header {
+    padding: 2rem;
+    text-align: center;
+    background: #ffc107;
+}
+
+.sidebar-menu {
+    flex-grow: 1;
+    padding: 0 1rem;
+    padding-top: 2rem;
+}
+
+.sidebar-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    position: relative;
+    cursor: pointer;
+    transition: 0.3s;
+    color: #ffffff;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    &.active {
+        background: #f8fafc;
+        color: #1e293b;
+        border-left: 5px solid #ffc107;
+    }
+
+    i {
+        font-size: 1.25rem;
+        margin-right: 1.5rem;
+    }
+
+    span {
+        font-weight: 500;
+    }
+}

@@ -1,4 +1,6 @@
-import React, { useMemo , useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchTopicsAction, selectTopics } from '../store/slices/resourceSlice';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   fetchVocabulary,
@@ -6,12 +8,15 @@ import {
   updateVocabulary,
   deleteVocabulary,
 } from '../services/adminService';
-import { fetchTopics as fetchAllTopics } from '../services/adminService';
+
 const levelOptions = [
   { value: '', label: 'Tất cả' },
-  { value: 'A', label: 'Level A' },
-  { value: 'B', label: 'Level B' },
-  { value: 'C', label: 'Level C' },
+  { value: 'A1', label: 'Level A1' },
+  { value: 'A2', label: 'Level A2' },
+  { value: 'B1', label: 'Level B1' },
+  { value: 'B2', label: 'Level B2' },
+  { value: 'C1', label: 'Level C1' },
+  { value: 'C2', label: 'Level C2' },
 ];
 
 const typeOptions = [
@@ -30,62 +35,58 @@ const typeOptions = [
 
 import { usePage } from '../contexts/PageContext';
 const Vocabularys = () => {
-    const { setPageInfo } = usePage();
-    const resourceManagerRef = useRef(null);
-    const [topicOptions, setTopicOptions] = useState([]);
+  const { setPageInfo } = usePage();
+  const dispatch = useDispatch();
+  const resourceManagerRef = useRef(null);
+  const topicsData = useSelector(selectTopics);
 
-    useEffect(() => {
-      const loadTopics = async () => {
-        try {
-          const response = await fetchAllTopics();
-          const topicsData = response.data || [];
-          const options = topicsData.map(topic => ({
-            value: topic.name,
-            label: `${topic.name}`,
-          }));
-          setTopicOptions(options);
-        } catch (error) {
-          console.error('Error fetching topics:', error);
-        }
-      };
-      loadTopics();
-    }, []);
+  useEffect(() => {
+    dispatch(fetchTopicsAction());
+  }, [dispatch]);
 
-    useEffect(() => {
-      const handleRefresh = () => {
-        if (resourceManagerRef.current) {
-          resourceManagerRef.current.refresh();
-        }
-      };
-  
-      const handleCreate = () => {
-        if (resourceManagerRef.current) {
-          resourceManagerRef.current.openCreateForm();
-        }
-      };
-  
-        setPageInfo({
-          title: 'Quản lý Từ vựng',
-          description: 'Quản lý toàn bộ từ vựng: thêm, sửa, xóa và tìm kiếm.',
-          actions: (
-            <>
-              <button
-                className="btn btn-outline-secondary"
-                type="button"
-                onClick={handleRefresh}
-              >
-                <i className="fas fa-rotate me-2"></i>
-                Làm mới
-              </button>
-              <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
-                <i className="fas fa-plus me-2" />
-                Thêm từ vựng
-              </button>
-            </>
-          ),
-        });
-      return () => setPageInfo({ title: '', description: '', actions: null });
-    }, [setPageInfo]);
+  const topicOptions = useMemo(() => {
+    const options = topicsData.map((topic) => ({
+      value: topic._id || topic.id,
+      label: `${topic.name}`,
+    }));
+    return [{ value: '', label: 'Tất cả' }, ...options];
+  }, [topicsData]);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.refresh();
+      }
+    };
+
+    const handleCreate = () => {
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.openCreateForm();
+      }
+    };
+
+    setPageInfo({
+      title: 'Quản lý Từ vựng',
+      description: 'Quản lý toàn bộ từ vựng: thêm, sửa, xóa và tìm kiếm.',
+      actions: (
+        <>
+          <button
+            className="btn btn-outline-secondary"
+            type="button"
+            onClick={handleRefresh}
+          >
+            <i className="fas fa-rotate me-2"></i>
+            Làm mới
+          </button>
+          <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
+            <i className="fas fa-plus me-2" />
+            Thêm từ vựng
+          </button>
+        </>
+      ),
+    });
+    return () => setPageInfo({ title: '', description: '', actions: null });
+  }, [setPageInfo]);
   // Hàm xử lý phát âm thanh
   const playAudio = (url) => {
     if (!url) return;
@@ -102,9 +103,9 @@ const Vocabularys = () => {
         render: (item) => (
           item.imageUrl ? (
             <div className="ratio ratio-4x3" style={{ width: '80px', borderRadius: '8px', overflow: 'hidden' }}>
-              <img 
-                src={item.imageUrl} 
-                alt={item.word} 
+              <img
+                src={item.imageUrl}
+                alt={item.word}
                 className="object-fit-cover w-100 h-100"
                 onError={(e) => { e.target.src = 'https://placehold.co/80x60?text=No+Img'; }}
               />
@@ -131,14 +132,14 @@ const Vocabularys = () => {
                 </span>
               )}
             </div>
-            
+
             <div className="d-flex align-items-center gap-2">
               {/* Phiên âm */}
               <span className="text-muted fst-italic font-monospace">/{item.pronunciation}/</span>
-              
+
               {/* Nút nghe Audio */}
               {item.audioUrl && (
-                <button 
+                <button
                   type="button"
                   className="btn btn-sm btn-light text-primary rounded-circle p-1 d-flex align-items-center justify-content-center"
                   style={{ width: '28px', height: '28px' }}
@@ -168,10 +169,10 @@ const Vocabularys = () => {
         minWidth: '100px',
         render: (item) => {
           let colorClass = 'bg-secondary';
-          if (item.level === 'A') colorClass = 'bg-success';
-          if (item.level === 'B') colorClass = 'bg-warning text-dark';
-          if (item.level === 'C') colorClass = 'bg-danger';
-          
+          if (['A1', 'A2', 'A'].includes(item.level)) colorClass = 'bg-success';
+          if (['B1', 'B2', 'B'].includes(item.level)) colorClass = 'bg-warning text-dark';
+          if (['C1', 'C2', 'C'].includes(item.level)) colorClass = 'bg-danger';
+
           return (
             <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
               {item.level || '—'}
@@ -182,12 +183,31 @@ const Vocabularys = () => {
       {
         key: 'topic',
         label: 'Chủ đề',
-        render: (item) => (
-           item.topic ? <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">{item.topic}</span> : '—'
-        ),
+        render: (item) => {
+          // topic may be a populated object or a plain string (id or name)
+          if (!item.topic) return '—';
+          if (typeof item.topic === 'object') {
+            return (
+              <span className="text-dark">
+                {item.topic.name || item.topic.label || item.topic.title}
+              </span>
+            );
+          }
+
+          // If topic is a string, it might be an id. Try to resolve a friendly name from topicOptions
+          const topicStr = String(item.topic);
+          const found = topicOptions.find((t) => String(t.value) === topicStr || String(t.label) === topicStr);
+          const label = found ? found.label : topicStr;
+
+          return (
+            <span className="text-dark">
+              {label}
+            </span>
+          );
+        },
       },
     ],
-    []
+    [topicOptions]
   );
 
   const filters = useMemo(
@@ -202,8 +222,8 @@ const Vocabularys = () => {
       {
         name: 'topic',
         label: 'Chủ đề',
-        type: 'text',
-        placeholder: 'Lọc theo chủ đề...',
+        type: 'select',
+        options: topicOptions,
         col: 3,
       },
       {
@@ -214,14 +234,14 @@ const Vocabularys = () => {
         col: 2,
       },
       {
-        name: 'level',
-        label: 'Trình độ',
+        name: 'type',
+        label: 'Loại từ',
         type: 'select',
         options: typeOptions,
-        col: 2,
+        col: 3,
       },
     ],
-    []
+    [topicOptions]
   );
 
   const formFields = useMemo(
@@ -255,7 +275,7 @@ const Vocabularys = () => {
         label: 'Trình độ',
         type: 'select',
         options: levelOptions.slice(1),
-        defaultValue: 'A',
+        defaultValue: 'A1',
         col: 6,
       },
       {
@@ -268,10 +288,19 @@ const Vocabularys = () => {
         col: 12,
       },
       {
+        name: 'example',
+        label: 'Ví dụ (Example)',
+        type: 'textarea',
+        rows: 2,
+        required: false,
+        placeholder: 'Ví dụ câu sử dụng từ này...',
+        col: 12,
+      },
+      {
         name: 'topic',
         label: 'Chủ đề',
         type: 'select',
-        options: topicOptions.slice(1),
+        options: [{ value: '', label: '-- Chọn chủ đề --' }, ...topicOptions.slice(1)],
         required: true,
         col: 12,
         placeholder: 'Ví dụ: Travel, Business...'
@@ -291,17 +320,18 @@ const Vocabularys = () => {
         col: 12,
       },
     ],
-    [topicOptions, typeOptions, levelOptions]
+    [topicOptions]
   );
 
   const buildPayload = (values) => {
     const payload = {
       word: values.word?.trim(),
       meaning: values.meaning?.trim(),
-      level: values.level || 'A',
+      example: values.example?.trim(),
+      level: values.level || 'A1',
       type: values.type || 'noun',
       pronunciation: values.pronunciation?.trim(),
-      topic: values.topic?.trim(),
+      topic: typeof values.topic === 'object' ? values.topic._id : values.topic?.trim(),
       imageUrl: values.imageUrl?.trim(),
       audioUrl: values.audioUrl?.trim(),
     };
@@ -320,15 +350,47 @@ const Vocabularys = () => {
       columns={columns}
       filters={filters}
       formFields={formFields}
-      listApi={fetchVocabulary}
+      listApi={async (params) => {
+        const res = await fetchVocabulary(params);
+        let items = res.data || res.items || [];
+
+        try {
+          if (params) {
+            if (params.topic) {
+              const wanted = String(params.topic).toLowerCase();
+              items = items.filter((it) => {
+                const topicId = it.topic?._id || it.topic || '';
+                return String(topicId) === wanted;
+              });
+            }
+            if (params.search) {
+              const q = String(params.search).toLowerCase();
+              items = items.filter((it) => (it.word || '').toLowerCase().includes(q) || (it.meaning || '').toLowerCase().includes(q));
+            }
+            if (params.level) {
+              if (params.level !== '') items = items.filter((it) => it.level === params.level);
+            }
+            if (params.type) {
+              if (params.type !== '') items = items.filter((it) => it.type === params.type);
+            }
+          }
+        } catch (e) {
+          console.warn('Client-side filter fallback failed for Vocabulary', e);
+        }
+
+        return { ...res, data: items, total: items.length };
+      }}
       createApi={createVocabulary}
       updateApi={updateVocabulary}
       deleteApi={deleteVocabulary}
       hideHeader={true}
+      mapItemToForm={(item) => ({
+        ...item,
+        topic: item.topic?._id || item.topic?.id || item.topic,
+      })}
       buildPayload={buildPayload}
     />
   );
 };
 
 export default Vocabularys;
-

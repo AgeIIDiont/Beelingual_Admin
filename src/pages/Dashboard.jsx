@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../store/slices/userSlice';
 import StatsCard from '../components/ui/StatsCard';
-// Import component chung mới
-import AreaChartCard from '../components/ui/AreaChartCard'; 
-import { 
-  fetchProfile, 
-  fetchVocabulary, 
-  fetchGrammar, 
-  fetchTopics, 
-  fetchExercises, 
-  fetchStatsNewUsers 
+import AreaChartCard from '../components/ui/AreaChartCard';
+import LeaderboardCard from '../components/ui/LeaderboardCard';
+import {
+  fetchVocabulary,
+  fetchGrammar,
+  fetchTopics,
+  fetchExercises,
+  fetchStatsNewUsers,
+  fetchUsers
 } from '../services/adminService';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const reduxProfile = useSelector(selectUser);
   const [userChartData, setUserChartData] = useState([]);
+  const [topUsers, setTopUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -25,14 +29,12 @@ const Dashboard = () => {
         setError(null);
 
         const [
-          profileRes, 
-          vocabRes, 
-          grammarRes, 
-          topicsRes, 
+          vocabRes,
+          grammarRes,
+          topicsRes,
           exercisesRes,
           newUsersRes
         ] = await Promise.all([
-          fetchProfile(),
           fetchVocabulary({ page: 1, limit: 1 }),
           fetchGrammar({ page: 1, limit: 1 }),
           fetchTopics({ page: 1, limit: 1 }),
@@ -40,10 +42,12 @@ const Dashboard = () => {
           fetchStatsNewUsers()
         ]);
 
-        setProfile(profileRes);
         setUserChartData(newUsersRes);
 
-        const getTotal = (res) => (res && res.total ? res.total : 0);
+        const getTotal = (res) => {
+          if (Array.isArray(res)) return res.length;
+          return res && res.total ? res.total : 0;
+        };
 
         setStats({
           vocabulary: getTotal(vocabRes),
@@ -62,11 +66,28 @@ const Dashboard = () => {
     loadData();
   }, []);
 
-  // Effect xử lý update profile (giữ nguyên code cũ của bạn)
+  // Load top users - Xử lý hoàn toàn ở frontend
   useEffect(() => {
-    const handler = (e) => { if (e.detail) setProfile(e.detail); };
-    window.addEventListener('auth:userUpdated', handler);
-    return () => window.removeEventListener('auth:userUpdated', handler);
+    const loadTopUsers = async () => {
+      try {
+        setLeaderboardLoading(true);
+        const data = await fetchUsers({ page: 1, limit: 100 });
+
+        const users = data.users || data.data || [];
+        const sortedUsers = users
+          .sort((a, b) => (b.xp || 0) - (a.xp || 0))
+          .slice(0, 5);
+
+        setTopUsers(sortedUsers);
+      } catch (err) {
+        console.error('Lỗi tải bảng xếp hạng:', err);
+        setTopUsers([]);
+      } finally {
+        setLeaderboardLoading(false);
+      }
+    };
+
+    loadTopUsers();
   }, []);
 
   return (
@@ -103,29 +124,22 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Hàng 2: Biểu đồ */}
+          {/* Hàng 2: Biểu đồ & Bảng xếp hạng */}
           <div className="row g-4">
-            {/* Biểu đồ 1: Người dùng mới (Màu xanh dương) */}
-            <div className="col-12 col-lg-6">
-              <AreaChartCard 
-                title="Người dùng mới trong 7 ngày qua" 
-                data={userChartData} 
-                dataKey="count"       // Key trong object API: { count: 12 }
-                color="#0d6efd"       // Màu xanh Primary
+            {/* Biểu đồ: Người dùng mới */}
+            <div className="col-12 col-lg-7">
+              <AreaChartCard
+                title="Người dùng mới trong 7 ngày qua"
+                data={userChartData}
+                dataKey="count"
+                color="#0d6efd"
                 unit="người"
               />
             </div>
 
-            {/* Ví dụ Biểu đồ 2: Giả sử bạn muốn dùng lại component này cho thống kê khác (Màu vàng cam) */}
-            {/* Bạn có thể bỏ đoạn này đi nếu chưa có dữ liệu */}
-            <div className="col-12 col-lg-6">
-               <AreaChartCard 
-                title="Hoạt động bài tập (Demo)" 
-                data={userChartData} // Tạm dùng chung data để demo
-                dataKey="count"
-                color="#ffc107"       // Màu vàng Warning
-                unit="lượt làm"
-              />
+            {/* Bảng xếp hạng */}
+            <div className="col-12 col-lg-5">
+              <LeaderboardCard users={topUsers} loading={leaderboardLoading} />
             </div>
           </div>
         </>

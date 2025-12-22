@@ -1,4 +1,7 @@
-import React, { useMemo, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchGrammarCategoriesAction, selectGrammarCategories } from '../store/slices/resourceSlice';
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   createGrammar,
@@ -7,38 +10,37 @@ import {
   updateGrammar,
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
-import { fetchCategories } from '../services/adminService';
 
 const levelOptions = [
   { value: '', label: 'Tất cả' },
-  { value: 'A', label: 'Level A' },
-  { value: 'B', label: 'Level B' },
-  { value: 'C', label: 'Level C' },
+  { value: 'A1', label: 'Level A1' },
+  { value: 'A2', label: 'Level A2' },
+  { value: 'B1', label: 'Level B1' },
+  { value: 'B2', label: 'Level B2' },
+  { value: 'C1', label: 'Level C1' },
+  { value: 'C2', label: 'Level C2' },
 ];
 
 const Grammar = () => {
   const { setPageInfo } = usePage();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const resourceManagerRef = useRef(null);
 
-  const [categoriOptions, setCategoriOptions] = useState([]);
-  
+  const categoriesData = useSelector(selectGrammarCategories);
+
   useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const response = await fetchCategories();
-        const categoriesData = Array.isArray(response) ? response : (response.data || []);
-        const options = categoriesData.map(categorie => ({
-          value: categorie.name,
-          label: `${categorie.name}`,
-        }));
-        setCategoriOptions(options);
-      } catch (error) {
-        console.error('Error fetching topics:', error);
-      }
-    };
-    loadCategories();
-  }, []);
-  
+    dispatch(fetchGrammarCategoriesAction());
+  }, [dispatch]);
+
+  const categoryOptions = useMemo(() => {
+    const options = categoriesData.map((categorie) => ({
+      value: categorie._id || categorie.id || categorie.name,
+      label: `${categorie.icon ? categorie.icon + ' ' : ''}${categorie.name}`,
+    }));
+    return [{ value: '', label: 'Tất cả' }, ...options];
+  }, [categoriesData]);
+
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -76,68 +78,101 @@ const Grammar = () => {
     return () => setPageInfo({ title: '', description: '', actions: null });
   }, [setPageInfo]);
 
+  // Manual delete handler since we are customizing the actions column
+  const handleDelete = async (id) => {
+    if (!window.confirm('Bạn chắc chắn muốn xóa bài ngữ pháp này?')) return;
+    try {
+      await deleteGrammar(id);
+      // Refresh list
+      if (resourceManagerRef.current) {
+        resourceManagerRef.current.refresh();
+      }
+    } catch (error) {
+      alert('Không thể xóa: ' + (error.message || 'Lỗi không xác định'));
+    }
+  };
+
   const columns = useMemo(
     () => [
       {
         key: 'title',
-        label: 'Chủ điểm',
+        label: 'Chủ điểm ngữ pháp',
         render: (item) => (
           <div>
-            <div className="fw-bold text-dark">{item.title}</div>
-            <small className="text-muted">{item.structure || '—'}</small>
+            <h6 className="fw-bold text-dark mb-1">{item.title}</h6>
+            {/* Structure */}
+            <div className="text-muted fst-italic small">
+              {item.structure || 'Không có cấu trúc'}
+            </div>
           </div>
         ),
-      },
-      {
-        key: 'categoryId',
-        label: 'Danh mục',
-        render: (item) => {
-          // Kiểm tra nếu categoryId là object (đã populate)
-          if (item.categoryId && typeof item.categoryId === 'object') {
-            return (
-              <span className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
-                {item.categoryId.icon} {item.categoryId.name}
-              </span>
-            );
-          }
-          return '—';
-        },
       },
       {
         key: 'level',
         label: 'Level',
         minWidth: '100px',
-        render: (item) => {
-          let colorClass = 'bg-secondary';
-          if (item.level === 'A') colorClass = 'bg-success';
-          if (item.level === 'B') colorClass = 'bg-warning text-dark';
-          if (item.level === 'C') colorClass = 'bg-danger';
-          
-          return (
-            <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
-              {item.level || '—'}
-            </span>
-          );
-        },
+        render: (item) => (
+          <span className={`badge rounded-pill ${['A1', 'A2', 'A'].includes(item.level) ? 'bg-success' :
+            ['B1', 'B2', 'B'].includes(item.level) ? 'bg-warning text-dark' :
+              ['C1', 'C2', 'C'].includes(item.level) ? 'bg-danger' : 'bg-secondary'
+            }`}>
+            {item.level || '—'}
+          </span>
+        ),
+      },
+      {
+        key: 'category',
+        label: 'Danh mục',
+        minWidth: '150px',
+        render: (item) => (
+          <div className="text-dark">
+            {item.categoryId && typeof item.categoryId === 'object'
+              ? item.categoryId.name
+              : '—'}
+          </div>
+        ),
       },
       {
         key: 'example',
         label: 'Ví dụ',
-        render: (item) => item.example || '—',
+        render: (item) => (
+          <div className="text-muted small text-truncate" style={{ maxWidth: '250px' }} title={item.example}>
+            {item.example || '—'}
+          </div>
+        ),
       },
       {
-        key: 'createdAt',
-        label: 'Ngày tạo',
-        render: (item) => new Date(item.createdAt).toLocaleDateString('vi-VN'),
+        key: 'actions',
+        label: 'Thao tác',
+        minWidth: '100px',
+        className: 'text-end',
+        render: (item) => (
+          <div className="d-flex gap-2 justify-content-end">
+            <button
+              className="btn btn-sm btn-light text-primary"
+              onClick={() => resourceManagerRef.current?.openEditForm(item)}
+              title="Chỉnh sửa"
+            >
+              <i className="fas fa-pen"></i>
+            </button>
+            <button
+              className="btn btn-sm btn-light text-danger"
+              onClick={() => handleDelete(item._id)}
+              title="Xóa"
+            >
+              <i className="fas fa-trash"></i>
+            </button>
+          </div>
+        ),
       },
     ],
-    []
+    [navigate]
   );
 
   const filters = useMemo(
     () => [
       {
-        name: 'title',
+        name: 'search',
         label: 'Tìm kiếm',
         type: 'text',
         placeholder: 'Nhập tiêu đề...',
@@ -150,8 +185,15 @@ const Grammar = () => {
         options: levelOptions,
         col: 3,
       },
+      {
+        name: 'categoryId',
+        label: 'Loại ngữ pháp',
+        type: 'select',
+        options: categoryOptions,
+        col: 3,
+      },
     ],
-    []
+    [categoryOptions]
   );
 
   const formFields = useMemo(
@@ -168,7 +210,7 @@ const Grammar = () => {
         label: 'Trình độ',
         type: 'select',
         options: levelOptions.slice(1),
-        defaultValue: 'A',
+        defaultValue: 'A1',
         col: 3,
       },
       {
@@ -182,7 +224,7 @@ const Grammar = () => {
         name: 'categoryId', // Sửa name cho đúng với API
         label: 'Loại ngữ pháp',
         type: 'select',
-        options: categoriOptions, // List options đã lấy từ API
+        options: categoryOptions, // List options đã lấy từ API
         required: true,
         col: 12, // Hoặc 3 tùy layout
       },
@@ -201,21 +243,31 @@ const Grammar = () => {
         col: 12,
       },
     ],
-    [categoriOptions,]
+    [categoryOptions]
   );
 
   const buildPayload = (values) => {
     const payload = {
       title: values.title?.trim(),
-      level: values.level || 'A',
-      categoryId: values.categoryId, // Gửi _id của category
+      level: values.level || 'A1',
+      // categoryId có thể là object (khi edit) hoặc string (khi create)
+      // Luôn extract _id nếu là object
+      categoryId: values.categoryId?._id || values.categoryId,
       structure: values.structure?.trim(),
       content: values.content?.trim(),
       example: values.example?.trim(),
     };
 
+    // Chỉ xóa các field undefined, null, hoặc empty string
+    // NHƯNG KHÔNG xóa categoryId nếu nó có giá trị
     Object.keys(payload).forEach((key) => {
-      if (!payload[key]) delete payload[key];
+      if (key === 'categoryId') {
+        // Giữ categoryId nếu nó có giá trị (không phải '', null, undefined)
+        if (!payload[key]) delete payload[key];
+      } else {
+        // Các field khác: xóa nếu falsy
+        if (!payload[key]) delete payload[key];
+      }
     });
 
     return payload;
@@ -225,7 +277,7 @@ const Grammar = () => {
     return {
       ...item,
       // Khi load về categoryId là object { _id, name... }, nhưng select cần _id string
-      categoryId: item.categoryId?._id || item.categoryId || '', 
+      categoryId: item.categoryId?._id || item.categoryId || '',
     };
   };
 
@@ -236,16 +288,33 @@ const Grammar = () => {
       columns={columns}
       filters={filters}
       formFields={formFields}
-      listApi={fetchGrammar}
+      listApi={async (params) => {
+        // Backend đã xử lý filter, chỉ cần gọi API và trả về kết quả
+        const res = await fetchGrammar(params);
+        const items = res.data || res.items || [];
+
+        // Debug log (có thể xóa sau khi test xong)
+        console.log('📊 Grammar API Response:', {
+          params,
+          totalItems: items.length,
+          total: res.total
+        });
+
+        return {
+          ...res,
+          data: items,
+          total: res.total || items.length,
+        };
+      }}
       createApi={createGrammar}
       updateApi={updateGrammar}
       deleteApi={deleteGrammar}
       buildPayload={buildPayload}
       mapItemToForm={mapItemToForm}
       hideHeader={true}
+      hideActionsColumn={true}
     />
   );
 };
 
 export default Grammar;
-

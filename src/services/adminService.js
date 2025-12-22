@@ -34,6 +34,7 @@ export const updateGrammar = (id, payload) => unwrap(api.put(`/api/edit_grammar/
 export const deleteGrammar = (id) => unwrap(api.delete(`/api/delet_grammar/${id}`));
 
 // ===== Grammar_categories =====
+export const fetchGrammarCategories = (params = {}) => unwrap(api.get('/api/grammar-categories', { params }));
 export const fetchCategories = (params = {}) => unwrap(api.get('/api/grammar-categories', { params }));
 export const createCategory = (payload) => unwrap(api.post('/api/grammar-categories', payload));
 
@@ -48,6 +49,28 @@ export const fetchExercises = (params = {}) => unwrap(api.get('/api/exercises', 
 export const createExercise = (payload) => unwrap(api.post('/api/exercises', payload));
 export const updateExercise = (id, payload) => unwrap(api.put(`/api/edit_exercise/${id}`, payload));
 export const deleteExercise = (id) => unwrap(api.delete(`/api/delet_exercise/${id}`));
+
+// ===== Grammar Exercises =====
+export const fetchGrammarExercises = (grammarIdOrParams, params = {}) => {
+  // Support both (grammarId) and (grammarId, params) and ({ grammarCategoryId... }) signatures
+  let queryParams = {};
+
+  if (typeof grammarIdOrParams === 'object') {
+    // Called as fetchGrammarExercises({ grammarCategoryId: '...' })
+    queryParams = { ...grammarIdOrParams };
+  } else if (typeof grammarIdOrParams === 'string' && grammarIdOrParams) {
+    // Called as fetchGrammarExercises('123')
+    queryParams = { grammarId: grammarIdOrParams, ...params };
+  } else {
+    // Called as fetchGrammarExercises()
+    queryParams = { ...params };
+  }
+
+  return unwrap(api.get('/api/grammar-exercises', { params: queryParams }));
+};
+export const createGrammarExercise = (payload) => unwrap(api.post('/api/grammar-exercises/create', payload));
+export const updateGrammarExercise = (id, payload) => unwrap(api.put(`/api/grammar-exercises/update/${id}`, payload));
+export const deleteGrammarExercise = (id) => unwrap(api.delete(`/api/grammar-exercises/delete/${id}`));
 
 // ===== Profile / Settings =====
 export const fetchProfile = async () => {
@@ -73,4 +96,16 @@ export const updateProfile = (payload) => unwrap(api.put('/api/profile', payload
 export const changePassword = (payload) => unwrap(api.put('/api/change-password', payload));
 export const fetchMyStreak = () => unwrap(api.get('/api/my-streak'));
 
+//============= Landing Page =============
+export const fetchLandingPageContent = () => unwrap(api.get('/api/landing-page/content'));
+export const fetchLandingPageTheme = () => unwrap(api.get('/api/landing-page/theme'));
+export const fetchLandingPageStatistics = () => unwrap(api.get('/api/landing-page/statistics'));
+export const updateLandingPageSection = (section, content) =>
+  unwrap(api.put(`/api/landing-page/content/${section}`, { content }));
+export const updateLandingPageTheme = (themeData) =>
+  unwrap(api.put('/api/landing-page/theme', themeData));
+
+//============= AI / Chatbot =============
+export const fetchChatbotConfig = () => unwrap(api.get('/api/ai/config'));
+export const updateChatbotConfig = (payload) => unwrap(api.put('/api/ai/config', payload));
 

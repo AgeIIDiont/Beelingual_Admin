@@ -1,0 +1,210 @@
+// ================================
+// LOGIN PAGE STYLES
+// ================================
+
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.login-container {
+    min-height: 100vh;
+    @include gradient-bg(#eadf49e7, #ffd013ff, 135deg);
+    overflow: hidden;
+    position: relative;
+    @include flex-center;
+}
+
+.login-decorative-circle {
+    position: absolute;
+    border-radius: $radius-full;
+    filter: blur(60px);
+
+    &--top-left {
+        width: 400px;
+        height: 400px;
+        background: rgba($color-white, 0.1);
+        top: -100px;
+        left: -100px;
+    }
+
+    &--bottom-right {
+        width: 350px;
+        height: 350px;
+        background: rgba($color-white, 0.15);
+        bottom: -80px;
+        right: -80px;
+    }
+}
+
+.login-card {
+    max-width: 460px;
+    width: 100%;
+    @include backdrop-blur(10px, $color-white);
+    border: 1px solid rgba($color-white, 0.3);
+    border-radius: $radius-2xl;
+    box-shadow: 0 20px 60px rgba($color-black, 0.15);
+    padding: $spacing-2xl;
+    position: relative;
+}
+
+.login-logo {
+    text-align: center;
+    margin-bottom: $spacing-sm;
+
+    img {
+        max-width: 180px;
+        width: 100%;
+    }
+}
+
+.login-title {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+    font-weight: $font-weight-bold;
+    font-size: $font-size-xl;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #fef244e7 0%, #fedf11ee 40%, #1f0f4fff 50%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+.login-error {
+    border-radius: $radius-md;
+    border: none;
+    background-color: #fee2e2;
+    border-left: 4px solid #dc2626;
+    animation: shake 0.5s;
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: $spacing-xl;
+    padding: $spacing-md;
+
+    i {
+        color: #dc2626;
+        margin-right: $spacing-sm;
+        margin-top: $spacing-xs;
+    }
+
+    div {
+        color: #7f1d1d;
+        font-size: $font-size-base;
+        font-weight: $font-weight-medium;
+    }
+}
+
+.login-form-group {
+    margin-bottom: $spacing-xl;
+
+    label {
+        font-weight: $font-weight-semibold;
+        color: #334155;
+        font-size: $font-size-base;
+        margin-bottom: $spacing-sm;
+        display: block;
+    }
+}
+
+.login-input-group {
+    height: 48px;
+    position: relative;
+
+    .input-group-text {
+        background-color: $color-light;
+        border: 2px solid $border-color;
+        border-right: none;
+        border-radius: $radius-md 0 0 $radius-md;
+
+        i {
+            color: $color-muted;
+        }
+    }
+
+    input {
+        border: 2px solid $border-color;
+        border-left: none;
+        border-radius: 0 $radius-md $radius-md 0;
+        font-size: $font-size-md;
+        padding: 12px 16px;
+        transition: all $transition-fast;
+
+        &:focus {
+            border-color: #fbbf24;
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+            outline: none;
+
+            &+.input-group-text,
+            ~.password-toggle {
+                border-color: #fbbf24;
+            }
+        }
+
+        &:disabled {
+            background-color: #f1f5f9 !important;
+            cursor: not-allowed;
+        }
+    }
+
+    &.password-group {
+        input {
+            border-right: none;
+        }
+    }
+}
+
+.password-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    border: 2px solid $border-color;
+    border-left: none;
+    border-radius: 0 $radius-md $radius-md 0;
+    background-color: $color-light;
+    padding: 0 16px;
+    cursor: pointer;
+    transition: all $transition-fast;
+    z-index: 10;
+
+    i {
+        color: $color-muted;
+    }
+
+    &:hover {
+        background-color: darken($color-light, 3%);
+    }
+}
+
+.login-submit-btn {
+    width: 100%;
+    font-weight: $font-weight-bold;
+    font-size: $font-size-lg;
+    padding: 14px;
+    border-radius: $radius-md;
+    @include gradient-bg(#fbbf24, #f59e0b);
+    border: none;
+    color: $color-dark;
+    box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
+    transition: all $transition-base;
+    letter-spacing: 0.3px;
+
+    @include button-hover(-2px, 0 6px 20px rgba(251, 191, 36, 0.5));
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+}
+
+.login-footer {
+    margin-top: $spacing-xl;
+    text-align: center;
+
+    p {
+        margin-bottom: 0;
+        color: $color-muted;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+    }
+}

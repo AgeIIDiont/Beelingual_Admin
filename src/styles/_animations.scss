@@ -1,0 +1,129 @@
+// ================================
+// ANIMATIONS & KEYFRAMES
+// ================================
+
+// Floating Icon Animation
+@keyframes float {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    50% {
+        transform: translate(-10px, -15px) rotate(5deg);
+    }
+
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+}
+
+// Slide Up Fade Animation
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// Grow Width Animation (Progress Line)
+@keyframes growWidth {
+    from {
+        width: 0%;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+// Slide Down Fade (Dropdown)
+@keyframes slideDownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+// Shake Animation (Error)
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-8px);
+    }
+
+    75% {
+        transform: translateX(8px);
+    }
+}
+
+// Fade In
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+// Spin (Loading)
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// Pulse
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+// Animation Classes
+.floating-icon {
+    animation: float 6s ease-in-out infinite;
+}
+
+.slide-up-fade {
+    animation: slideUp 0.8s ease-out forwards;
+}
+
+.progress-line-anim {
+    width: 0%;
+    animation: growWidth 1.5s ease-out 0.5s forwards;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-in;
+}

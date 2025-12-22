@@ -1,0 +1,64 @@
+// ================================
+// PROFILE CARD COMPONENT STYLES
+// ================================
+
+.profile-card {
+    background: linear-gradient(145deg, #ffffff, #fdfbf7);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.15);
+    box-shadow: 0 12px 25px -10px rgba(255, 215, 0, 0.15), 0 6px 10px -4px rgba(0, 0, 0, 0.05);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    overflow: hidden;
+    height: 100%;
+    position: relative;
+
+    &:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 40px -10px rgba(255, 215, 0, 0.3);
+    }
+}
+
+.profile-card__progress-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ffd700, #ffecb3);
+}
+
+.profile-card__icon-bg {
+    font-size: 120px;
+    color: #ffd700;
+    opacity: 0.1;
+    position: absolute;
+    right: -20px;
+    bottom: -20px;
+    z-index: 0;
+}
+
+.profile-card__body {
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.profile-card__icon-circle {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffc107 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 6px 15px rgba(255, 215, 0, 0.35);
+}
+
+.profile-card__title {
+    letter-spacing: 1px;
+}
+
+.profile-card__content-wrapper {
+    max-width: 80%;
+}
