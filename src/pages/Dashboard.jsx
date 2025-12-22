@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { selectUser } from '../store/slices/userSlice';
+// import { useSelector } from 'react-redux';
+// import { selectUser } from '../store/slices/userSlice';
 import StatsCard from '../components/ui/StatsCard';
 import AreaChartCard from '../components/ui/AreaChartCard';
 import LeaderboardCard from '../components/ui/LeaderboardCard';
@@ -9,13 +9,14 @@ import {
   fetchGrammar,
   fetchTopics,
   fetchExercises,
+  fetchGrammarExercises,
   fetchStatsNewUsers,
   fetchUsers
 } from '../services/adminService';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
-  const reduxProfile = useSelector(selectUser);
+  // const reduxProfile = useSelector(selectUser);
   const [userChartData, setUserChartData] = useState([]);
   const [topUsers, setTopUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,27 +34,43 @@ const Dashboard = () => {
           grammarRes,
           topicsRes,
           exercisesRes,
+          grammarExercisesRes,
           newUsersRes
         ] = await Promise.all([
           fetchVocabulary({ page: 1, limit: 1 }),
           fetchGrammar({ page: 1, limit: 1 }),
           fetchTopics({ page: 1, limit: 1 }),
+          // Regular exercises - API trả về total đúng
           fetchExercises({ page: 1, limit: 1 }),
+          // Grammar exercises - fetch all vì API không hỗ trợ total
+          fetchGrammarExercises({}),
           fetchStatsNewUsers()
         ]);
 
         setUserChartData(newUsersRes);
 
+        // Hàm lấy total từ API response
         const getTotal = (res) => {
           if (Array.isArray(res)) return res.length;
-          return res && res.total ? res.total : 0;
+          // API thường trả về total/count
+          if (res && typeof res.total === 'number') return res.total;
+          if (res && typeof res.count === 'number') return res.count;
+          // Fallback: đếm từ data array
+          if (res && res.data && Array.isArray(res.data)) return res.data.length;
+          if (res && res.items && Array.isArray(res.items)) return res.items.length;
+          return 0;
         };
+
+        // Tổng bài tập = exercises (từ API total) + grammar exercises (đếm array)
+        const regularExercisesCount = getTotal(exercisesRes);
+        const grammarExercisesCount = grammarExercisesRes?.data?.length || grammarExercisesRes?.length || 0;
+        const totalExercises = regularExercisesCount + grammarExercisesCount;
 
         setStats({
           vocabulary: getTotal(vocabRes),
           grammar: getTotal(grammarRes),
           topics: getTotal(topicsRes),
-          exercises: getTotal(exercisesRes),
+          exercises: totalExercises,
         });
       } catch (err) {
         console.error('Lỗi tải Dashboard:', err);
