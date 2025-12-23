@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-// Đảm bảo import cả hàm logout để xử lý trường hợp không phải Admin
+import { useLocation } from 'react-router-dom';
 import { login, logout } from '../../services/authService'; 
 import logo from '../../assets/logoLogin.jpg';
 
 const Login = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   
   const [formData, setFormData] = useState({
@@ -53,9 +51,8 @@ const Login = () => {
           return;
         }
 
-        // 3. Chuyển hướng (Không cần lưu localStorage nữa)
-        // Nếu bạn dùng Context API/Redux, hãy dispatch action cập nhật state user tại đây
-        navigate(from, { replace: true });
+        // 3. Chuyển hướng và reload trang để đảm bảo state được reset hoàn toàn
+        window.location.href = from;
 
       } else {
         setError('Tên đăng nhập hoặc mật khẩu không đúng.');

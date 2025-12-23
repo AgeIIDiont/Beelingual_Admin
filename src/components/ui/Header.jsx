@@ -88,10 +88,10 @@ const Header = () => {
               {/* Text Info */}
               <div className="text-end d-none d-md-block">
                 <div className="fw-bold text-dark">
-                  {profile?.fullname || 'Admin User'}
+                  {profile?.fullname}
                 </div>
                 <div className="text-muted text-uppercase" style={{ fontSize: '10px' }}>
-                  {profile?.role || 'Administrator'}
+                  {profile?.role}
                 </div>
               </div>
 
