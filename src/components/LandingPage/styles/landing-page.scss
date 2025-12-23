@@ -185,6 +185,52 @@
   cursor: not-allowed;
 }
 
+/* Add Button - Secondary Style */
+.lp-btn-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  border: 1.5px solid #ffc107;
+  border-radius: 8px;
+  background: transparent;
+  color: #d97706;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lp-btn-add:hover {
+  background: linear-gradient(135deg, #FFB75E 0%, #ED8F03 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(237, 143, 3, 0.25);
+}
+
+/* Delete Button - Subtle Style */
+.lp-btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lp-btn-delete:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
 /* Skeleton Loading */
 .lp-skeleton {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);

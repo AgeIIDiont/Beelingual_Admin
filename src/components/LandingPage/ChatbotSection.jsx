@@ -11,6 +11,21 @@ const ChatbotSection = ({ chatConfig, setChatConfig, onSave, saving }) => {
     setChatConfig(prev => ({ ...prev, suggestedQuestions: newQs }));
   };
 
+  const addQuestion = () => {
+    const newQuestion = { text: '', response: '' };
+    setChatConfig(prev => ({
+      ...prev,
+      suggestedQuestions: [...(prev.suggestedQuestions || []), newQuestion]
+    }));
+  };
+
+  const removeQuestion = (idx) => {
+    setChatConfig(prev => ({
+      ...prev,
+      suggestedQuestions: prev.suggestedQuestions.filter((_, i) => i !== idx)
+    }));
+  };
+
   return (
     <div className="fade-in">
       {/* Bot Identity */}
@@ -95,16 +110,36 @@ const ChatbotSection = ({ chatConfig, setChatConfig, onSave, saving }) => {
       </div>
 
       {/* Suggested Questions */}
-      <h6 className="fw-bold text-secondary mb-3">
-        <i className="fas fa-lightbulb me-2"></i>
-        Câu hỏi gợi ý ({chatConfig.suggestedQuestions?.length || 0})
-      </h6>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h6 className="fw-bold text-secondary mb-0">
+          <i className="fas fa-lightbulb me-2"></i>
+          Câu hỏi gợi ý ({chatConfig.suggestedQuestions?.length || 0})
+        </h6>
+        <button
+          type="button"
+          className="lp-btn-add"
+          onClick={addQuestion}
+        >
+          <i className="fas fa-plus"></i>
+          Thêm câu hỏi
+        </button>
+      </div>
 
       {chatConfig.suggestedQuestions?.map((q, idx) => (
         <div key={idx} className="lp-section-card">
-          <div className="lp-section-card-title">
-            <span className="badge bg-info text-white rounded-pill">Q{idx + 1}</span>
-            <span>{q.text?.substring(0, 40) || 'Câu hỏi chưa đặt'}{q.text?.length > 40 ? '...' : ''}</span>
+          <div className="lp-section-card-title d-flex justify-content-between align-items-center">
+            <div>
+              <span className="badge bg-info text-white rounded-pill">Q{idx + 1}</span>
+              <span className="ms-2">{q.text?.substring(0, 40) || 'Câu hỏi chưa đặt'}{q.text?.length > 40 ? '...' : ''}</span>
+            </div>
+            <button
+              type="button"
+              className="lp-btn-delete"
+              onClick={() => removeQuestion(idx)}
+              title="Xóa câu hỏi này"
+            >
+              <i className="fas fa-trash-alt"></i>
+            </button>
           </div>
 
           <div className="lp-form-group mb-3">
