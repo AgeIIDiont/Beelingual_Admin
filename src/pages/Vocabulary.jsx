@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTopicsAction, selectTopics } from '../store/slices/resourceSlice';
 import ResourceManager from '../components/ui/ResourceManager';
@@ -38,6 +38,7 @@ const Vocabularys = () => {
   const { setPageInfo } = usePage();
   const dispatch = useDispatch();
   const resourceManagerRef = useRef(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const topicsData = useSelector(selectTopics);
 
   useEffect(() => {
@@ -88,11 +89,18 @@ const Vocabularys = () => {
     return () => setPageInfo({ title: '', description: '', actions: null });
   }, [setPageInfo]);
   // Hàm xử lý phát âm thanh
-  const playAudio = (url) => {
+  const playAudio = useCallback((url) => {
     if (!url) return;
     const audio = new Audio(url);
     audio.play().catch((err) => console.error("Audio play error:", err));
-  };
+  }, []);
+
+  // Hàm xem ảnh - sử dụng useCallback để tránh tạo lại mỗi render
+  const handleImageClick = useCallback((e, imageUrl) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setPreviewImage(imageUrl);
+  }, []);
 
   const columns = useMemo(
     () => [
@@ -102,7 +110,12 @@ const Vocabularys = () => {
         minWidth: '100px',
         render: (item) => (
           item.imageUrl ? (
-            <div className="ratio ratio-4x3" style={{ width: '80px', borderRadius: '8px', overflow: 'hidden' }}>
+            <div 
+              className="ratio ratio-4x3" 
+              style={{ width: '80px', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer' }}
+              onClick={(e) => handleImageClick(e, item.imageUrl)}
+              title="Nhấn để xem ảnh lớn"
+            >
               <img
                 src={item.imageUrl}
                 alt={item.word}
@@ -143,7 +156,7 @@ const Vocabularys = () => {
                   type="button"
                   className="btn btn-sm btn-light text-primary rounded-circle p-1 d-flex align-items-center justify-content-center"
                   style={{ width: '28px', height: '28px' }}
-                  onClick={() => playAudio(item.audioUrl)}
+                  onClick={(e) => { e.stopPropagation(); playAudio(item.audioUrl); }}
                   title="Nghe phát âm"
                 >
                   <i className="fas fa-volume-high"></i>
@@ -207,7 +220,7 @@ const Vocabularys = () => {
         },
       },
     ],
-    [topicOptions]
+    [topicOptions, handleImageClick, playAudio]
   );
 
   const filters = useMemo(
@@ -344,6 +357,7 @@ const Vocabularys = () => {
   };
 
   return (
+    <>
     <ResourceManager
       ref={resourceManagerRef}
       resourceName="từ vựng"
@@ -397,6 +411,37 @@ const Vocabularys = () => {
       })}
       buildPayload={buildPayload}
     />
+
+    {/* Modal xem ảnh */}
+    {previewImage && (
+      <div 
+        className="modal d-block" 
+        tabIndex="-1"
+        style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}
+        onClick={() => setPreviewImage(null)}
+      >
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content bg-transparent border-0">
+            <div className="modal-body p-0 d-flex justify-content-center align-items-center">
+              <img 
+                src={previewImage} 
+                alt="Preview"
+                className="img-fluid rounded shadow"
+                style={{ maxHeight: '80vh', objectFit: 'contain' }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            <button 
+              type="button" 
+              className="btn-close btn-close-white position-absolute top-0 end-0 m-3"
+              onClick={() => setPreviewImage(null)}
+              aria-label="Close"
+            />
+          </div>
+        </div>
+      </div>
+    )}
+  </>
   );
 };
 

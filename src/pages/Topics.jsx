@@ -158,7 +158,7 @@ const Topics = () => {
         type: 'text',
         required: true,
         placeholder: 'Ví dụ: Daily Routine, Travel...',
-        col: 8,
+        col: 6,
       },
       {
         name: 'level',
@@ -166,7 +166,16 @@ const Topics = () => {
         type: 'select',
         options: levelOptions.slice(1),
         defaultValue: 'A1',
-        col: 4,
+        col: 3,
+      },
+      {
+        name: 'order',
+        label: 'Thứ tự hiển thị',
+        type: 'number',
+        placeholder: 'auto',
+        col: 3,
+        min: 1,
+        helper: 'Để trống = tự động thêm vào cuối.'
       },
       {
         name: 'imageUrl',
@@ -189,15 +198,22 @@ const Topics = () => {
   );
 
   const buildPayload = (values) => {
+    // Đảm bảo order >= 1
+    let orderValue = values.order ? Number(values.order) : undefined;
+    if (orderValue !== undefined && orderValue < 1) {
+      orderValue = 1;
+    }
+    
     const payload = {
       name: values.name?.trim(),
       level: values.level || 'A1',
       description: values.description?.trim(),
       imageUrl: values.imageUrl?.trim(),
+      order: orderValue,
     };
 
     Object.keys(payload).forEach((key) => {
-      if (!payload[key]) delete payload[key];
+      if (payload[key] === undefined || payload[key] === '') delete payload[key];
     });
 
     return payload;
@@ -213,8 +229,12 @@ const Topics = () => {
       filters={filters}
       formFields={formFields}
       listApi={async (params) => {
-        const res = await fetchTopics(params);
+        // Fetch ALL topics first (ignore page/limit, use high limit)
+        const res = await fetchTopics({ limit: 10000 });
         let items = Array.isArray(res) ? res : (res.data || res.items || []);
+
+        // Sắp xếp theo thứ tự order (tăng dần)
+        items = items.sort((a, b) => (a.order || 999) - (b.order || 999));
 
         try {
           if (params) {
@@ -230,11 +250,89 @@ const Topics = () => {
           console.warn('Client-side filter fallback failed for Topics', e);
         }
 
-        return { ...res, data: items, total: items.length };
+        return { data: items, total: items.length };
       }}
-      createApi={createTopic}
-      updateApi={updateTopic}
-      deleteApi={deleteTopic}
+      createApi={async (payload) => {
+        const res = await fetchTopics({ limit: 10000 });
+        const allTopics = Array.isArray(res) ? res : (res.data || res.items || []);
+        
+        if (payload.order) {
+          // Nếu có order, tự động đẩy các topic có order >= newOrder lên 1
+          const newOrder = Number(payload.order);
+          
+          // Tìm các topic cần shift (order >= newOrder)
+          const topicsToShift = allTopics.filter(t => (t.order || 999) >= newOrder);
+          
+          // Update từng topic bị ảnh hưởng
+          for (const topic of topicsToShift) {
+            await updateTopic(topic._id, { order: (topic.order || 999) + 1 });
+          }
+        } else {
+          // Nếu không nhập order, tự động gán order = max + 1
+          const maxOrder = allTopics.reduce((max, t) => Math.max(max, t.order || 0), 0);
+          payload.order = maxOrder + 1;
+        }
+        
+        return createTopic(payload);
+      }}
+      updateApi={async (id, payload) => {
+        // Nếu order thay đổi, xử lý shift
+        if (payload.order !== undefined) {
+          const newOrder = Number(payload.order);
+          const res = await fetchTopics({ limit: 10000 });
+          const allTopics = Array.isArray(res) ? res : (res.data || res.items || []);
+          
+          // Tìm topic hiện tại để lấy order cũ
+          const currentTopic = allTopics.find(t => t._id === id);
+          const oldOrder = currentTopic?.order || 999;
+          
+          if (oldOrder !== newOrder) {
+            if (newOrder < oldOrder) {
+              // Di chuyển lên: đẩy các topic từ newOrder đến oldOrder-1 xuống 1
+              const topicsToShift = allTopics.filter(t => 
+                t._id !== id && 
+                (t.order || 999) >= newOrder && 
+                (t.order || 999) < oldOrder
+              );
+              for (const topic of topicsToShift) {
+                await updateTopic(topic._id, { order: (topic.order || 999) + 1 });
+              }
+            } else {
+              // Di chuyển xuống: đẩy các topic từ oldOrder+1 đến newOrder lên 1
+              const topicsToShift = allTopics.filter(t => 
+                t._id !== id && 
+                (t.order || 999) > oldOrder && 
+                (t.order || 999) <= newOrder
+              );
+              for (const topic of topicsToShift) {
+                await updateTopic(topic._id, { order: (topic.order || 999) - 1 });
+              }
+            }
+          }
+        }
+        
+        return updateTopic(id, payload);
+      }}
+      deleteApi={async (id, item) => {
+        const deletedOrder = item?.order;
+        
+        // Xóa topic trước
+        const result = await deleteTopic(id);
+        
+        // Sau đó giảm order của các topic có order > deletedOrder
+        if (deletedOrder) {
+          const res = await fetchTopics({ limit: 10000 });
+          const allTopics = Array.isArray(res) ? res : (res.data || res.items || []);
+          
+          const topicsToShift = allTopics.filter(t => (t.order || 999) > deletedOrder);
+          
+          for (const topic of topicsToShift) {
+            await updateTopic(topic._id, { order: (topic.order || 999) - 1 });
+          }
+        }
+        
+        return result;
+      }}
       buildPayload={buildPayload}
       hideHeader={true}
     />

@@ -257,6 +257,15 @@ const ResourceManager = forwardRef(({
 
   const handleFormChange = (e, field) => {
     const { name, value } = e.target;
+    
+    // Xử lý đặc biệt cho number với min: nếu giá trị < min thì về rỗng (auto)
+    if (field.type === 'number' && field.min !== undefined) {
+      if (value !== '' && Number(value) < field.min) {
+        setFormState((prev) => ({ ...prev, [name]: '' }));
+        return;
+      }
+    }
+    
     setFormState((prev) => ({
       ...prev,
       [name]:
@@ -427,7 +436,13 @@ const ResourceManager = forwardRef(({
           ? 'password'
           : 'text';
 
-    return <input type={inputType} {...commonProps} />;
+    // Thêm min/max cho input number
+    const numberProps = field.type === 'number' ? {
+      min: field.min,
+      max: field.max,
+    } : {};
+
+    return <input type={inputType} {...commonProps} {...numberProps} />;
   };
 
   const hasActions = Boolean((updateApi || deleteApi) && !hideActionsColumn);
