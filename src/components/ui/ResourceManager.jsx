@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState, useImperativeHandle, forwardRef } from 'react';
+import ReactDOM from 'react-dom';
 
 // --- STYLES & ANIMATIONS (Inline CSS for portability) ---
 const customStyles = `
@@ -98,6 +99,9 @@ const customStyles = `
     backdrop-filter: blur(5px);
     background-color: rgba(0,0,0,0.4);
   }
+  .rm-table-row.drag-over {
+    /* Styles removed */
+  }
 `;
 
 const sanitizePayload = (values) => {
@@ -137,6 +141,8 @@ const ResourceManager = forwardRef(({
   hideHeader = false,
   customFormRenderer,
   hideActionsColumn = false,
+  enableReorder = false,
+  onReorder,
 }, ref) => {
   const initialFilterValues = useMemo(() => {
     const values = {};
@@ -160,6 +166,15 @@ const ResourceManager = forwardRef(({
   const [limit, setLimit] = useState(defaultLimit);
   const [records, setRecords] = useState([]);
   const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
+  const [draggingId, setDraggingId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
+
+  // Kiểm tra xem có đang filter không
+  const isFiltering = useMemo(() => {
+    return Object.keys(appliedFilters).some(
+      (key) => appliedFilters[key] !== initialFilterValues[key]
+    );
+  }, [appliedFilters, initialFilterValues]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [feedback, setFeedback] = useState(null);
@@ -257,7 +272,7 @@ const ResourceManager = forwardRef(({
 
   const handleFormChange = (e, field) => {
     const { name, value } = e.target;
-    
+
     // Xử lý đặc biệt cho number với min: nếu giá trị < min thì về rỗng (auto)
     if (field.type === 'number' && field.min !== undefined) {
       if (value !== '' && Number(value) < field.min) {
@@ -265,7 +280,7 @@ const ResourceManager = forwardRef(({
         return;
       }
     }
-    
+
     setFormState((prev) => ({
       ...prev,
       [name]:
@@ -360,6 +375,52 @@ const ResourceManager = forwardRef(({
     openEditForm,
   }));
 
+  const handleDragStart = (itemId) => {
+    if (!enableReorder) return;
+    setDraggingId(itemId);
+  };
+
+  const handleDragEnter = (itemId) => {
+    if (!enableReorder || itemId === draggingId) return;
+    setDragOverId(itemId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    setDragOverId(null);
+  };
+
+  const handleDrop = async (targetId) => {
+    if (!enableReorder || !draggingId) return;
+
+    const sourceIndex = records.findIndex((r) => r[primaryKey] === draggingId);
+    const destinationIndex = records.findIndex((r) => r[primaryKey] === targetId);
+
+    if (sourceIndex === -1 || destinationIndex === -1 || sourceIndex === destinationIndex) {
+      handleDragEnd();
+      return;
+    }
+
+    const reordered = [...records];
+    const [movedItem] = reordered.splice(sourceIndex, 1);
+    reordered.splice(destinationIndex, 0, movedItem);
+
+    const reindexed = reordered.map((item, idx) => ({ ...item, order: idx + 1 }));
+    setRecords(reindexed);
+    setDraggingId(null);
+    setDragOverId(null);
+
+    if (onReorder) {
+      try {
+        await onReorder(sourceIndex, destinationIndex, movedItem);
+      } catch (err) {
+        console.error('onReorder failed', err);
+        setFeedback({ type: 'danger', message: 'Không thể sắp xếp. Đang làm mới...' });
+        setRefreshIndex((prev) => prev + 1);
+      }
+    }
+  };
+
   const renderFilterInput = (filter) => {
     const value = filterInputs[filter.name] ?? '';
     const commonProps = {
@@ -447,10 +508,128 @@ const ResourceManager = forwardRef(({
 
   const hasActions = Boolean((updateApi || deleteApi) && !hideActionsColumn);
 
+  const renderTableBody = () => {
+    if (loading) {
+      return (
+        <tbody>
+          <tr>
+            <td colSpan={columns.length + (hasActions ? 1 : 0) + (enableReorder ? 1 : 0)} className="text-center py-5">
+              <div className="spinner-border text-warning" style={{ width: '3rem', height: '3rem' }} role="status">
+                <span className="visually-hidden">Đang tải...</span>
+              </div>
+              <p className="text-muted mt-2">Đang tải dữ liệu...</p>
+            </td>
+          </tr>
+        </tbody>
+      );
+    }
+
+    if (records.length === 0) {
+      return (
+        <tbody>
+          <tr>
+            <td colSpan={columns.length + (hasActions ? 1 : 0) + (enableReorder ? 1 : 0)} className="text-center py-5 text-muted">
+              <div className="py-4">
+                <i className="fas fa-folder-open display-4 text-light mb-3"></i>
+                <p>Chưa có dữ liệu {resourceName} nào.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      );
+    }
+
+    const rows = records.map((item, index) => {
+      const isDragging = draggingId === item[primaryKey];
+      const isDragOver = dragOverId === item[primaryKey];
+      return (
+        <tr
+          key={item[primaryKey]}
+          className={`rm-table-row${isDragging ? ' dragging' : ''}${isDragOver ? ' drag-over' : ''}`}
+          draggable={enableReorder && !isFiltering}
+          onDragStart={() => handleDragStart(item[primaryKey])}
+          onDragEnter={() => handleDragEnter(item[primaryKey])}
+          onDragOver={(e) => {
+            if (enableReorder) e.preventDefault();
+          }}
+          onDrop={(e) => {
+            if (enableReorder) {
+              e.preventDefault();
+              handleDrop(item[primaryKey]);
+            }
+          }}
+          onDragEnd={handleDragEnd}
+        >
+          {enableReorder && (
+            <td className="text-center text-muted" style={{ width: '40px', cursor: isFiltering ? 'not-allowed' : 'grab' }}>
+              {isFiltering ? (
+                <i className="fas fa-filter text-secondary opacity-25" title="Tắt bộ lọc để sắp xếp"></i>
+              ) : (
+                <i className="fas fa-grip-vertical"></i>
+              )}
+            </td>
+          )}
+          {columns.map((col) => (
+            <td key={col.key} className={col.className}>
+              {col.render ? col.render(item) : (
+                <span className="fw-medium text-dark">{item[col.key] ?? '—'}</span>
+              )}
+            </td>
+          ))}
+          {hasActions && (
+            <td className="text-end">
+              <div className="d-flex justify-content-end gap-2">
+                {updateApi && (
+                  <button
+                    className="rm-action-btn edit"
+                    onClick={() => openEditForm(item)}
+                    title="Chỉnh sửa"
+                  >
+                    <i className="fas fa-pen fa-sm" />
+                  </button>
+                )}
+                {deleteApi && (
+                  <button
+                    className="rm-action-btn delete"
+                    onClick={() => handleDelete(item)}
+                    title="Xóa"
+                  >
+                    <i className="fas fa-trash fa-sm" />
+                  </button>
+                )}
+              </div>
+            </td>
+          )}
+        </tr>
+      );
+    });
+
+    return <tbody>{rows}</tbody>;
+  };
+
   return (
     <div className="container-fluid py-4 rm-container">
       {/* Inject custom styles */}
-      <style>{customStyles}</style>
+      <style>
+        {`${customStyles}
+          .rm-table-row.dragging {
+            background: #fff !important;
+            display: table !important;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15) !important;
+            border: 2px solid #ffc107 !important;
+            z-index: 9999;
+            /* Remove width: 100% and table-layout: fixed from here as they are moved to inline style or handled by library */
+          }
+          
+          .rm-table-row.dragging td {
+            display: table-cell !important;
+            padding: 1rem !important;
+            border-bottom: none !important;
+            /* Force cells to have some width if they squash */
+            min-width: 100px;
+          }
+        `}
+      </style>
 
       {/* HEADER SECTION */}
       {!hideHeader && (
@@ -552,75 +731,16 @@ const ResourceManager = forwardRef(({
           <table className="table mb-0">
             <thead className="rm-table-header">
               <tr>
+                {/* {enableReorder && <th style={{ width: '40px' }}></th>} */}
                 {columns.map((col) => (
                   <th key={col.key} style={{ minWidth: col.minWidth || 'auto' }} className={col.className}>
                     {col.label}
                   </th>
                 ))}
-                {hasActions && <th className="text-end">Hành động</th>}
+                {hasActions && <th className="text-end">Thao tác</th>}
               </tr>
             </thead>
-            <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={columns.length + (hasActions ? 1 : 0)} className="text-center py-5">
-                    <div className="spinner-border text-warning" style={{ width: '3rem', height: '3rem' }} role="status">
-                      <span className="visually-hidden">Đang tải...</span>
-                    </div>
-                    <p className="text-muted mt-2">Đang tải dữ liệu...</p>
-                  </td>
-                </tr>
-              )}
-
-              {!loading && records.length === 0 && (
-                <tr>
-                  <td colSpan={columns.length + (hasActions ? 1 : 0)} className="text-center py-5 text-muted">
-                    <div className="py-4">
-                      <i className="fas fa-folder-open display-4 text-light mb-3"></i>
-                      <p>Chưa có dữ liệu {resourceName} nào.</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-
-              {!loading &&
-                records.length > 0 &&
-                records.map((item) => (
-                  <tr key={item[primaryKey]} className="rm-table-row">
-                    {columns.map((col) => (
-                      <td key={col.key} className={col.className}>
-                        {col.render ? col.render(item) : (
-                          <span className="fw-medium text-dark">{item[col.key] ?? '—'}</span>
-                        )}
-                      </td>
-                    ))}
-                    {hasActions && (
-                      <td className="text-end">
-                        <div className="d-flex justify-content-end gap-2">
-                          {updateApi && (
-                            <button
-                              className="rm-action-btn edit"
-                              onClick={() => openEditForm(item)}
-                              title="Chỉnh sửa"
-                            >
-                              <i className="fas fa-pen fa-sm" />
-                            </button>
-                          )}
-                          {deleteApi && (
-                            <button
-                              className="rm-action-btn delete"
-                              onClick={() => handleDelete(item)}
-                              title="Xóa"
-                            >
-                              <i className="fas fa-trash fa-sm" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-            </tbody>
+            {renderTableBody()}
           </table>
         </div>
 

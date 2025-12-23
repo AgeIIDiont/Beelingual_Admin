@@ -1,5 +1,6 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
 import ResourceManager from '../components/ui/ResourceManager';
+import TopicReorderModal from '../components/TopicReorderModal';
 import {
   fetchTopics,
   createTopic,
@@ -21,6 +22,21 @@ const levelOptions = [
 const Topics = () => {
   const { setPageInfo } = usePage();
   const resourceManagerRef = useRef(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [showReorderModal, setShowReorderModal] = useState(false);
+  const [reorderTopics, setReorderTopics] = useState([]);
+
+  const handleOpenReorder = async () => {
+    try {
+      // Fetch all topics for reordering (fresh data)
+      const res = await fetchTopics({ limit: 10000 });
+      const items = Array.isArray(res) ? res : (res.data || res.items || []);
+      setReorderTopics(items);
+      setShowReorderModal(true);
+    } catch (e) {
+      console.error("Failed to fetch topics for reorder", e);
+    }
+  };
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -43,6 +59,14 @@ const Topics = () => {
           <button
             className="btn btn-outline-secondary"
             type="button"
+            onClick={handleOpenReorder}
+          >
+            <i className="fas fa-arrow-down-short-wide me-2"></i>
+            Sắp xếp
+          </button>
+          <button
+            className="btn btn-outline-secondary"
+            type="button"
             onClick={handleRefresh}
           >
             <i className="fas fa-rotate me-2"></i>
@@ -57,8 +81,17 @@ const Topics = () => {
     });
     return () => setPageInfo({ title: '', description: '', actions: null });
   }, [setPageInfo]);
+
   const columns = useMemo(
     () => [
+      {
+        key: 'order',
+        label: 'STT',
+        minWidth: '60px',
+        render: (item) => (
+          <span className="badge bg-light text-dark border fw-bold">{item.order}</span>
+        )
+      },
       {
         key: 'imageUrl',
         label: 'Hình ảnh',
@@ -175,7 +208,8 @@ const Topics = () => {
         placeholder: 'auto',
         col: 3,
         min: 1,
-        helper: 'Để trống = tự động thêm vào cuối.'
+        max: totalCount + 1,
+        helper: `Thứ tự hiển thị (1 - ${totalCount + 1}). Để trống = tự động.`
       },
       {
         name: 'imageUrl',
@@ -194,7 +228,7 @@ const Topics = () => {
         placeholder: 'Mô tả nội dung bài học...'
       },
     ],
-    []
+    [totalCount]
   );
 
   const buildPayload = (values) => {
@@ -203,7 +237,7 @@ const Topics = () => {
     if (orderValue !== undefined && orderValue < 1) {
       orderValue = 1;
     }
-    
+
     const payload = {
       name: values.name?.trim(),
       level: values.level || 'A1',
@@ -220,122 +254,73 @@ const Topics = () => {
   };
 
   return (
-    <ResourceManager
-      title="Quản lý Chủ đề"
-      description="Chuẩn hóa và quản lý các nhóm chủ đề bài học trong hệ thống."
-      ref={resourceManagerRef}
-      resourceName="chủ đề"
-      columns={columns}
-      filters={filters}
-      formFields={formFields}
-      listApi={async (params) => {
-        // Fetch ALL topics first (ignore page/limit, use high limit)
-        const res = await fetchTopics({ limit: 10000 });
-        let items = Array.isArray(res) ? res : (res.data || res.items || []);
-
-        // Sắp xếp theo thứ tự order (tăng dần)
-        items = items.sort((a, b) => (a.order || 999) - (b.order || 999));
-
-        try {
-          if (params) {
-            if (params.search) {
-              const q = String(params.search).toLowerCase();
-              items = items.filter((it) => (it.name || '').toLowerCase().includes(q));
-            }
-            if (params.level) {
-              if (params.level !== '') items = items.filter((it) => it.level === params.level);
-            }
-          }
-        } catch (e) {
-          console.warn('Client-side filter fallback failed for Topics', e);
-        }
-
-        return { data: items, total: items.length };
-      }}
-      createApi={async (payload) => {
-        const res = await fetchTopics({ limit: 10000 });
-        const allTopics = Array.isArray(res) ? res : (res.data || res.items || []);
-        
-        if (payload.order) {
-          // Nếu có order, tự động đẩy các topic có order >= newOrder lên 1
-          const newOrder = Number(payload.order);
-          
-          // Tìm các topic cần shift (order >= newOrder)
-          const topicsToShift = allTopics.filter(t => (t.order || 999) >= newOrder);
-          
-          // Update từng topic bị ảnh hưởng
-          for (const topic of topicsToShift) {
-            await updateTopic(topic._id, { order: (topic.order || 999) + 1 });
-          }
-        } else {
-          // Nếu không nhập order, tự động gán order = max + 1
-          const maxOrder = allTopics.reduce((max, t) => Math.max(max, t.order || 0), 0);
-          payload.order = maxOrder + 1;
-        }
-        
-        return createTopic(payload);
-      }}
-      updateApi={async (id, payload) => {
-        // Nếu order thay đổi, xử lý shift
-        if (payload.order !== undefined) {
-          const newOrder = Number(payload.order);
+    <>
+      <ResourceManager
+        title="Quản lý Chủ đề"
+        description="Chuẩn hóa và quản lý các nhóm chủ đề bài học trong hệ thống."
+        ref={resourceManagerRef}
+        resourceName="chủ đề"
+        columns={columns}
+        filters={filters}
+        formFields={formFields}
+        listApi={async (params) => {
+          // Fetch ALL topics ignore page/limit for display ordering
           const res = await fetchTopics({ limit: 10000 });
-          const allTopics = Array.isArray(res) ? res : (res.data || res.items || []);
-          
-          // Tìm topic hiện tại để lấy order cũ
-          const currentTopic = allTopics.find(t => t._id === id);
-          const oldOrder = currentTopic?.order || 999;
-          
-          if (oldOrder !== newOrder) {
-            if (newOrder < oldOrder) {
-              // Di chuyển lên: đẩy các topic từ newOrder đến oldOrder-1 xuống 1
-              const topicsToShift = allTopics.filter(t => 
-                t._id !== id && 
-                (t.order || 999) >= newOrder && 
-                (t.order || 999) < oldOrder
-              );
-              for (const topic of topicsToShift) {
-                await updateTopic(topic._id, { order: (topic.order || 999) + 1 });
+          let items = Array.isArray(res) ? res : (res.data || res.items || []);
+
+          // Sắp xếp theo thứ tự order (tăng dần)
+          items = items.sort((a, b) => (a.order || 999) - (b.order || 999));
+
+          setTotalCount(items.length);
+
+          try {
+            if (params) {
+              if (params.search) {
+                const q = String(params.search).toLowerCase();
+                items = items.filter((it) => (it.name || '').toLowerCase().includes(q));
               }
-            } else {
-              // Di chuyển xuống: đẩy các topic từ oldOrder+1 đến newOrder lên 1
-              const topicsToShift = allTopics.filter(t => 
-                t._id !== id && 
-                (t.order || 999) > oldOrder && 
-                (t.order || 999) <= newOrder
-              );
-              for (const topic of topicsToShift) {
-                await updateTopic(topic._id, { order: (topic.order || 999) - 1 });
+              if (params.level) {
+                if (params.level !== '') items = items.filter((it) => it.level === params.level);
               }
             }
+          } catch (e) {
+            console.warn('Client-side filter fallback failed for Topics', e);
           }
-        }
-        
-        return updateTopic(id, payload);
-      }}
-      deleteApi={async (id, item) => {
-        const deletedOrder = item?.order;
-        
-        // Xóa topic trước
-        const result = await deleteTopic(id);
-        
-        // Sau đó giảm order của các topic có order > deletedOrder
-        if (deletedOrder) {
+
+          return { data: items, total: items.length };
+        }}
+        createApi={async (payload) => {
+          return createTopic(payload);
+        }}
+        updateApi={async (id, payload) => {
+          return updateTopic(id, payload);
+        }}
+        deleteApi={async (id) => {
+          return deleteTopic(id);
+        }}
+        buildPayload={buildPayload}
+        hideHeader={true}
+      />
+
+      <TopicReorderModal
+        show={showReorderModal}
+        onClose={() => {
+          setShowReorderModal(false);
+          if (resourceManagerRef.current) resourceManagerRef.current.refresh();
+        }}
+        topics={reorderTopics}
+        onUpdateOrder={async (id, newOrder) => {
+          await updateTopic(id, { order: newOrder });
+          // Refresh local list if needed, or rely on next re-open.
+          // But if user drags again immediately, they need correct order.
+          // Actually backend shifts items so other items change order too.
+          // Ideally we should refetch the list.
           const res = await fetchTopics({ limit: 10000 });
-          const allTopics = Array.isArray(res) ? res : (res.data || res.items || []);
-          
-          const topicsToShift = allTopics.filter(t => (t.order || 999) > deletedOrder);
-          
-          for (const topic of topicsToShift) {
-            await updateTopic(topic._id, { order: (topic.order || 999) - 1 });
-          }
-        }
-        
-        return result;
-      }}
-      buildPayload={buildPayload}
-      hideHeader={true}
-    />
+          const items = Array.isArray(res) ? res : (res.data || res.items || []);
+          setReorderTopics(items);
+        }}
+      />
+    </>
   );
 };
 

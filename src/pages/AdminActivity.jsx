@@ -103,7 +103,7 @@ const AdminActivity = () => {
                                 <tr className="text-muted border-bottom">
                                     <th>Thời gian</th>
                                     <th>Tài khoản</th>
-                                    <th>Hành động</th>
+                                    <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
