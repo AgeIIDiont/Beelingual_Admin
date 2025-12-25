@@ -26,6 +26,7 @@ export const fetchVocabulary = (params = {}) => unwrap(api.get('/api/vocab', { p
 export const createVocabulary = (payload) => unwrap(api.post('/api/vocab', payload));
 export const updateVocabulary = (id, payload) => unwrap(api.put(`/api/vocab/${id}`, payload));
 export const deleteVocabulary = (id) => unwrap(api.delete(`/api/vocab/${id}`));
+export const fetchVocabularyTypes = () => unwrap(api.get('/api/vocab/types'));
 
 // ===== Grammar =====
 export const fetchGrammar = (params = {}) => unwrap(api.get('/api/grammar', { params }));
