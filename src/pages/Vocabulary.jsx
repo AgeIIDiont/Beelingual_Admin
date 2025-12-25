@@ -7,7 +7,6 @@ import {
   createVocabulary,
   updateVocabulary,
   deleteVocabulary,
-  fetchVocabularyTypes,
 } from '../services/adminService';
 
 const levelOptions = [
@@ -20,22 +19,44 @@ const levelOptions = [
   { value: 'C2', label: 'Level C2' },
 ];
 
-// Mapping tiếng Việt cho các loại từ phổ biến
-const typeTranslations = {
-  'noun': 'Danh từ',
-  'verb': 'Động từ',
-  'adjective': 'Tính từ',
-  'adverb': 'Trạng từ',
-  'preposition': 'Giới từ',
-  'pronoun': 'Đại từ',
-  'conjunction': 'Liên từ',
-  'determiner': 'Hạn định từ',
-  'interjection': 'Thán từ',
-  'idiom': 'Thành ngữ',
-  'phrase': 'Cụm từ',
-  'article': 'Mạo từ',
-  'auxiliary': 'Trợ động từ',
-  'modal': 'Động từ khuyết thiếu',
+// Danh sách loại từ cố định
+const typeOptions = [
+  { value: 'noun', label: 'Danh từ (n)' },
+  { value: 'verb', label: 'Động từ (v)' },
+  { value: 'adjective', label: 'Tính từ (adj)' },
+  { value: 'adverb', label: 'Trạng từ (adv)' },
+  { value: 'preposition', label: 'Giới từ (prep)' },
+  { value: 'pronoun', label: 'Đại từ (pron)' },
+  { value: 'conjunction', label: 'Liên từ (conj)' },
+  { value: 'determiner', label: 'Hạn định từ (det)' },
+  { value: 'interjection', label: 'Thán từ (int)' },
+  { value: 'article', label: 'Mạo từ (art)' },
+  { value: 'auxiliary', label: 'Trợ động từ (aux)' },
+  { value: 'modal', label: 'Động từ khuyết thiếu (modal)' },
+  { value: 'idiom', label: 'Thành ngữ (idiom)' },
+  { value: 'phrase', label: 'Cụm từ (phrase)' },
+  { value: 'numeral', label: 'Số từ (num)' },
+  { value: 'exclamation', label: 'Từ cảm thán (excl)' },
+];
+
+// Mapping để hiển thị viết tắt trong badge
+const typeAbbr = {
+  'noun': 'n',
+  'verb': 'v',
+  'adjective': 'adj',
+  'adverb': 'adv',
+  'preposition': 'prep',
+  'pronoun': 'pron',
+  'conjunction': 'conj',
+  'determiner': 'det',
+  'interjection': 'int',
+  'article': 'art',
+  'auxiliary': 'aux',
+  'modal': 'modal',
+  'idiom': 'idiom',
+  'phrase': 'phrase',
+  'numeral': 'num',
+  'exclamation': 'excl',
 };
 
 import { usePage } from '../contexts/PageContext';
@@ -44,22 +65,10 @@ const Vocabularys = () => {
   const dispatch = useDispatch();
   const resourceManagerRef = useRef(null);
   const [previewImage, setPreviewImage] = useState(null);
-  const [vocabularyTypes, setVocabularyTypes] = useState([]);
   const topicsData = useSelector(selectTopics);
 
   useEffect(() => {
     dispatch(fetchTopicsAction());
-
-    // Fetch vocabulary types from API
-    fetchVocabularyTypes()
-      .then((response) => {
-        setVocabularyTypes(response.types || []);
-      })
-      .catch((error) => {
-        console.error('Error fetching vocabulary types:', error);
-        // Fallback to empty array if API fails
-        setVocabularyTypes([]);
-      });
   }, [dispatch]);
 
   const topicOptions = useMemo(() => {
@@ -69,17 +78,6 @@ const Vocabularys = () => {
     }));
     return [{ value: '', label: 'Tất cả' }, ...options];
   }, [topicsData]);
-
-  // Tạo typeOptions động từ vocabularyTypes
-  const typeOptions = useMemo(() => {
-    const options = vocabularyTypes.map((type) => ({
-      value: type,
-      label: typeTranslations[type]
-        ? `${typeTranslations[type]} (${type})`
-        : type, // Nếu không có translation thì hiển thị tiếng Anh gốc
-    }));
-    return options;
-  }, [vocabularyTypes]);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -169,7 +167,7 @@ const Vocabularys = () => {
               {/* Badge hiển thị loại từ */}
               {item.type && (
                 <span className="badge bg-light text-secondary border border-secondary-subtle small fw-normal">
-                  {typeOptions.find(t => t.value === item.type)?.label?.match(/\((.*?)\)/)?.[1] || item.type}
+                  {typeAbbr[item.type] || item.type}
                 </span>
               )}
             </div>
@@ -282,7 +280,7 @@ const Vocabularys = () => {
         col: 3,
       },
     ],
-    [topicOptions, typeOptions]
+    [topicOptions]
   );
 
   const formFields = useMemo(
@@ -361,7 +359,7 @@ const Vocabularys = () => {
         col: 12,
       },
     ],
-    [topicOptions, typeOptions]
+    [topicOptions]
   );
 
   const buildPayload = (values) => {
@@ -393,40 +391,11 @@ const Vocabularys = () => {
         filters={filters}
         formFields={formFields}
         listApi={async (params) => {
-          // Option 2: Fetch ALL data, filter client-side, let ResourceManager paginate
-          // Fetch all vocab (ignore page/limit from params, use high limit to get all)
-          const res = await fetchVocabulary({ limit: 10000 });
-          let items = res.data || res.items || [];
-
-          // Client-side filtering
-          if (params) {
-            if (params.topic && params.topic !== '') {
-              const wanted = String(params.topic).toLowerCase();
-              items = items.filter((it) => {
-                const topicId = it.topic?._id || it.topic || '';
-                return String(topicId).toLowerCase() === wanted;
-              });
-            }
-            if (params.search && params.search !== '') {
-              const q = String(params.search).toLowerCase();
-              items = items.filter((it) =>
-                (it.word || '').toLowerCase().includes(q) ||
-                (it.meaning || '').toLowerCase().includes(q)
-              );
-            }
-            if (params.level && params.level !== '') {
-              items = items.filter((it) => it.level === params.level);
-            }
-            if (params.type && params.type !== '') {
-              items = items.filter((it) => it.type === params.type);
-            }
-          }
-
-          // Return FULL filtered list - ResourceManager will handle pagination
-          // (see ResourceManager.jsx lines 192-198 for client-side pagination logic)
+          // Server-side pagination - backend xử lý filter và phân trang
+          const res = await fetchVocabulary(params);
           return {
-            data: items,
-            total: items.length
+            data: res.data || res.items || [],
+            total: res.total || 0
           };
         }}
         createApi={createVocabulary}

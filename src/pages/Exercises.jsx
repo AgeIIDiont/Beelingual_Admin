@@ -883,34 +883,26 @@ const Exercises = () => {
     if (params.skill === 'grammar' || params.grammarId || params.grammarCategoryId) {
       try {
         // Prepare params for grammar exercises API
-        const grammarParams = { ...params }; // Copy all params including page/limit
+        // Pass page, limit, search directly to backend
+        const grammarParams = { ...params };
         if (params.grammarId) grammarParams.grammarId = params.grammarId;
         if (params.grammarCategoryId) grammarParams.grammarCategoryId = params.grammarCategoryId;
 
+        // Backend now supports search, page, limit
         const res = await fetchGrammarExercises(params.grammarId || '', grammarParams);
 
-        let items = res.data || [];
+        // Backend returns: { success: true, count, total, page, limit, totalPages, data: [...] }
+        const items = res.data || [];
+        const total = res.total || items.length;
 
         // Map grammar exercises to match UI format
-        // Use ref to avoid dependency change
         const currentGrammars = grammarsRef.current;
-
-        // Apply search filter if provided (Client-side search for grammar exercises)
-        if (params.search) {
-          const searchLower = params.search.toLowerCase();
-          items = items.filter(item =>
-            (item.question && item.question.toLowerCase().includes(searchLower)) ||
-            (item.explanation && item.explanation.toLowerCase().includes(searchLower))
-          );
-        }
 
         const mappedData = items.map((item) => {
           // Logic: Options empty -> 'fill_in_blank', else 'multiple_choice'
           const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
           const typeValue = (item.options && item.options.length > 0) ? 'multiple_choice' : 'fill_in_blank';
 
-          // Ưu tiên lấy title từ populated grammarId (backend trả về)
-          // Fallback sang lookup từ list grammars nếu backend chưa populate
           const grammarIdStr = item.grammarId?._id || item.grammarId;
           const populatedTitle = item.grammarId?.title;
           const populatedLevel = item.grammarId?.level;
@@ -929,20 +921,17 @@ const Exercises = () => {
           };
         });
 
-        // Apply client-side filtering for Type and Level (since grammar API doesn't support them yet)
-        let filteredData = mappedData;
-        if (params.type) {
-          filteredData = filteredData.filter(item => item.typeValue === params.type);
-        }
-        if (params.level) {
-          filteredData = filteredData.filter(item => item.level === params.level);
-        }
+        // Search is now handled by backend, so we don't filter search client-side
 
+        // Return structured data for ResourceManager
         return {
-          data: filteredData,
-          items: filteredData,
-          total: filteredData.length,
-          count: filteredData.length,
+          data: mappedData,
+          items: mappedData, // Legacy support
+          total: total,
+          count: mappedData.length,
+          // If backend didn't return page info (old API), these might be missing, but we assume updated API
+          page: res.page || (params.page ? parseInt(params.page) : 1),
+          limit: res.limit || (params.limit ? parseInt(params.limit) : 10),
         };
       } catch (err) {
         console.error('Error fetching grammar exercises:', err);
@@ -955,7 +944,15 @@ const Exercises = () => {
       const filteredParams = { ...params };
       delete filteredParams.grammarId;
       delete filteredParams.grammarCategoryId;
-      return fetchExercises(filteredParams);
+
+      const res = await fetchExercises(filteredParams);
+      // Ensure backend returns total for pagination
+      return {
+        data: res.data || res.items || [],
+        total: res.total || 0,
+        page: res.page || params.page || 1,
+        limit: res.limit || params.limit || 10
+      };
     }
 
     // TRƯỜNG HỢP 3: Không chọn skill nào (Tất cả kỹ năng) -> Merge cả 2 nguồn
