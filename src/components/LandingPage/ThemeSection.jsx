@@ -55,6 +55,25 @@ const ThemeSection = ({ theme, setTheme, onSave, saving }) => {
           />
         </div>
 
+        {/* Gradient Colors */}
+        <div className="col-md-6">
+          <ColorPicker
+            label="Gradient Start"
+            value={theme.gradientStart}
+            onChange={(val) => updateColor('gradientStart', val)}
+            defaultValue="#ffc107"
+          />
+        </div>
+
+        <div className="col-md-6">
+          <ColorPicker
+            label="Gradient End"
+            value={theme.gradientEnd}
+            onChange={(val) => updateColor('gradientEnd', val)}
+            defaultValue="#ffdb4d"
+          />
+        </div>
+
         {/* Background Colors */}
         <div className="col-12 mt-3">
           <h6 className="fw-bold text-secondary mb-3">
@@ -148,6 +167,77 @@ const ThemeSection = ({ theme, setTheme, onSave, saving }) => {
             value={theme.chatWindowColor}
             onChange={(val) => updateColor('chatWindowColor', val)}
             defaultValue="#ffffff"
+          />
+        </div>
+
+        {/* Chatbot Specific Colors */}
+        <div className="col-12 mt-3">
+          <h6 className="fw-bold text-secondary mb-3">
+            <i className="fas fa-robot me-2"></i>
+            Màu Chatbot
+          </h6>
+        </div>
+
+        <div className="col-md-6">
+          <ColorPicker
+            label="Màu chữ Header Chat"
+            value={theme.chatHeaderTextColor}
+            onChange={(val) => updateColor('chatHeaderTextColor', val)}
+            defaultValue="#1a1d29"
+          />
+        </div>
+
+        <div className="col-md-6">
+          <ColorPicker
+            label="Màu bong bóng Bot"
+            value={theme.botBubbleColor}
+            onChange={(val) => updateColor('botBubbleColor', val)}
+            defaultValue="#ffffff"
+          />
+        </div>
+
+        <div className="col-md-6">
+          <ColorPicker
+            label="Màu chữ Bot"
+            value={theme.botTextColor}
+            onChange={(val) => updateColor('botTextColor', val)}
+            defaultValue="#333333"
+          />
+        </div>
+
+        <div className="col-md-6">
+          <ColorPicker
+            label="Màu bong bóng User"
+            value={theme.userBubbleColor}
+            onChange={(val) => updateColor('userBubbleColor', val)}
+            defaultValue="#1a1d29"
+          />
+        </div>
+
+        <div className="col-md-6">
+          <ColorPicker
+            label="Màu chữ User"
+            value={theme.userTextColor}
+            onChange={(val) => updateColor('userTextColor', val)}
+            defaultValue="#ffffff"
+          />
+        </div>
+
+        <div className="col-md-6">
+          <ColorPicker
+            label="Nền gợi ý (Suggested)"
+            value={theme.suggestedBgColor}
+            onChange={(val) => updateColor('suggestedBgColor', val)}
+            defaultValue="#ffffff"
+          />
+        </div>
+
+        <div className="col-md-6">
+          <ColorPicker
+            label="Màu chữ gợi ý"
+            value={theme.suggestedTextColor}
+            onChange={(val) => updateColor('suggestedTextColor', val)}
+            defaultValue="#1a1d29"
           />
         </div>
 
