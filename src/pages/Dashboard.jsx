@@ -42,8 +42,8 @@ const Dashboard = () => {
           fetchTopics({ page: 1, limit: 1 }),
           // Regular exercises - API trả về total đúng
           fetchExercises({ page: 1, limit: 1 }),
-          // Grammar exercises - fetch all vì API không hỗ trợ total
-          fetchGrammarExercises({}),
+          // Grammar exercises - fetch 1 to get total count
+          fetchGrammarExercises({ page: 1, limit: 1 }),
           fetchStatsNewUsers()
         ]);
 
@@ -61,9 +61,9 @@ const Dashboard = () => {
           return 0;
         };
 
-        // Tổng bài tập = exercises (từ API total) + grammar exercises (đếm array)
+        // Tổng bài tập = exercises (từ API total) + grammar exercises (từ API total)
         const regularExercisesCount = getTotal(exercisesRes);
-        const grammarExercisesCount = grammarExercisesRes?.data?.length || grammarExercisesRes?.length || 0;
+        const grammarExercisesCount = getTotal(grammarExercisesRes);
         const totalExercises = regularExercisesCount + grammarExercisesCount;
 
         setStats({
@@ -88,14 +88,11 @@ const Dashboard = () => {
     const loadTopUsers = async () => {
       try {
         setLeaderboardLoading(true);
-        const data = await fetchUsers({ page: 1, limit: 100 });
+        // Fetch Top 5 XP users directly from server
+        const data = await fetchUsers({ page: 1, limit: 5, sortBy: 'xp', sortOrder: 'desc' });
 
         const users = data.users || data.data || [];
-        const sortedUsers = users
-          .sort((a, b) => (b.xp || 0) - (a.xp || 0))
-          .slice(0, 5);
-
-        setTopUsers(sortedUsers);
+        setTopUsers(users);
       } catch (err) {
         console.error('Lỗi tải bảng xếp hạng:', err);
         setTopUsers([]);

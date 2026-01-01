@@ -16,7 +16,7 @@ const PreviewPanel = ({ iframeRef, isMobilePreview, setIsMobilePreview, previewU
           <i className="fas fa-eye me-2 text-warning"></i>
           Live Preview
         </h5>
-        
+
         <div className="d-flex align-items-center gap-3">
           {/* Device Toggle */}
           <div className="lp-preview-toggle">
@@ -41,8 +41,21 @@ const PreviewPanel = ({ iframeRef, isMobilePreview, setIsMobilePreview, previewU
         </div>
       </div>
 
+      {/* Force hide scrollbar style inline to guarantee application */}
+      <style>
+        {`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none !important; 
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+          }
+        `}
+      </style>
+
       {/* Preview Content */}
-      <div style={{
+      <div className="hide-scrollbar" style={{
         flex: 1,
         overflowY: 'auto',
         background: isMobilePreview ? '#f0f2f5' : 'transparent',
@@ -72,7 +85,7 @@ const PreviewPanel = ({ iframeRef, isMobilePreview, setIsMobilePreview, previewU
               borderRadius: '0 0 16px 16px',
               zIndex: 10
             }}></div>
-            
+
             <iframe
               src={previewUrl}
               ref={iframeRef}

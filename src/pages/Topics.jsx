@@ -264,30 +264,23 @@ const Topics = () => {
         filters={filters}
         formFields={formFields}
         listApi={async (params) => {
-          // Fetch ALL topics ignore page/limit for display ordering
-          const res = await fetchTopics({ limit: 10000 });
-          let items = Array.isArray(res) ? res : (res.data || res.items || []);
+          // Use server-side pagination and sorting
+          // Default sort by order asc
+          const queryParams = {
+            ...params,
+            sortBy: 'order',
+            sortOrder: 'asc'
+          };
 
-          // Sắp xếp theo thứ tự order (tăng dần)
-          items = items.sort((a, b) => (a.order || 999) - (b.order || 999));
-
-          setTotalCount(items.length);
-
-          try {
-            if (params) {
-              if (params.search) {
-                const q = String(params.search).toLowerCase();
-                items = items.filter((it) => (it.name || '').toLowerCase().includes(q));
-              }
-              if (params.level) {
-                if (params.level !== '') items = items.filter((it) => it.level === params.level);
-              }
-            }
-          } catch (e) {
-            console.warn('Client-side filter fallback failed for Topics', e);
-          }
-
-          return { data: items, total: items.length };
+          const res = await fetchTopics(queryParams);
+          // Backend returns { data: [], total, page, limit, totalPages }
+          return {
+            data: res.data || [],
+            total: res.total || 0,
+            page: res.page || 1,
+            limit: res.limit || 10,
+            totalPages: res.totalPages || 1
+          };
         }}
         createApi={async (payload) => {
           return createTopic(payload);

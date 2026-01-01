@@ -18,6 +18,10 @@ import {
   createGrammarExercise,
   updateGrammarExercise,
   deleteGrammarExercise,
+  fetchQuestions,
+  createQuestion,
+  updateQuestion,
+  deleteQuestion,
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
 
@@ -56,6 +60,9 @@ const Exercises = () => {
 
   const [grammars, setGrammars] = React.useState([]); // For filter
   const [formGrammars, setFormGrammars] = React.useState([]); // For form dropdown
+
+  // Tab state: 'exercises' (regular) or 'questions' (competition)
+  const [activeTab, setActiveTab] = React.useState('exercises');
 
   // State để track filter values cho real-time filtering
   const [filterValues, setFilterValues] = React.useState({
@@ -135,13 +142,26 @@ const Exercises = () => {
           </button>
           <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
             <i className="fas fa-plus me-2" />
-            Thêm bài tập
+            {activeTab === 'questions' ? 'Thêm câu hỏi thi đấu' : 'Thêm bài tập'}
           </button>
         </>
       ),
     });
-    return () => setPageInfo({ title: '', description: '', actions: null });
-  }, [setPageInfo]);
+  }, [setPageInfo, activeTab]);
+
+  const TabButton = ({ id, label, icon }) => (
+    <button
+      className={`btn border-0 py-2 px-3 rounded-pill me-2 fw-medium d-flex align-items-center gap-2 transition-all ${activeTab === id
+        ? 'bg-warning text-dark shadow-sm'
+        : 'bg-light text-secondary hover-bg-gray'
+        }`}
+      onClick={() => setActiveTab(id)}
+      style={{ transition: 'all 0.2s ease' }}
+    >
+      <i className={icon}></i>
+      {label}
+    </button>
+  );
 
   const columns = useMemo(
     () => [
@@ -196,6 +216,69 @@ const Exercises = () => {
           return (
             <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
               {item.level || '—'}
+            </span>
+          );
+        },
+      },
+      {
+        key: 'createdAt',
+        label: 'Ngày tạo',
+        render: (item) => new Date(item.createdAt).toLocaleDateString('vi-VN'),
+      },
+    ],
+    []
+  );
+
+  const questionColumns = useMemo(
+    () => [
+      {
+        key: 'content',
+        label: 'Nội dung câu hỏi',
+        render: (item) => (
+          <div
+            className="fw-semibold text-dark"
+            title={item.content}
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            {item.content}
+          </div>
+        ),
+      },
+      {
+        key: 'level',
+        label: 'Level',
+        render: (item) => {
+          let colorClass = 'bg-secondary';
+          if (['A1', 'A2'].includes(item.level)) colorClass = 'bg-success';
+          if (['B1', 'B2'].includes(item.level)) colorClass = 'bg-warning text-dark';
+          if (['C1', 'C2'].includes(item.level)) colorClass = 'bg-danger';
+
+          return (
+            <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
+              {item.level || '—'}
+            </span>
+          );
+        },
+      },
+      {
+        key: 'mode',
+        label: 'Chế độ',
+        render: (item) => {
+          const mapMode = {
+            'pvp': { label: 'Thi đấu', color: 'bg-primary' },
+            'practice': { label: 'Luyện tập', color: 'bg-info text-dark' },
+            'both': { label: 'Cả hai', color: 'bg-secondary' }
+          };
+          const modeInfo = mapMode[item.mode] || { label: item.mode, color: 'bg-secondary' };
+          return (
+            <span className={`badge ${modeInfo.color} rounded-pill px-3 py-2 border border-light shadow-sm`}>
+              {modeInfo.label}
             </span>
           );
         },
@@ -304,6 +387,30 @@ const Exercises = () => {
     [grammars, grammarCategories, searchParams, filterValues, topicsData]
   );
 
+  const questionFilters = useMemo(
+    () => [
+      {
+        name: 'level',
+        label: 'Cấp độ',
+        type: 'select',
+        options: levelOptions,
+        col: 4,
+      },
+      {
+        name: 'mode',
+        label: 'Chế độ',
+        type: 'select',
+        options: [
+          { value: '', label: 'Tất cả chế độ' },
+          { value: 'pvp', label: 'Thi đấu' },
+          { value: 'practice', label: 'Luyện tập' },
+        ],
+        col: 4,
+      },
+    ],
+    []
+  );
+
   const formFields = useMemo(
     () => [
       {
@@ -336,6 +443,126 @@ const Exercises = () => {
     ],
     []
   );
+
+  /* Question (Competition) Helpers */
+  const questionFormFields = useMemo(
+    () => [
+      {
+        name: 'level',
+        label: 'Cấp độ',
+        type: 'select',
+        options: levelOptions.slice(1),
+        defaultValue: 'A1',
+        col: 6,
+        required: true,
+      },
+      {
+        name: 'mode',
+        label: 'Sử dụng cho',
+        type: 'select',
+        options: [
+          { value: 'pvp', label: 'Thi đấu' },
+          { value: 'practice', label: 'Luyện tập' },
+        ],
+        defaultValue: 'pvp',
+        col: 6,
+        required: true,
+      },
+    ],
+    []
+  );
+
+  const renderQuestionForm = ({ formState, setFormState, renderFormField }) => {
+    return (
+      <div className="row">
+        {questionFormFields.map((field) => (
+          <div className={`col-md-${field.col || 12} mb-3`} key={field.name}>
+            <label htmlFor={field.name} className="form-label fw-medium text-muted">
+              {field.label}
+            </label>
+            {renderFormField(field)}
+          </div>
+        ))}
+
+        <div className="col-12 mb-3">
+          <label htmlFor="content" className="form-label fw-medium text-muted">
+            Nội dung câu hỏi <span className="text-danger">*</span>
+          </label>
+          <textarea
+            className="form-control"
+            id="content"
+            name="content"
+            value={formState.content || ''}
+            onChange={(e) => setFormState({ ...formState, content: e.target.value })}
+            rows={3}
+            required
+          />
+        </div>
+
+        <div className="col-12 mb-3">
+          <label className="form-label fw-medium text-muted">
+            Danh sách đáp án
+          </label>
+          <small className="text-muted d-block mb-2">
+            Nhập 4 đáp án và chọn đáp án đúng
+          </small>
+          {['A', 'B', 'C', 'D'].map((letter) => {
+            const optionValue = formState.options?.[letter] || '';
+            const isCorrect = formState.correctAnswer === letter;
+
+            return (
+              <div key={letter} className="input-group mb-2">
+                <span className="input-group-text" style={{ width: '45px' }}>{letter}</span>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={optionValue}
+                  onChange={(e) => {
+                    setFormState(prev => ({
+                      ...prev,
+                      options: { ...prev.options, [letter]: e.target.value }
+                    }));
+                  }}
+                  placeholder={`Nhập đáp án ${letter}`}
+                  required
+                />
+                <div className="input-group-text">
+                  <input
+                    type="radio"
+                    className="form-check-input mt-0"
+                    name="questionCorrectAnswer"
+                    checked={isCorrect}
+                    onChange={() => setFormState({ ...formState, correctAnswer: letter })}
+                    title="Chọn làm đáp án đúng"
+                    required
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const buildQuestionPayload = (values) => {
+    return {
+      content: values.content,
+      level: values.level || 'A1',
+      mode: values.mode || 'both',
+      options: values.options, // Expecting { A: "...", B: "..." }
+      correctAnswer: values.correctAnswer, // Expecting "A" | "B" | "C" | "D"
+    };
+  };
+
+  const mapQuestionToForm = (item) => {
+    return {
+      ...item,
+      // Ensure options is an object if it's not
+      options: item.options || { A: '', B: '', C: '', D: '' },
+      mode: item.mode || 'both',
+    };
+  };
 
   const renderExerciseForm = ({ formState, setFormState, renderFormField }) => {
     const currentType = formState.type || 'multiple_choice';
@@ -1021,16 +1248,18 @@ const Exercises = () => {
       }
 
       // Merge and sort
-      const allExercises = [...regularExercises, ...filteredGrammarExercises];
+      let allExercises = [...regularExercises, ...filteredGrammarExercises];
 
       // Sort by createdAt desc
       allExercises.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-      // Note: Pagination logic here is tricky because we merged a paginated list with a full list.
-      // Ideally backend should support unified querying. 
-      // For now we return the merged list. ResourceManager might slice it if client-side pagination is enabled, 
-      // but if server-side pagination is expected, this "All Skills" view might behave oddly regarding page numbers.
-      // However, usually for "All", user expects to see everything mixed. 
+      // Slice data to respect limit for standard pagination view
+      const limit = params.limit ? parseInt(params.limit) : 10;
+      // Note: We only slice if we have more than limit, simulating a page. 
+      // This is imperfect for page 2+ logic in a merged list without full fetch, but solves the "Show 10 but get 20" UI bug.
+      if (allExercises.length > limit) {
+        allExercises = allExercises.slice(0, limit);
+      }
 
       return {
         data: allExercises,
@@ -1067,6 +1296,23 @@ const Exercises = () => {
     return updateExercise(id, payload);
   }, []);
 
+  // Wrapper for Question (Competition) API to match ResourceManager expectations
+  const listQuestionsWrapper = React.useCallback(async (params) => {
+    try {
+      const res = await fetchQuestions(params);
+      return {
+        data: res.questions || [],
+        total: res.totalQuestions || 0,
+        page: res.currentPage || 1,
+        limit: params.limit || 10, // Ensure limit respects request
+        totalPages: res.totalPages || 0
+      };
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+      return { data: [], total: 0 };
+    }
+  }, []);
+
   const deleteApiWrapper = React.useCallback(async (id, item) => {
     // Check if this is a grammar exercise
     // Grammar exercises have grammarId and question (not questionText)
@@ -1079,21 +1325,30 @@ const Exercises = () => {
   }, []);
 
   return (
-    <ResourceManager
-      ref={resourceManagerRef}
-      resourceName="bài tập"
-      columns={columns}
-      filters={filters}
-      formFields={formFields}
-      listApi={listApiWrapper}
-      createApi={createApiWrapper}
-      updateApi={updateApiWrapper}
-      deleteApi={deleteApiWrapper}
-      mapItemToForm={mapExerciseToForm}
-      buildPayload={buildPayload}
-      hideHeader={true}
-      customFormRenderer={renderExerciseForm}
-    />
+    <div className="d-flex flex-column gap-3 h-100">
+      <div className="d-flex align-items-center px-4 py-2 bg-white border-bottom shadow-sm" style={{ margin: '0 -1.5rem', marginTop: '-1rem' }}>
+        <TabButton id="exercises" label="Kho Bài Tập" icon="fas fa-book-open" />
+        <TabButton id="questions" label="Kho Thi Đấu" icon="fas fa-trophy" />
+      </div>
+
+      <div className="flex-grow-1">
+        <ResourceManager
+          ref={resourceManagerRef}
+          resourceName={activeTab === 'questions' ? 'câu hỏi thi đấu' : 'bài tập'}
+          columns={activeTab === 'questions' ? questionColumns : columns}
+          filters={activeTab === 'questions' ? questionFilters : filters}
+          formFields={activeTab === 'questions' ? questionFormFields : formFields}
+          listApi={activeTab === 'questions' ? listQuestionsWrapper : listApiWrapper}
+          createApi={activeTab === 'questions' ? createQuestion : createApiWrapper}
+          updateApi={activeTab === 'questions' ? updateQuestion : updateApiWrapper}
+          deleteApi={activeTab === 'questions' ? deleteQuestion : deleteApiWrapper}
+          mapItemToForm={activeTab === 'questions' ? mapQuestionToForm : mapExerciseToForm}
+          buildPayload={activeTab === 'questions' ? buildQuestionPayload : buildPayload}
+          hideHeader={true}
+          customFormRenderer={activeTab === 'questions' ? renderQuestionForm : renderExerciseForm}
+        />
+      </div>
+    </div>
   );
 };
 

@@ -76,6 +76,25 @@ export const login = async (username, password) => {
   }
 };
 
+// ====================== QUÊN MẬT KHẨU ======================
+export const forgotPassword = async (username) => {
+  try {
+    const response = await api.post('/api/forgot-password', { username });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const resetPassword = async (username, otp, newPassword) => {
+  try {
+    const response = await api.post('/api/reset-password', { username, otp, newPassword });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 // ====================== ĐĂNG XUẤT ======================
 export const logout = async () => {
   try {
@@ -226,4 +245,6 @@ export default {
   setToken,
   setUser,
   clearAuth,
+  forgotPassword,
+  resetPassword
 };

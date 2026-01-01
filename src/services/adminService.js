@@ -45,6 +45,12 @@ export const createTopic = (payload) => unwrap(api.post('/api/topics', payload))
 export const updateTopic = (id, payload) => unwrap(api.put(`/api/edit_topic/${id}`, payload));
 export const deleteTopic = (id) => unwrap(api.delete(`/api/delet_topic/${id}`));
 
+// ===== Questions (Competition) =====
+export const fetchQuestions = (params = {}) => unwrap(api.get('/api/questions', { params }));
+export const createQuestion = (payload) => unwrap(api.post('/api/questions', payload));
+export const updateQuestion = (id, payload) => unwrap(api.put(`/api/questions/${id}`, payload));
+export const deleteQuestion = (id) => unwrap(api.delete(`/api/questions/${id}`));
+
 // ===== Exercises =====
 export const fetchExercises = (params = {}) => unwrap(api.get('/api/exercises', { params }));
 export const createExercise = (payload) => unwrap(api.post('/api/exercises', payload));
