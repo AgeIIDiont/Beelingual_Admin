@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Swal from 'sweetalert2';
 import {
     fetchLandingPageContent,
     fetchLandingPageTheme,
@@ -40,7 +41,7 @@ const LandingPage = () => {
         modelNotFoundMessage: ''
     });
     const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState({ type: '', text: '' });
+    // const [message, setMessage] = useState({ type: '', text: '' }); // Removed
     const [activeTab, setActiveTab] = useState('hero');
     const [isMobilePreview, setIsMobilePreview] = useState(false);
 
@@ -59,7 +60,7 @@ const LandingPage = () => {
             setTheme(themeData.data || {});
             setChatConfig(chatData.data || {});
         } catch (error) {
-            showMessage('danger', 'Lỗi khi tải dữ liệu: ' + error.message);
+            Swal.fire('Lỗi', 'Lỗi khi tải dữ liệu: ' + error.message, 'error');
         } finally {
             setLoading(false);
         }
@@ -101,18 +102,25 @@ const LandingPage = () => {
         return () => iframe.removeEventListener('load', sendMessage);
     }, [content, theme]);
 
-    const showMessage = (type, text) => {
-        setMessage({ type, text });
-        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
-    };
+    // const showMessage... Removed
 
     const handleSaveSection = async (section) => {
         try {
             setSaving(true);
             await updateLandingPageSection(section, content[section]);
-            showMessage('success', `Đã lưu ${section} section thành công!`);
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: `Đã lưu ${section} section thành công!`,
+                timer: 1500,
+                showConfirmButton: false
+            });
         } catch (error) {
-            showMessage('danger', 'Lỗi khi lưu: ' + error.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi',
+                text: 'Lỗi khi lưu: ' + error.message
+            });
         } finally {
             setSaving(false);
         }
@@ -122,9 +130,19 @@ const LandingPage = () => {
         try {
             setSaving(true);
             await updateLandingPageTheme(theme);
-            showMessage('success', 'Đã lưu theme thành công!');
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: 'Đã lưu theme thành công!',
+                timer: 1500,
+                showConfirmButton: false
+            });
         } catch (error) {
-            showMessage('danger', 'Lỗi khi lưu theme: ' + error.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi',
+                text: 'Lỗi khi lưu theme: ' + error.message
+            });
         } finally {
             setSaving(false);
         }
@@ -134,9 +152,19 @@ const LandingPage = () => {
         try {
             setSaving(true);
             await updateChatbotConfig(chatConfig);
-            showMessage('success', 'Đã lưu cấu hình chatbot thành công!');
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: 'Đã lưu cấu hình chatbot thành công!',
+                timer: 1500,
+                showConfirmButton: false
+            });
         } catch (error) {
-            showMessage('danger', 'Lỗi khi lưu cấu hình chatbot: ' + error.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi',
+                text: 'Lỗi khi lưu cấu hình chatbot: ' + error.message
+            });
         } finally {
             setSaving(false);
         }
@@ -235,18 +263,6 @@ const LandingPage = () => {
     return (
         <div className="container-fluid py-4">
             {/* Alert Message */}
-            {message.text && (
-                <div className={`lp-alert lp-alert-${message.type}`}>
-                    <i className={`fas fa-${message.type === 'success' ? 'check-circle' : 'exclamation-circle'}`}></i>
-                    <span>{message.text}</span>
-                    <button
-                        className="lp-alert-close"
-                        onClick={() => setMessage({ type: '', text: '' })}
-                    >
-                        ×
-                    </button>
-                </div>
-            )}
 
             <div className="row g-4">
                 {/* Editor Column */}

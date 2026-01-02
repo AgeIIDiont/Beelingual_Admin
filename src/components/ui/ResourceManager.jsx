@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState, useImperativeHandle, forwardRef } from 'react';
 import ReactDOM from 'react-dom';
+import Swal from 'sweetalert2';
 
 // --- STYLES & ANIMATIONS (Inline CSS for portability) ---
 const customStyles = `
@@ -328,22 +329,32 @@ const ResourceManager = forwardRef(({
 
       if (editingItem) {
         await updateApi(editingItem[primaryKey], payload);
-        setFeedback({
-          type: 'success',
-          message: `Đã cập nhật ${resourceName} thành công.`,
+        Swal.fire({
+          icon: 'success',
+          title: 'Thành công!',
+          text: `Đã cập nhật ${resourceName} thành công.`,
+          timer: 1500,
+          showConfirmButton: false
         });
       } else {
         await createApi(payload);
-        setFeedback({
-          type: 'success',
-          message: `Đã thêm ${resourceName} mới thành công.`,
+        Swal.fire({
+          icon: 'success',
+          title: 'Thành công!',
+          text: `Đã thêm ${resourceName} mới thành công.`,
+          timer: 1500,
+          showConfirmButton: false
         });
       }
 
       closeForm();
       setRefreshIndex((prev) => prev + 1);
     } catch (err) {
-      setFormError(err.message || 'Không thể lưu dữ liệu.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Thất bại',
+        text: err.message || 'Không thể lưu dữ liệu.',
+      });
     } finally {
       setSaving(false);
     }
@@ -351,21 +362,35 @@ const ResourceManager = forwardRef(({
 
   const handleDelete = async (item) => {
     if (!deleteApi) return;
-    const confirmDelete = window.confirm(`Bạn chắc chắn muốn xóa ${resourceName} này?`);
-    if (!confirmDelete) return;
+
+    const result = await Swal.fire({
+      title: 'Bạn chắc chắn muốn xóa?',
+      text: `Hành động này sẽ xóa ${resourceName} và không thể hoàn tác.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy bỏ',
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await deleteApi(item[primaryKey], item);
-      setFeedback({
-        type: 'success',
-        message: `Đã xóa ${resourceName} thành công.`,
-      });
+      Swal.fire(
+        'Đã xóa!',
+        `Đã xóa ${resourceName} thành công.`,
+        'success'
+      );
       setRefreshIndex((prev) => prev + 1);
     } catch (err) {
-      setFeedback({
-        type: 'danger',
-        message: err.message || 'Không thể xóa bản ghi.',
-      });
+      Swal.fire(
+        'Lỗi!',
+        err.message || 'Không thể xóa bản ghi.',
+        'error'
+      );
     }
   };
 

@@ -18,10 +18,6 @@ import {
   createGrammarExercise,
   updateGrammarExercise,
   deleteGrammarExercise,
-  fetchQuestions,
-  createQuestion,
-  updateQuestion,
-  deleteQuestion,
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
 
@@ -61,8 +57,6 @@ const Exercises = () => {
   const [grammars, setGrammars] = React.useState([]); // For filter
   const [formGrammars, setFormGrammars] = React.useState([]); // For form dropdown
 
-  // Tab state: 'exercises' (regular) or 'questions' (competition)
-  const [activeTab, setActiveTab] = React.useState('exercises');
 
   // State để track filter values cho real-time filtering
   const [filterValues, setFilterValues] = React.useState({
@@ -142,26 +136,13 @@ const Exercises = () => {
           </button>
           <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
             <i className="fas fa-plus me-2" />
-            {activeTab === 'questions' ? 'Thêm câu hỏi thi đấu' : 'Thêm bài tập'}
+            Thêm bài tập
           </button>
         </>
       ),
     });
-  }, [setPageInfo, activeTab]);
+  }, [setPageInfo]);
 
-  const TabButton = ({ id, label, icon }) => (
-    <button
-      className={`btn border-0 py-2 px-3 rounded-pill me-2 fw-medium d-flex align-items-center gap-2 transition-all ${activeTab === id
-        ? 'bg-warning text-dark shadow-sm'
-        : 'bg-light text-secondary hover-bg-gray'
-        }`}
-      onClick={() => setActiveTab(id)}
-      style={{ transition: 'all 0.2s ease' }}
-    >
-      <i className={icon}></i>
-      {label}
-    </button>
-  );
 
   const columns = useMemo(
     () => [
@@ -221,52 +202,6 @@ const Exercises = () => {
         },
       },
       {
-        key: 'createdAt',
-        label: 'Ngày tạo',
-        render: (item) => new Date(item.createdAt).toLocaleDateString('vi-VN'),
-      },
-    ],
-    []
-  );
-
-  const questionColumns = useMemo(
-    () => [
-      {
-        key: 'content',
-        label: 'Nội dung câu hỏi',
-        render: (item) => (
-          <div
-            className="fw-semibold text-dark"
-            title={item.content}
-            style={{
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}
-          >
-            {item.content}
-          </div>
-        ),
-      },
-      {
-        key: 'level',
-        label: 'Level',
-        render: (item) => {
-          let colorClass = 'bg-secondary';
-          if (['A1', 'A2'].includes(item.level)) colorClass = 'bg-success';
-          if (['B1', 'B2'].includes(item.level)) colorClass = 'bg-warning text-dark';
-          if (['C1', 'C2'].includes(item.level)) colorClass = 'bg-danger';
-
-          return (
-            <span className={`badge ${colorClass} rounded-pill px-3 py-2`}>
-              {item.level || '—'}
-            </span>
-          );
-        },
-      },
-      {
         key: 'mode',
         label: 'Chế độ',
         render: (item) => {
@@ -275,7 +210,7 @@ const Exercises = () => {
             'practice': { label: 'Luyện tập', color: 'bg-info text-dark' },
             'both': { label: 'Cả hai', color: 'bg-secondary' }
           };
-          const modeInfo = mapMode[item.mode] || { label: item.mode, color: 'bg-secondary' };
+          const modeInfo = mapMode[item.mode] || { label: 'Luyện tập', color: 'bg-info text-dark' };
           return (
             <span className={`badge ${modeInfo.color} rounded-pill px-3 py-2 border border-light shadow-sm`}>
               {modeInfo.label}
@@ -291,6 +226,7 @@ const Exercises = () => {
     ],
     []
   );
+
 
   const filters = useMemo(
     () => [
@@ -383,19 +319,6 @@ const Exercises = () => {
         options: levelOptions,
         col: 3,
       },
-    ],
-    [grammars, grammarCategories, searchParams, filterValues, topicsData]
-  );
-
-  const questionFilters = useMemo(
-    () => [
-      {
-        name: 'level',
-        label: 'Cấp độ',
-        type: 'select',
-        options: levelOptions,
-        col: 4,
-      },
       {
         name: 'mode',
         label: 'Chế độ',
@@ -405,10 +328,10 @@ const Exercises = () => {
           { value: 'pvp', label: 'Thi đấu' },
           { value: 'practice', label: 'Luyện tập' },
         ],
-        col: 4,
+        col: 3,
       },
     ],
-    []
+    [grammars, grammarCategories, searchParams, filterValues, topicsData]
   );
 
   const formFields = useMemo(
@@ -440,133 +363,29 @@ const Exercises = () => {
         col: 4,
         required: true,
       },
-    ],
-    []
-  );
-
-  /* Question (Competition) Helpers */
-  const questionFormFields = useMemo(
-    () => [
-      {
-        name: 'level',
-        label: 'Cấp độ',
-        type: 'select',
-        options: levelOptions.slice(1),
-        defaultValue: 'A1',
-        col: 6,
-        required: true,
-      },
       {
         name: 'mode',
-        label: 'Sử dụng cho',
+        label: 'Chế độ',
         type: 'select',
         options: [
-          { value: 'pvp', label: 'Thi đấu' },
+          { value: '', label: 'Chế độ mặc định (Luyện tập)' },
           { value: 'practice', label: 'Luyện tập' },
+          { value: 'pvp', label: 'Thi đấu' },
         ],
-        defaultValue: 'pvp',
-        col: 6,
+        defaultValue: 'practice',
+        col: 4,
         required: true,
       },
     ],
     []
   );
 
-  const renderQuestionForm = ({ formState, setFormState, renderFormField }) => {
-    return (
-      <div className="row">
-        {questionFormFields.map((field) => (
-          <div className={`col-md-${field.col || 12} mb-3`} key={field.name}>
-            <label htmlFor={field.name} className="form-label fw-medium text-muted">
-              {field.label}
-            </label>
-            {renderFormField(field)}
-          </div>
-        ))}
 
-        <div className="col-12 mb-3">
-          <label htmlFor="content" className="form-label fw-medium text-muted">
-            Nội dung câu hỏi <span className="text-danger">*</span>
-          </label>
-          <textarea
-            className="form-control"
-            id="content"
-            name="content"
-            value={formState.content || ''}
-            onChange={(e) => setFormState({ ...formState, content: e.target.value })}
-            rows={3}
-            required
-          />
-        </div>
-
-        <div className="col-12 mb-3">
-          <label className="form-label fw-medium text-muted">
-            Danh sách đáp án
-          </label>
-          <small className="text-muted d-block mb-2">
-            Nhập 4 đáp án và chọn đáp án đúng
-          </small>
-          {['A', 'B', 'C', 'D'].map((letter) => {
-            const optionValue = formState.options?.[letter] || '';
-            const isCorrect = formState.correctAnswer === letter;
-
-            return (
-              <div key={letter} className="input-group mb-2">
-                <span className="input-group-text" style={{ width: '45px' }}>{letter}</span>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={optionValue}
-                  onChange={(e) => {
-                    setFormState(prev => ({
-                      ...prev,
-                      options: { ...prev.options, [letter]: e.target.value }
-                    }));
-                  }}
-                  placeholder={`Nhập đáp án ${letter}`}
-                  required
-                />
-                <div className="input-group-text">
-                  <input
-                    type="radio"
-                    className="form-check-input mt-0"
-                    name="questionCorrectAnswer"
-                    checked={isCorrect}
-                    onChange={() => setFormState({ ...formState, correctAnswer: letter })}
-                    title="Chọn làm đáp án đúng"
-                    required
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  const buildQuestionPayload = (values) => {
-    return {
-      content: values.content,
-      level: values.level || 'A1',
-      mode: values.mode || 'both',
-      options: values.options, // Expecting { A: "...", B: "..." }
-      correctAnswer: values.correctAnswer, // Expecting "A" | "B" | "C" | "D"
-    };
-  };
-
-  const mapQuestionToForm = (item) => {
-    return {
-      ...item,
-      // Ensure options is an object if it's not
-      options: item.options || { A: '', B: '', C: '', D: '' },
-      mode: item.mode || 'both',
-    };
-  };
 
   const renderExerciseForm = ({ formState, setFormState, renderFormField }) => {
     const currentType = formState.type || 'multiple_choice';
     const currentSkill = formState.skill || 'reading';
+    const currentMode = formState.mode || 'practice';
     const selectedCategoryId = formState.grammarCategoryId || '';
 
     // Use formGrammars state which is fetched from server based on category
@@ -714,11 +533,10 @@ const Exercises = () => {
           </div>
         )}
 
-        {/* Topic reference for non-grammar exercises */}
         {currentSkill !== 'grammar' && (
           <div className="col-md-6 mb-3">
             <label htmlFor="topicId" className="form-label fw-medium text-muted">
-              Topic tham chiếu
+              Topic tham chiếu {currentMode === 'pvp' && <span className="text-secondary fst-italic ms-2">(Không dùng cho thi đấu)</span>}
             </label>
             <select
               className="form-select"
@@ -726,6 +544,7 @@ const Exercises = () => {
               name="topicId"
               value={formState.topicId || ''}
               onChange={(e) => setFormState({ ...formState, topicId: e.target.value })}
+              disabled={currentMode === 'pvp'}
             >
               <option value="">-- Chọn Topic --</option>
               {topicsData.map((topic) => (
@@ -949,6 +768,7 @@ const Exercises = () => {
       skill: values.skill || 'reading',
       type: values.type || 'multiple_choice',
       level: values.level || 'A',
+      mode: values.mode || 'practice',
       questionText: values.questionText?.trim(),
       topicId: values.topicId,
       explanation: values.explanation?.trim(),
@@ -1066,6 +886,7 @@ const Exercises = () => {
       skill: item.skill || 'reading',
       type: item.type || 'multiple_choice',
       level: item.level || 'A',
+      mode: item.mode || 'practice',
       questionText: item.questionText || '',
       topicId: item.topicId?._id || item.topicId?.id || item.topicId || '',
       explanation: item.explanation || '',
@@ -1108,6 +929,12 @@ const Exercises = () => {
   const listApiWrapper = React.useCallback(async (params = {}) => {
     // TRƯỜNG HỢP 1: Lọc theo Skill = Grammar HOẶC đang chọn cụ thể 1 bài Grammar (hoặc category)
     if (params.skill === 'grammar' || params.grammarId || params.grammarCategoryId) {
+      // Grammar exercises are always 'practice' mode.
+      // If user filters for 'pvp', return empty immediately.
+      if (params.mode === 'pvp') {
+        return { data: [], items: [], total: 0, count: 0, page: 1, limit: 10 };
+      }
+
       try {
         // Prepare params for grammar exercises API
         // Pass page, limit, search directly to backend
@@ -1198,9 +1025,12 @@ const Exercises = () => {
       // Phải gửi grammarCategoryId nếu có để backend filter ngay từ đầu (giảm tải client)
       if (params.grammarCategoryId) noPaginationParams.grammarCategoryId = params.grammarCategoryId;
 
+      // Only fetch grammar exercises if mode is NOT 'pvp' (since grammar is always practice)
+      const shouldFetchGrammar = !params.topicId && (!params.mode || params.mode === 'practice');
+
       const [regularRes, grammarRes] = await Promise.all([
         fetchExercises(noPaginationParams),
-        !params.topicId ? fetchGrammarExercises('', noPaginationParams) : Promise.resolve({ data: [] })
+        shouldFetchGrammar ? fetchGrammarExercises('', noPaginationParams) : Promise.resolve({ data: [] })
       ]);
 
       const regularExercises = regularRes.data || regularRes.items || [];
@@ -1296,23 +1126,6 @@ const Exercises = () => {
     return updateExercise(id, payload);
   }, []);
 
-  // Wrapper for Question (Competition) API to match ResourceManager expectations
-  const listQuestionsWrapper = React.useCallback(async (params) => {
-    try {
-      const res = await fetchQuestions(params);
-      return {
-        data: res.questions || [],
-        total: res.totalQuestions || 0,
-        page: res.currentPage || 1,
-        limit: params.limit || 10, // Ensure limit respects request
-        totalPages: res.totalPages || 0
-      };
-    } catch (error) {
-      console.error("Error fetching questions:", error);
-      return { data: [], total: 0 };
-    }
-  }, []);
-
   const deleteApiWrapper = React.useCallback(async (id, item) => {
     // Check if this is a grammar exercise
     // Grammar exercises have grammarId and question (not questionText)
@@ -1326,26 +1139,21 @@ const Exercises = () => {
 
   return (
     <div className="d-flex flex-column gap-3 h-100">
-      <div className="d-flex align-items-center px-4 py-2 bg-white border-bottom shadow-sm" style={{ margin: '0 -1.5rem', marginTop: '-1rem' }}>
-        <TabButton id="exercises" label="Kho Bài Tập" icon="fas fa-book-open" />
-        <TabButton id="questions" label="Kho Thi Đấu" icon="fas fa-trophy" />
-      </div>
-
       <div className="flex-grow-1">
         <ResourceManager
           ref={resourceManagerRef}
-          resourceName={activeTab === 'questions' ? 'câu hỏi thi đấu' : 'bài tập'}
-          columns={activeTab === 'questions' ? questionColumns : columns}
-          filters={activeTab === 'questions' ? questionFilters : filters}
-          formFields={activeTab === 'questions' ? questionFormFields : formFields}
-          listApi={activeTab === 'questions' ? listQuestionsWrapper : listApiWrapper}
-          createApi={activeTab === 'questions' ? createQuestion : createApiWrapper}
-          updateApi={activeTab === 'questions' ? updateQuestion : updateApiWrapper}
-          deleteApi={activeTab === 'questions' ? deleteQuestion : deleteApiWrapper}
-          mapItemToForm={activeTab === 'questions' ? mapQuestionToForm : mapExerciseToForm}
-          buildPayload={activeTab === 'questions' ? buildQuestionPayload : buildPayload}
+          resourceName="bài tập"
+          columns={columns}
+          filters={filters}
+          formFields={formFields}
+          listApi={listApiWrapper}
+          createApi={createApiWrapper}
+          updateApi={updateApiWrapper}
+          deleteApi={deleteApiWrapper}
+          mapItemToForm={mapExerciseToForm}
+          buildPayload={buildPayload}
           hideHeader={true}
-          customFormRenderer={activeTab === 'questions' ? renderQuestionForm : renderExerciseForm}
+          customFormRenderer={renderExerciseForm}
         />
       </div>
     </div>

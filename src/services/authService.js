@@ -1,5 +1,7 @@
-// src/services/auth.js
 import api from './api';
+import Swal from 'sweetalert2';
+import store from '../store'; // Import redux store
+import { setUser as setReduxUser, clearUser as clearReduxUser } from '../store/slices/userSlice';
 
 const TOKEN_KEY = 'beelingual_admin_token';
 const USER_KEY = 'beelingual_admin_user';
@@ -15,6 +17,8 @@ export const setToken = () => {
 export const setUser = (user) => {
   if (user) {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
+    // Dispatch to Redux to update UI immediately
+    store.dispatch(setReduxUser(user));
   }
 };
 
@@ -32,6 +36,7 @@ export const getUser = () => {
 export const clearAuth = () => {
   // Token cookie is cleared by backend (if necessary). Only remove local user copy.
   localStorage.removeItem(USER_KEY);
+  store.dispatch(clearReduxUser());
 };
 
 export const isAuthenticated = () => !!getUser();
@@ -142,7 +147,10 @@ const refreshAccessToken = async () => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Refresh token thất bại');
+      // Throw object containing code to handle it later
+      const err = new Error(errorData.message || 'Refresh token thất bại');
+      err.code = errorData.code;
+      throw err;
     }
 
     const data = await response.json();
@@ -179,8 +187,42 @@ api.interceptors.response.use(
 
     // Xử lý lỗi 401 - token hết hạn hoặc không hợp lệ
     if (error.response?.status === 401) {
+      // Check for concurrent login session
+      const errorCode = error.response.data?.code;
+      if (errorCode === 'SESSION_EXPIRED') {
+        Swal.fire({
+          title: 'Cảnh báo đăng nhập',
+          text: 'Tài khoản của bạn đã được đăng nhập ở một thiết bị khác. Vui lòng đăng nhập lại.',
+          icon: 'warning',
+          confirmButtonText: 'Đăng nhập lại',
+          confirmButtonColor: '#fbbf24',
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        }).then(() => {
+          clearAuth();
+          window.location.href = '/login';
+        });
+        return new Promise(() => { });
+      }
+
+      if (errorCode === 'REFRESH_TOKEN_EXPIRED') {
+        Swal.fire({
+          title: 'Hết phiên đăng nhập',
+          text: 'Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.',
+          icon: 'info',
+          confirmButtonText: 'Đăng nhập lại',
+          confirmButtonColor: '#3085d6',
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        }).then(() => {
+          clearAuth();
+          window.location.href = '/login';
+        });
+        return new Promise(() => { });
+      }
       // Logic cũ: chỉ refresh nếu code === 'TOKEN_EXPIRED'
       // Logic mới: Thử refresh cho mọi lỗi 401 (trừ login) để tránh logout oan khi backend trả lỗi chung chung
+
       const isLoginRequest = originalRequest.url?.includes('/login');
 
       // Nếu là request login bị 401 thì không refresh, trả về lỗi luôn để component Login xử lý
@@ -217,17 +259,62 @@ api.interceptors.response.use(
 
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh thất bại → xử lý queue và logout
-        processQueue(refreshError, null);
+        // Refresh thất bại -> Không reject queue để tránh lỗi đỏ ở UI (vì sắp redirect rồi)
+        // Chỉ cần clear queue để các request đó "treo" luôn
+        failedQueue = [];
         isRefreshing = false;
 
-        // Chỉ logout nếu không phải đang ở trang login
-        if (window.location.pathname !== '/login') {
-          console.warn('Refresh token thất bại → tự động đăng xuất');
-          logout();
+        // Check if specific error code exists to show alert instead of blind logout
+        const refreshErrorCode = refreshError.code;
+
+        if (refreshErrorCode === 'REFRESH_TOKEN_EXPIRED') {
+          Swal.fire({
+            title: 'Hết phiên đăng nhập',
+            text: 'Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.',
+            icon: 'info',
+            confirmButtonText: 'Đăng nhập lại',
+            confirmButtonColor: '#3085d6',
+            allowOutsideClick: false,
+            allowEscapeKey: false
+          }).then(() => {
+            clearAuth();
+            window.location.href = '/login';
+          });
+          return new Promise(() => { });
         }
 
-        return Promise.reject(refreshError);
+        if (refreshErrorCode === 'SESSION_EXPIRED') {
+          Swal.fire({
+            title: 'Cảnh báo đăng nhập',
+            text: 'Tài khoản của bạn đã được đăng nhập ở một thiết bị khác. Vui lòng đăng nhập lại.',
+            icon: 'warning',
+            confirmButtonText: 'Đăng nhập lại',
+            confirmButtonColor: '#fbbf24',
+            allowOutsideClick: false,
+            allowEscapeKey: false
+          }).then(() => {
+            clearAuth();
+            window.location.href = '/login';
+          });
+          return new Promise(() => { });
+        }
+
+        // catch-all: Nếu refresh thất bại vì bất cứ lý do nào khác (hết hạn, lỗi mạng...)
+        // Hiện alert thay vì logout luôn
+        Swal.fire({
+          title: 'Hết phiên đăng nhập',
+          text: 'Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.',
+          icon: 'info',
+          confirmButtonText: 'Đăng nhập lại',
+          confirmButtonColor: '#fbbf24',
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        }).then(() => {
+          clearAuth();
+          window.location.href = '/login';
+        });
+
+        return new Promise(() => { });
       }
     }
 

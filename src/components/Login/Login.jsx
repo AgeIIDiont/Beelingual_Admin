@@ -15,8 +15,8 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   // Forgot Password State
-  const [view, setView] = useState('login'); // 'login', 'forgot', 'reset'
-  const [resetData, setResetData] = useState({ username: '', otp: '', newPassword: '' });
+  const [view, setView] = useState('login'); // 'login', 'forgot', 'otp', 'reset'
+  const [resetData, setResetData] = useState({ username: '', otp: '', newPassword: '', confirmPassword: '' });
   const [message, setMessage] = useState({ type: '', text: '' });
 
   const from = location.state?.from?.pathname || '/dashboard';
@@ -78,7 +78,10 @@ const Login = () => {
     try {
       await forgotPassword(resetData.username);
       setMessage({ type: 'success', text: 'OTP đã được gửi đến email của bạn.' });
-      setView('reset');
+      setTimeout(() => {
+        setMessage({ type: '', text: '' });
+        setView('otp');
+      }, 1000);
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Không thể gửi OTP.' });
     } finally {
@@ -86,15 +89,38 @@ const Login = () => {
     }
   };
 
+  const handleOtpSubmit = (e) => {
+    e.preventDefault();
+    if (!resetData.otp || resetData.otp.length < 6) {
+      setMessage({ type: 'error', text: 'Vui lòng nhập mã OTP hợp lệ.' });
+      return;
+    }
+    setMessage({ type: '', text: '' });
+    setView('reset');
+  };
+
   const handleResetSubmit = async (e) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
+
+    if (resetData.newPassword !== resetData.confirmPassword) {
+      setMessage({ type: 'error', text: 'Mật khẩu xác nhận không khớp.' });
+      return;
+    }
+
+    if (resetData.newPassword.length < 6) {
+      setMessage({ type: 'error', text: 'Mật khẩu phải có ít nhất 6 ký tự.' });
+      return;
+    }
+
     setLoading(true);
     try {
       await resetPassword(resetData.username, resetData.otp, resetData.newPassword);
       setMessage({ type: 'success', text: 'Đổi mật khẩu thành công! Vui lòng đăng nhập.' });
       setTimeout(() => {
         setView('login');
+        setFormData(prev => ({ ...prev, username: resetData.username }));
+        setResetData({ username: '', otp: '', newPassword: '', confirmPassword: '' });
         setMessage({ type: '', text: '' });
       }, 2000);
     } catch (err) {
@@ -206,31 +232,143 @@ const Login = () => {
     </form>
   );
 
+  const handleOtpChange = (e, index) => {
+    const value = e.target.value;
+    if (isNaN(value)) return; // Only allow numbers
+
+    const newOtp = resetData.otp.split('');
+    // Ensure array has size 6
+    while (newOtp.length < 6) newOtp.push('');
+
+    newOtp[index] = value.substring(value.length - 1); // Take last char
+    const newOtpString = newOtp.join('').substring(0, 6);
+
+    setResetData({ ...resetData, otp: newOtpString });
+
+    // Focus next input
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-${index + 1}`);
+      if (nextInput) nextInput.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (e, index) => {
+    if (e.key === 'Backspace') {
+      if (!resetData.otp[index] && index > 0) {
+        // If empty and backspaced, move to previous
+        const prevInput = document.getElementById(`otp-${index - 1}`);
+        if (prevInput) prevInput.focus();
+      }
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const data = e.clipboardData.getData('text').trim();
+    if (!data || isNaN(data)) return;
+
+    const pastedOtp = data.substring(0, 6);
+    setResetData({ ...resetData, otp: pastedOtp });
+
+    // Focus last filled
+    const lastIndex = Math.min(pastedOtp.length, 6) - 1;
+    if (lastIndex >= 0) {
+      const input = document.getElementById(`otp-${lastIndex}`);
+      if (input) input.focus();
+    }
+  };
+
+  const renderOtpForm = () => (
+    <form onSubmit={handleOtpSubmit}>
+      <h4 className="text-center mb-3" style={{ color: '#334155' }}>Nhập mã OTP</h4>
+      <p className="text-center mb-4 text-muted small">Mã OTP (6 số) đã được gửi đến email của bạn</p>
+
+      <div className="mb-4 d-flex justify-content-between gap-2">
+        {[0, 1, 2, 3, 4, 5].map((index) => (
+          <input
+            key={index}
+            id={`otp-${index}`}
+            type="text"
+            className="form-control text-center fw-bold"
+            value={resetData.otp[index] || ''}
+            onChange={(e) => handleOtpChange(e, index)}
+            onKeyDown={(e) => handleOtpKeyDown(e, index)}
+            onPaste={index === 0 ? handleOtpPaste : undefined}
+            required={index === 0} // Only first required for HTML5 validation roughly, but we check manually too
+            maxLength={1}
+            style={{
+              width: '48px',
+              height: '56px',
+              fontSize: '24px',
+              borderRadius: '12px',
+              border: '2px solid #e2e8f0',
+              backgroundColor: '#f8fafc',
+              color: '#334155'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#fbbf24';
+              e.target.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.1)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#e2e8f0';
+              e.target.style.boxShadow = 'none';
+            }}
+          />
+        ))}
+      </div>
+
+      <button
+        type="submit" className="btn w-100 fw-bold mb-3" disabled={loading}
+        style={{ padding: '12px', borderRadius: '8px', background: '#fbbf24', border: 'none', color: '#1e293b' }}
+      >
+        Tiếp tục
+      </button>
+
+      <button
+        type="button"
+        className="btn w-100 text-muted"
+        onClick={() => { setView('forgot'); setMessage({ type: '', text: '' }); }}
+        style={{ background: 'transparent', border: 'none' }}
+      >
+        <i className="fas fa-arrow-left me-2"></i>Quay lại nhập email
+      </button>
+    </form>
+  );
+
   const renderResetForm = () => (
     <form onSubmit={handleResetSubmit}>
       <h4 className="text-center mb-3" style={{ color: '#334155' }}>Đặt lại mật khẩu</h4>
-      <p className="text-center mb-4 text-muted small">Kiểm tra email để lấy mã OTP</p>
+      <p className="text-center mb-4 text-muted small">Nhập mật khẩu mới cho tài khoản</p>
 
       <div className="mb-3">
-        <label className="form-label fw-semibold">Mã OTP</label>
-        <input
-          type="text" className="form-control"
-          value={resetData.otp}
-          onChange={(e) => setResetData({ ...resetData, otp: e.target.value })}
-          required disabled={loading}
-          placeholder="Nhập mã OTP 6 số"
-          style={{ padding: '12px', borderRadius: '8px' }}
-        />
+        <label className="form-label fw-semibold">Mật khẩu mới</label>
+        <div className="input-group">
+          <input
+            type={showPassword ? "text" : "password"} className="form-control"
+            value={resetData.newPassword}
+            onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
+            required disabled={loading}
+            placeholder="Mật khẩu mới (tối thiểu 6 ký tự)"
+            style={{ padding: '12px', borderRadius: '8px' }}
+          />
+          <button
+            type="button" className="btn btn-outline-secondary"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{ borderTopRightRadius: '8px', borderBottomRightRadius: '8px' }}
+          >
+            <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+          </button>
+        </div>
       </div>
 
       <div className="mb-4">
-        <label className="form-label fw-semibold">Mật khẩu mới</label>
+        <label className="form-label fw-semibold">Xác nhận mật khẩu</label>
         <input
           type="password" className="form-control"
-          value={resetData.newPassword}
-          onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
+          value={resetData.confirmPassword}
+          onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
           required disabled={loading}
-          placeholder="Nhập mật khẩu mới"
+          placeholder="Nhập lại mật khẩu mới"
           style={{ padding: '12px', borderRadius: '8px' }}
         />
       </div>
@@ -244,10 +382,10 @@ const Login = () => {
       <button
         type="button"
         className="btn w-100 text-muted"
-        onClick={() => { setView('forgot'); setMessage({ type: '', text: '' }); }}
+        onClick={() => { setView('otp'); setMessage({ type: '', text: '' }); }}
         style={{ background: 'transparent', border: 'none' }}
       >
-        <i className="fas fa-arrow-left me-2"></i>Quay lại
+        <i className="fas fa-arrow-left me-2"></i>Quay lại nhập OTP
       </button>
     </form>
   );
@@ -289,6 +427,7 @@ const Login = () => {
 
         {view === 'login' && renderLoginForm()}
         {view === 'forgot' && renderForgotForm()}
+        {view === 'otp' && renderOtpForm()}
         {view === 'reset' && renderResetForm()}
 
         {/* Footer */}

@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect, useRef } from 'react';
+import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchGrammarCategoriesAction, selectGrammarCategories } from '../store/slices/resourceSlice';
@@ -80,15 +81,37 @@ const Grammar = () => {
 
   // Manual delete handler since we are customizing the actions column
   const handleDelete = async (id) => {
-    if (!window.confirm('Bạn chắc chắn muốn xóa bài ngữ pháp này?')) return;
+    const result = await Swal.fire({
+      title: 'Bạn chắc chắn muốn xóa?',
+      text: "Hành động này sẽ xóa bài ngữ pháp và không thể hoàn tác.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy bỏ',
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await deleteGrammar(id);
+      Swal.fire(
+        'Đã xóa!',
+        'Đã xóa bài ngữ pháp thành công.',
+        'success'
+      );
       // Refresh list
       if (resourceManagerRef.current) {
         resourceManagerRef.current.refresh();
       }
     } catch (error) {
-      alert('Không thể xóa: ' + (error.message || 'Lỗi không xác định'));
+      Swal.fire(
+        'Lỗi!',
+        'Không thể xóa: ' + (error.message || 'Lỗi không xác định'),
+        'error'
+      );
     }
   };
 
