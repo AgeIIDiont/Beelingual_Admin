@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoHome from '../../assets/LogoHome.png';
 import './styles/sidebar.scss';
 
 const menu = [
@@ -31,17 +30,6 @@ const Sidebar = () => {
 
   return (
     <div className="sidebar-container d-flex flex-column bg-dark text-white">
-
-      <div
-        className="sidebar-header bg-white d-flex justify-content-center align-items-center py-3"
-        style={{ minHeight: '80px' }}
-      >
-        <img
-          src={LogoHome}
-          alt="Beelingual"
-          style={{ maxHeight: '50px', maxWidth: '220px', width: 'auto' }}
-        />
-      </div>
 
       <nav className="sidebar-menu">
         {menu.map((item, i) => {

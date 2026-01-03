@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { login, logout, forgotPassword, resetPassword } from '../../services/authService';
 import logo from '../../assets/logoLogin.jpg';
+import './Login.scss';
 
 const Login = () => {
   const location = useLocation();
@@ -392,10 +393,9 @@ const Login = () => {
 
   return (
     <div
-      className="container-fluid d-flex align-items-center justify-content-center position-relative"
+      className="login-page container-fluid d-flex align-items-center justify-content-center position-relative"
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #eadf49e7 0%, #fedf11ee 50%, #ffd013ff 100%)',
         overflow: 'hidden'
       }}
     >

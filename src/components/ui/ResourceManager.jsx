@@ -1,109 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState, useImperativeHandle, forwardRef } from 'react';
 import ReactDOM from 'react-dom';
 import Swal from 'sweetalert2';
+import './styles/resource-manager.scss';
 
-// --- STYLES & ANIMATIONS (Inline CSS for portability) ---
-const customStyles = `
-  .rm-container {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  }
-  .rm-card {
-    background: #ffffff;
-    border: 1px solid rgba(0,0,0,0.05);
-    border-radius: 16px;
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-  }
-  .rm-card:hover {
-    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
-  }
-  .rm-btn-primary {
-    background: linear-gradient(135deg, #FFB75E 0%, #ED8F03 100%);
-    border: none;
-    color: white;
-    box-shadow: 0 4px 15px rgba(237, 143, 3, 0.3);
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .rm-btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(237, 143, 3, 0.4);
-    color: white;
-  }
-  .rm-table-header th {
-    background-color: #f8f9fa;
-    color: #6c757d;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-    padding: 16px;
-    border-bottom: 2px solid #e9ecef;
-  }
-  .rm-table-row {
-    transition: all 0.2s ease;
-    border-bottom: 1px solid #f1f3f5;
-  }
-  .rm-table-row:hover {
-    background-color: #fff8e1 !important; /* Slight yellow tint on hover */
-  }
-  .rm-table-row td {
-    padding: 16px;
-    vertical-align: middle;
-    color: #495057;
-  }
-  .rm-input-modern {
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 10px;
-    padding: 10px 15px;
-    transition: all 0.2s;
-  }
-  .rm-input-modern:focus {
-    background-color: #fff;
-    border-color: #ED8F03;
-    box-shadow: 0 0 0 4px rgba(237, 143, 3, 0.1);
-  }
-  .rm-action-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    border: none;
-  }
-  .rm-action-btn.edit {
-    background-color: #e3f2fd;
-    color: #1976d2;
-  }
-  .rm-action-btn.edit:hover {
-    background-color: #1976d2;
-    color: white;
-  }
-  .rm-action-btn.delete {
-    background-color: #ffebee;
-    color: #d32f2f;
-  }
-  .rm-action-btn.delete:hover {
-    background-color: #d32f2f;
-    color: white;
-  }
-  .fade-in-up {
-    animation: fadeInUp 0.5s ease-out forwards;
-  }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .modal-blur {
-    backdrop-filter: blur(5px);
-    background-color: rgba(0,0,0,0.4);
-  }
-  .rm-table-row.drag-over {
-    /* Styles removed */
-  }
-`;
+
 
 const sanitizePayload = (values) => {
   const payload = {};
@@ -634,27 +534,6 @@ const ResourceManager = forwardRef(({
 
   return (
     <div className="container-fluid py-4 rm-container">
-      {/* Inject custom styles */}
-      <style>
-        {`${customStyles}
-          .rm-table-row.dragging {
-            background: #fff !important;
-            display: table !important;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15) !important;
-            border: 2px solid #ffc107 !important;
-            z-index: 9999;
-            /* Remove width: 100% and table-layout: fixed from here as they are moved to inline style or handled by library */
-          }
-          
-          .rm-table-row.dragging td {
-            display: table-cell !important;
-            padding: 1rem !important;
-            border-bottom: none !important;
-            /* Force cells to have some width if they squash */
-            min-width: 100px;
-          }
-        `}
-      </style>
 
       {/* HEADER SECTION */}
       {!hideHeader && (

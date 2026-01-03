@@ -34,6 +34,9 @@ export const getUser = () => {
 };
 
 export const clearAuth = () => {
+  // Debug: Log khi clearAuth được gọi
+  console.log('clearAuth() called from:', new Error().stack);
+
   // Token cookie is cleared by backend (if necessary). Only remove local user copy.
   localStorage.removeItem(USER_KEY);
   store.dispatch(clearReduxUser());
@@ -118,6 +121,10 @@ export const logout = async () => {
 let isRefreshing = false;
 // Queue các request đang chờ refresh token hoàn thành
 let failedQueue = [];
+// Flag để ngăn PrivateRoutes redirect khi đang hiển thị alert
+let showingSessionAlert = false;
+
+export const isShowingSessionAlert = () => showingSessionAlert;
 
 // Hàm xử lý queue các request đã fail
 const processQueue = (error, token = null) => {
@@ -187,9 +194,29 @@ api.interceptors.response.use(
 
     // Xử lý lỗi 401 - token hết hạn hoặc không hợp lệ
     if (error.response?.status === 401) {
-      // Check for concurrent login session
-      const errorCode = error.response.data?.code;
-      if (errorCode === 'SESSION_EXPIRED') {
+      // Debug: Log toàn bộ error response để kiểm tra
+      console.log('401 Error Response:', {
+        data: error.response.data,
+        headers: error.response.headers,
+        config: error.config
+      });
+
+      // Check for concurrent login session - kiểm tra cả code và message
+      const errorData = error.response.data || {};
+      const errorCode = errorData.code;
+      const errorMessage = errorData.message || errorData.error || '';
+
+      // Kiểm tra SESSION_EXPIRED qua code hoặc message
+      if (errorCode === 'SESSION_EXPIRED' || errorMessage.includes('đăng nhập ở một thiết bị khác') || errorMessage.includes('concurrent login')) {
+        // Nếu đã đang hiển thị alert rồi, không hiển thị nữa (tránh duplicate)
+        if (showingSessionAlert) {
+          console.log('Session alert already showing, skipping duplicate');
+          return new Promise(() => { });
+        }
+
+        // Đánh dấu đang hiển thị alert để ngăn PrivateRoutes redirect
+        showingSessionAlert = true;
+        console.log('Showing SESSION_EXPIRED alert');
         Swal.fire({
           title: 'Cảnh báo đăng nhập',
           text: 'Tài khoản của bạn đã được đăng nhập ở một thiết bị khác. Vui lòng đăng nhập lại.',
@@ -199,13 +226,17 @@ api.interceptors.response.use(
           allowOutsideClick: false,
           allowEscapeKey: false
         }).then(() => {
+          showingSessionAlert = false;
           clearAuth();
           window.location.href = '/login';
         });
         return new Promise(() => { });
       }
 
-      if (errorCode === 'REFRESH_TOKEN_EXPIRED') {
+      // Kiểm tra REFRESH_TOKEN_EXPIRED qua code hoặc message
+      if (errorCode === 'REFRESH_TOKEN_EXPIRED' || errorMessage.includes('hết hạn') || errorMessage.includes('expired')) {
+        // Đánh dấu đang hiển thị alert
+        showingSessionAlert = true;
         Swal.fire({
           title: 'Hết phiên đăng nhập',
           text: 'Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.',
@@ -215,22 +246,29 @@ api.interceptors.response.use(
           allowOutsideClick: false,
           allowEscapeKey: false
         }).then(() => {
+          showingSessionAlert = false;
           clearAuth();
           window.location.href = '/login';
         });
         return new Promise(() => { });
       }
-      // Logic cũ: chỉ refresh nếu code === 'TOKEN_EXPIRED'
-      // Logic mới: Thử refresh cho mọi lỗi 401 (trừ login) để tránh logout oan khi backend trả lỗi chung chung
 
+      // Nếu không phải SESSION_EXPIRED hay REFRESH_TOKEN_EXPIRED
+      // Có thể là concurrent login nhưng backend không trả đúng code/message
+      // Hoặc là các lỗi 401 khác → Hiển thị alert trước khi thử refresh
       const isLoginRequest = originalRequest.url?.includes('/login');
 
-      // Nếu là request login bị 401 thì không refresh, trả về lỗi luôn để component Login xử lý
       if (isLoginRequest) {
+        // Nếu là request login bị 401 thì không refresh, trả về lỗi luôn
         return Promise.reject(error);
       }
 
-      // Với các request khác, nếu bị 401 thì thử refresh token
+      // Log để debug
+      console.log('401 but no specific code - will try refresh. Error:', {
+        code: errorCode,
+        message: errorMessage
+      });
+
       // Nếu đang refresh, thêm request vào queue
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -268,6 +306,7 @@ api.interceptors.response.use(
         const refreshErrorCode = refreshError.code;
 
         if (refreshErrorCode === 'REFRESH_TOKEN_EXPIRED') {
+          showingSessionAlert = true;
           Swal.fire({
             title: 'Hết phiên đăng nhập',
             text: 'Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.',
@@ -277,6 +316,7 @@ api.interceptors.response.use(
             allowOutsideClick: false,
             allowEscapeKey: false
           }).then(() => {
+            showingSessionAlert = false;
             clearAuth();
             window.location.href = '/login';
           });
@@ -284,6 +324,7 @@ api.interceptors.response.use(
         }
 
         if (refreshErrorCode === 'SESSION_EXPIRED') {
+          showingSessionAlert = true;
           Swal.fire({
             title: 'Cảnh báo đăng nhập',
             text: 'Tài khoản của bạn đã được đăng nhập ở một thiết bị khác. Vui lòng đăng nhập lại.',
@@ -293,6 +334,7 @@ api.interceptors.response.use(
             allowOutsideClick: false,
             allowEscapeKey: false
           }).then(() => {
+            showingSessionAlert = false;
             clearAuth();
             window.location.href = '/login';
           });
@@ -301,6 +343,7 @@ api.interceptors.response.use(
 
         // catch-all: Nếu refresh thất bại vì bất cứ lý do nào khác (hết hạn, lỗi mạng...)
         // Hiện alert thay vì logout luôn
+        showingSessionAlert = true;
         Swal.fire({
           title: 'Hết phiên đăng nhập',
           text: 'Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.',
@@ -310,6 +353,7 @@ api.interceptors.response.use(
           allowOutsideClick: false,
           allowEscapeKey: false
         }).then(() => {
+          showingSessionAlert = false;
           clearAuth();
           window.location.href = '/login';
         });

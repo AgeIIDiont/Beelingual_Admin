@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/slices/userSlice';
 import { logout } from '../../services/authService';
 import { usePage } from '../../contexts/PageContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import LogoHome from '../../assets/LogoHome.png';
 import './styles/header.scss';
 
 const routeTitles = {
@@ -22,6 +24,7 @@ const Header = () => {
   const location = useLocation();
   const { pageTitle, pageDescription, actionButtons } = usePage();
   const profile = useSelector(selectUser);
+  const { theme, toggleTheme } = useTheme();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -53,9 +56,19 @@ const Header = () => {
     <header className="header-container">
       <div className="d-flex justify-content-between align-items-center h-100 px-4 px-lg-5">
 
-        {/* Left side: Page Title */}
+        {/* Logo */}
+        <div className="header-logo me-4">
+          <img
+            src={LogoHome}
+            alt="Beelingual"
+            style={{ height: '40px', width: 'auto', cursor: 'pointer' }}
+            onClick={() => navigate('/dashboard')}
+          />
+        </div>
+
+        {/* Page Title */}
         <div className="flex-grow-1 d-flex flex-column justify-content-center">
-          <h1 className="h4 fw-bold text-dark mb-0">
+          <h1 className="h4 fw-bold mb-0" style={{ color: 'var(--text-primary)' }}>
             {currentTitle}
           </h1>
           {pageDescription && (
@@ -79,6 +92,15 @@ const Header = () => {
             </div>
           )}
 
+          {/* Dark Mode Toggle */}
+          <button
+            className="theme-toggle-btn"
+            onClick={toggleTheme}
+            title={theme === 'light' ? 'Chuyển sang Dark Mode' : 'Chuyển sang Light Mode'}
+          >
+            <i className={theme === 'light' ? 'fas fa-moon' : 'fas fa-sun'}></i>
+          </button>
+
           {/* Profile Section */}
           <div className="position-relative" ref={dropdownRef}>
             <div
@@ -87,10 +109,10 @@ const Header = () => {
             >
               {/* Text Info */}
               <div className="text-end d-none d-md-block">
-                <div className="fw-bold text-dark">
+                <div className="fw-bold" style={{ color: 'var(--text-primary)' }}>
                   {profile?.fullname}
                 </div>
-                <div className="text-muted text-uppercase" style={{ fontSize: '10px' }}>
+                <div className="text-uppercase" style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
                   {profile?.role}
                 </div>
               </div>
@@ -116,10 +138,10 @@ const Header = () => {
 
             {/* Dropdown Menu */}
             {showDropdown && (
-              <div className="position-absolute end-0 mt-3 bg-white rounded-4 custom-dropdown overflow-hidden" style={{ minWidth: '240px' }}>
-                <div className="p-3 bg-light border-bottom">
-                  <p className="fw-bold mb-0 text-dark">{profile?.fullname}</p>
-                  <p className="text-muted small mb-0 text-truncate">{profile?.email || 'admin@beelingual.com'}</p>
+              <div className="position-absolute end-0 mt-3 rounded-4 custom-dropdown overflow-hidden" style={{ minWidth: '240px' }}>
+                <div className="p-3 border-bottom" style={{ background: 'var(--bg-hover)' }}>
+                  <p className="fw-bold mb-0" style={{ color: 'var(--text-primary)' }}>{profile?.fullname}</p>
+                  <p className="small mb-0 text-truncate" style={{ color: 'var(--text-muted)' }}>{profile?.email || 'admin@beelingual.com'}</p>
                 </div>
 
                 <div className="p-2">

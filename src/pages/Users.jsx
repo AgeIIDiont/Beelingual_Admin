@@ -78,8 +78,8 @@ const Users = () => {
         label: 'Người dùng',
         render: (item) => (
           <div>
-            <div className="fw-bold text-dark text-capitalize">{item.fullname || item.username}</div>
-            <small className="text-muted">{item.username}{item.email ? ` · ${item.email}` : ''}</small>
+            <div className="fw-bold text-capitalize" style={{ color: 'var(--text-primary)' }}>{item.fullname || item.username}</div>
+            <small style={{ color: 'var(--text-muted)' }}>{item.username}{item.email ? ` · ${item.email}` : ''}</small>
           </div>
         ),
       },
@@ -102,8 +102,8 @@ const Users = () => {
         label: 'XP / Gems',
         render: (item) => (
           <div>
-            <span className="text-dark fw-semibold">{item.xp ?? 0} XP</span>
-            <div className="text-muted small">{item.gems ?? 0} gems</div>
+            <span className="fw-semibold" style={{ color: 'var(--text-primary)' }}>{item.xp ?? 0} XP</span>
+            <div className="small" style={{ color: 'var(--text-muted)' }}>{item.gems ?? 0} gems</div>
           </div>
         ),
       },
@@ -311,29 +311,29 @@ const Users = () => {
           <div className="row g-4">
             {/* Level Distribution Card */}
             <div className="col-lg-6">
-              <div 
+              <div
                 className="h-100"
                 style={{
-                  background: '#ffffff',
+                  background: 'var(--bg-card)',
                   borderRadius: '16px',
-                  border: '1px solid rgba(0,0,0,0.05)',
-                  boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.05)',
+                  border: '1px solid var(--border-color)',
+                  boxShadow: 'var(--shadow-md)',
                   overflow: 'hidden',
                   transition: 'all 0.3s ease'
                 }}
               >
-                <div 
+                <div
                   style={{
                     padding: '1rem 1.25rem',
-                    background: 'linear-gradient(135deg, #f8f9fa 0%, #fff8e1 100%)',
-                    borderBottom: '1px solid rgba(255,193,7,0.1)'
+                    background: 'var(--bg-hover)',
+                    borderBottom: '1px solid var(--border-color)'
                   }}
                 >
-                  <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                    <span 
+                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                    <span
                       style={{
-                        width: '32px', 
-                        height: '32px', 
+                        width: '32px',
+                        height: '32px',
                         background: 'linear-gradient(135deg, #FFB75E 0%, #ED8F03 100%)',
                         borderRadius: '8px',
                         display: 'flex',
@@ -371,38 +371,38 @@ const Users = () => {
                           if (indexB === -1) return -1;
                           return indexA - indexB;
                         });
-                        
+
                         return sortedStats.map((item, idx) => (
-                        <tr 
-                          key={item._id || 'unknown'} 
-                          style={{ 
-                            borderBottom: idx < (sortedStats.length - 1) ? '1px solid #f1f3f5' : 'none',
-                            transition: 'background 0.2s'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = '#fffbeb'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                        >
-                          <td style={{ padding: '0.875rem 0' }}>
-                            <span 
-                              className="badge rounded-pill px-3 py-2"
-                              style={{
-                                background: item._id?.startsWith('A') ? '#77f9a4ff' : 
-                                           item._id?.startsWith('B') ? '#fff04dff' : 
-                                           item._id?.startsWith('C') ? '#f76161ff' : '#f1f5f9',
-                                color: item._id?.startsWith('A') ? '#066229ff' : 
-                                       item._id?.startsWith('B') ? '#442605ff' : 
-                                       item._id?.startsWith('C') ? '#630b0bff' : '#475569',
-                                fontWeight: 600
-                              }}
-                            >
-                              {item._id || 'Chưa xác định'}
-                            </span>
-                          </td>
-                          <td style={{ textAlign: 'right', padding: '0.875rem 0' }}>
-                            <span className="fw-bold text-dark">{item.count}</span>
-                            <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}> người</span>
-                          </td>
-                        </tr>
+                          <tr
+                            key={item._id || 'unknown'}
+                            style={{
+                              borderBottom: idx < (sortedStats.length - 1) ? '1px solid #f1f3f5' : 'none',
+                              transition: 'background 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#fffbeb'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <td style={{ padding: '0.875rem 0' }}>
+                              <span
+                                className="badge rounded-pill px-3 py-2"
+                                style={{
+                                  background: item._id?.startsWith('A') ? '#77f9a4ff' :
+                                    item._id?.startsWith('B') ? '#fff04dff' :
+                                      item._id?.startsWith('C') ? '#f76161ff' : '#f1f5f9',
+                                  color: item._id?.startsWith('A') ? '#066229ff' :
+                                    item._id?.startsWith('B') ? '#442605ff' :
+                                      item._id?.startsWith('C') ? '#630b0bff' : '#475569',
+                                  fontWeight: 600
+                                }}
+                              >
+                                {item._id || 'Chưa xác định'}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'right', padding: '0.875rem 0' }}>
+                              <span className="fw-bold text-dark">{item.count}</span>
+                              <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}> người</span>
+                            </td>
+                          </tr>
                         ));
                       })()}
                       {!userStats?.levelStats?.length && (
@@ -421,29 +421,29 @@ const Users = () => {
 
             {/* Recent Users Card */}
             <div className="col-lg-6">
-              <div 
+              <div
                 className="h-100"
                 style={{
-                  background: '#ffffff',
+                  background: 'var(--bg-card)',
                   borderRadius: '16px',
-                  border: '1px solid rgba(0,0,0,0.05)',
-                  boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.05)',
+                  border: '1px solid var(--border-color)',
+                  boxShadow: 'var(--shadow-md)',
                   overflow: 'hidden',
                   transition: 'all 0.3s ease'
                 }}
               >
-                <div 
+                <div
                   style={{
                     padding: '1rem 1.25rem',
-                    background: 'linear-gradient(135deg, #f8f9fa 0%, #e0f2fe 100%)',
-                    borderBottom: '1px solid rgba(59,130,246,0.1)'
+                    background: 'var(--bg-hover)',
+                    borderBottom: '1px solid var(--border-color)'
                   }}
                 >
-                  <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                    <span 
+                  <h5 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                    <span
                       style={{
-                        width: '32px', 
-                        height: '32px', 
+                        width: '32px',
+                        height: '32px',
                         background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
                         borderRadius: '8px',
                         display: 'flex',
@@ -458,7 +458,7 @@ const Users = () => {
                 </div>
                 <div style={{ padding: '0.5rem' }}>
                   {(userStats?.recentUsers || []).map((user) => (
-                    <div 
+                    <div
                       key={user._id}
                       style={{
                         display: 'flex',
@@ -471,14 +471,14 @@ const Users = () => {
                         cursor: 'default'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f8fafc';
+                        e.currentTarget.style.background = 'var(--bg-hover)';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent';
                       }}
                     >
                       <div className="d-flex align-items-center gap-3">
-                        <div 
+                        <div
                           style={{
                             width: '40px',
                             height: '40px',
@@ -496,9 +496,9 @@ const Users = () => {
                           {(user.fullname || user.username || 'U').charAt(0)}
                         </div>
                         <div>
-                          <div className="fw-semibold text-dark">{user.fullname || user.username}</div>
+                          <div className="fw-semibold" style={{ color: 'var(--text-primary)' }}>{user.fullname || user.username}</div>
                           <small style={{ color: '#94a3b8' }}>
-                            <span 
+                            <span
                               className="badge me-1"
                               style={{
                                 background: user.role === 'admin' ? '#fef3c7' : '#e0f2fe',
@@ -513,7 +513,7 @@ const Users = () => {
                           </small>
                         </div>
                       </div>
-                      <span 
+                      <span
                         className="badge rounded-pill px-2 py-1"
                         style={{
                           background: '#f1f5f9',

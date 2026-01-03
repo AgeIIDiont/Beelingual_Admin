@@ -3,10 +3,10 @@
 // ================================
 
 .stats-card {
-    background: linear-gradient(145deg, #ffffff, #fdfbf7);
+    background: var(--bg-card);
     border-radius: 20px;
-    border: 1px solid rgba(255, 215, 0, 0.15);
-    box-shadow: 0 12px 25px -10px rgba(255, 215, 0, 0.15), 0 6px 10px -4px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     cursor: pointer;
     overflow: hidden;

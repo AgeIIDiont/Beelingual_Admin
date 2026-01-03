@@ -172,14 +172,14 @@ const Grammar = () => {
         render: (item) => (
           <div className="d-flex gap-2 justify-content-end">
             <button
-              className="btn btn-sm btn-light text-primary"
+              className="btn-action edit"
               onClick={() => resourceManagerRef.current?.openEditForm(item)}
               title="Chỉnh sửa"
             >
               <i className="fas fa-pen"></i>
             </button>
             <button
-              className="btn btn-sm btn-light text-danger"
+              className="btn-action delete"
               onClick={() => handleDelete(item._id)}
               title="Xóa"
             >

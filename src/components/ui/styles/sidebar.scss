@@ -4,10 +4,12 @@
 
 .sidebar-container {
     width: 280px;
-    transition: width 0.3s;
+    transition: width 0.3s, background 0.3s ease;
     position: fixed;
     height: 100%;
-    z-index: 1020;
+    z-index: 900;
+    background: var(--sidebar-bg);
+    padding-top: 80px;
 }
 
 .sidebar-header {
@@ -30,7 +32,7 @@
     margin-bottom: 0.5rem;
     position: relative;
     cursor: pointer;
-    transition: 0.3s;
+    transition: all 0.3s ease;
     color: #ffffff;
 
     &:hover {
@@ -38,8 +40,8 @@
     }
 
     &.active {
-        background: #f8fafc;
-        color: #1e293b;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
         border-left: 5px solid #ffc107;
     }
 

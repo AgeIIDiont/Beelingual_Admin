@@ -3,22 +3,21 @@
 // ================================
 
 .header-container {
-    background: rgba(255, 255, 255, 0.85);
+    background: var(--header-bg);
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
-    width: calc(100% - 280px);
-    transition: left 0.3s, width 0.3s;
+    border-bottom: 1px solid var(--border-color-light);
+    box-shadow: var(--shadow-sm);
+    width: 100%;
+    transition: background-color 0.3s ease;
     position: fixed;
     top: 0;
     right: 0;
-    left: 280px;
+    left: 0;
     height: 80px;
     z-index: 1000;
 
     @media (max-width: 991px) {
-        left: 0 !important;
-        width: 100% !important;
+        width: 100%;
     }
 }
 
@@ -32,8 +31,8 @@
 
     &:hover,
     &.active {
-        background: rgba(0, 0, 0, 0.04);
-        border-color: rgba(0, 0, 0, 0.05);
+        background: var(--bg-hover);
+        border-color: var(--border-color-light);
     }
 }
 
@@ -42,21 +41,22 @@
     border: 2px solid #ffd700;
     border-radius: 50%;
     display: inline-block;
-    background: #fff;
+    background: var(--bg-primary);
 }
 
 .custom-dropdown {
     animation: slideDownFade 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
     transform-origin: top right;
-    border: none;
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
     min-width: 240px;
+    background: var(--dropdown-bg);
 }
 
 .dropdown-item-custom {
     border-radius: 8px;
     transition: all 0.2s;
-    color: #555;
+    color: var(--text-secondary);
     font-weight: 500;
 
     &:hover {
@@ -74,4 +74,34 @@
 
 .transition-icon {
     transition: transform 0.2s;
+}
+
+// Dark Mode Toggle Button
+.theme-toggle-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+
+    &:hover {
+        background: var(--bg-hover);
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    }
+
+    i {
+        font-size: 18px;
+        transition: transform 0.3s ease;
+    }
+
+    &:active i {
+        transform: rotate(180deg);
+    }
 }

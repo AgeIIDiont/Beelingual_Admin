@@ -58,7 +58,7 @@ const PreviewPanel = ({ iframeRef, isMobilePreview, setIsMobilePreview, previewU
       <div className="hide-scrollbar" style={{
         flex: 1,
         overflowY: 'auto',
-        background: isMobilePreview ? '#f0f2f5' : 'transparent',
+        background: isMobilePreview ? 'var(--bg-secondary)' : 'transparent',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'flex-start',
@@ -94,7 +94,7 @@ const PreviewPanel = ({ iframeRef, isMobilePreview, setIsMobilePreview, previewU
                 height: '700px',
                 border: 'none',
                 borderRadius: '24px',
-                background: '#fff'
+                background: 'var(--bg-card)'
               }}
               title="Beelingual Landing Page Preview"
             />

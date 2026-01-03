@@ -1,0 +1,90 @@
+// ================================
+// LOGIN PAGE STYLES - FORCE LIGHT THEME
+// ================================
+
+.login-page {
+    // Force light theme colors with !important
+    --page-bg: #ffffff !important;
+    --bg-primary: #ffffff !important;
+    --bg-secondary: #f8fafc !important;
+    --bg-card: #ffffff !important;
+    --bg-hover: rgba(0, 0, 0, 0.04) !important;
+
+    --text-primary: #1e293b !important;
+    --text-secondary: #64748b !important;
+    --text-muted: #94a3b8 !important;
+
+    --border-color: #e2e8f0 !important;
+    --border-color-light: rgba(0, 0, 0, 0.05) !important;
+
+    --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+    --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.06) !important;
+
+    // Ensure background is always light
+    background: linear-gradient(135deg, #eadf49e7 0%, #fedf11ee 50%, #ffd013ff 100%) !important;
+
+    // Override any dark mode styles
+    * {
+        color-scheme: light !important;
+    }
+
+    // Force light colors for all text elements
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    span,
+    div,
+    label,
+    input,
+    button {
+        color: #1e293b !important;
+    }
+
+    // Force light background for card
+    .bg-white {
+        background-color: #ffffff !important;
+    }
+
+    // Force light input backgrounds
+    .form-control {
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+        border-color: #e2e8f0 !important;
+
+        &:disabled {
+            background-color: #f1f5f9 !important;
+        }
+
+        &::placeholder {
+            color: #94a3b8 !important;
+        }
+    }
+
+    .input-group-text {
+        background-color: #f8fafc !important;
+        border-color: #e2e8f0 !important;
+        color: #94a3b8 !important;
+    }
+
+    // Force light alert backgrounds
+    .alert {
+        background-color: #ffffff !important;
+        border-color: #e2e8f0 !important;
+    }
+
+    .alert-danger {
+        background-color: #fef2f2 !important;
+        color: #991b1b !important;
+        border-color: #fecaca !important;
+    }
+
+    .alert-success {
+        background-color: #f0fdf4 !important;
+        color: #166534 !important;
+        border-color: #bbf7d0 !important;
+    }
+}

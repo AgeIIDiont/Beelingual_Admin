@@ -4,10 +4,10 @@
 
 /* Modern Card Styling */
 .lp-card {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
 }
 
@@ -17,15 +17,15 @@
 
 .lp-card-header {
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  background: linear-gradient(135deg, #fefefe 0%, #f8f9fa 100%);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-hover);
   border-radius: 16px 16px 0 0;
 }
 
 .lp-card-header h5 {
   margin: 0;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -43,7 +43,7 @@
   padding: 0;
   margin: 0 0 1.5rem 0;
   list-style: none;
-  background: #f8f9fa;
+  background: var(--bg-secondary);
   border-radius: 12px;
   padding: 0.5rem;
 }
@@ -59,7 +59,7 @@
   border: none;
   border-radius: 10px;
   background: transparent;
-  color: #64748b;
+  color: var(--text-secondary);
   font-weight: 500;
   font-size: 0.875rem;
   cursor: pointer;
@@ -96,7 +96,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #64748b;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
 }
 
@@ -105,11 +105,11 @@
 .lp-select {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   border-radius: 10px;
-  background: #f8f9fa;
+  background: var(--bg-secondary);
   font-size: 0.95rem;
-  color: #1e293b;
+  color: var(--text-primary);
   transition: all 0.2s ease;
 }
 
@@ -118,7 +118,7 @@
 .lp-select:focus {
   outline: none;
   border-color: #ffc107;
-  background: #fff;
+  background: var(--bg-primary);
   box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.15);
 }
 
@@ -138,7 +138,7 @@
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border-color);
   cursor: pointer;
   padding: 0;
   overflow: hidden;
@@ -216,10 +216,10 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--border-color);
   border-radius: 8px;
   background: transparent;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -233,7 +233,7 @@
 
 /* Skeleton Loading */
 .lp-skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-hover) 50%, var(--bg-secondary) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite;
   border-radius: 8px;
@@ -243,6 +243,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -269,8 +270,8 @@
 
 /* Section Card (Feature items, etc) */
 .lp-section-card {
-  background: #f8f9fa;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.25rem;
   margin-bottom: 1rem;
@@ -284,7 +285,7 @@
 .lp-section-card-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
@@ -297,14 +298,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  background: linear-gradient(135deg, #fefefe 0%, #f8f9fa 100%);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-hover);
 }
 
 .lp-preview-toggle {
   display: flex;
   gap: 0;
-  background: #e2e8f0;
+  background: var(--bg-secondary);
   border-radius: 8px;
   padding: 3px;
 }
@@ -314,7 +315,7 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
@@ -325,8 +326,8 @@
 }
 
 .lp-preview-toggle-btn.active {
-  background: white;
-  color: #1e293b;
+  background: var(--bg-card);
+  color: var(--text-primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -354,9 +355,12 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -405,7 +409,7 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .lp-tab-item {
     flex: 0 0 auto;
   }

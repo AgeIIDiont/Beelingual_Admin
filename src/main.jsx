@@ -7,13 +7,16 @@ import './index.css' // Import global css
 import { Provider } from 'react-redux'
 import store from './store'
 import AppRoutes from './routes/AppRoutes'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </ThemeProvider>
     </Provider>
   </StrictMode>,
 )
