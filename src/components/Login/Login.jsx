@@ -14,6 +14,8 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isUsernameReadOnly, setIsUsernameReadOnly] = useState(true);
+  const [isPasswordReadOnly, setIsPasswordReadOnly] = useState(true);
 
   // Forgot Password State
   const [view, setView] = useState('login'); // 'login', 'forgot', 'otp', 'reset'
@@ -58,7 +60,10 @@ const Login = () => {
         }
 
         // 3. Chuyển hướng và reload trang để đảm bảo state được reset hoàn toàn
-        window.location.href = from;
+        // Add small delay to ensure localStorage is persisted before reload
+        setTimeout(() => {
+          window.location.href = from;
+        }, 100);
 
       } else {
         setError('Tên đăng nhập hoặc mật khẩu không đúng.');
@@ -133,7 +138,7 @@ const Login = () => {
 
   // Render Login Form
   const renderLoginForm = () => (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} autoComplete="off">
       {/* Username */}
       <div className="mb-4">
         <label htmlFor="username" className="form-label fw-semibold" style={{ color: '#334155', fontSize: '14px', marginBottom: '8px' }}>Tên đăng nhập</label>
@@ -145,8 +150,10 @@ const Login = () => {
             type="text" className="form-control" id="username" name="username"
             value={formData.username} onChange={handleChange}
             placeholder="Nhập tên đăng nhập" required disabled={loading}
+            readOnly={isUsernameReadOnly}
+            autoComplete="off"
             style={{ border: '2px solid #e2e8f0', borderLeft: 'none', borderRadius: '0 12px 12px 0', fontSize: '15px', padding: '12px 16px', transition: 'all 0.2s' }}
-            onFocus={(e) => { e.target.style.borderColor = '#fbbf24'; e.target.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.1)'; e.target.previousSibling.style.borderColor = '#fbbf24'; }}
+            onFocus={(e) => { setIsUsernameReadOnly(false); e.target.style.borderColor = '#fbbf24'; e.target.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.1)'; e.target.previousSibling.style.borderColor = '#fbbf24'; }}
             onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; e.target.previousSibling.style.borderColor = '#e2e8f0'; }}
           />
         </div>
@@ -163,8 +170,10 @@ const Login = () => {
             type={showPassword ? "text" : "password"} className="form-control" id="password" name="password"
             value={formData.password} onChange={handleChange}
             placeholder="Nhập mật khẩu" required disabled={loading}
+            readOnly={isPasswordReadOnly}
+            autoComplete="new-password"
             style={{ border: '2px solid #e2e8f0', borderLeft: 'none', borderRight: 'none', fontSize: '15px', padding: '12px 16px', transition: 'all 0.2s' }}
-            onFocus={(e) => { e.target.style.borderColor = '#fbbf24'; e.target.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.1)'; e.target.previousSibling.style.borderColor = '#fbbf24'; e.target.parentElement.querySelector('.password-toggle').style.borderColor = '#fbbf24'; }}
+            onFocus={(e) => { setIsPasswordReadOnly(false); e.target.style.borderColor = '#fbbf24'; e.target.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.1)'; e.target.previousSibling.style.borderColor = '#fbbf24'; e.target.parentElement.querySelector('.password-toggle').style.borderColor = '#fbbf24'; }}
             onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; e.target.previousSibling.style.borderColor = '#e2e8f0'; e.target.parentElement.querySelector('.password-toggle').style.borderColor = '#e2e8f0'; }}
           />
           <button
@@ -210,6 +219,7 @@ const Login = () => {
           value={resetData.username}
           onChange={(e) => setResetData({ ...resetData, username: e.target.value })}
           required disabled={loading}
+          autoComplete="off"
           placeholder="Nhập username của bạn"
           style={{ padding: '12px', borderRadius: '8px' }}
         />
@@ -349,6 +359,7 @@ const Login = () => {
             value={resetData.newPassword}
             onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
             required disabled={loading}
+            autoComplete="new-password"
             placeholder="Mật khẩu mới (tối thiểu 6 ký tự)"
             style={{ padding: '12px', borderRadius: '8px' }}
           />
@@ -369,6 +380,7 @@ const Login = () => {
           value={resetData.confirmPassword}
           onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
           required disabled={loading}
+          autoComplete="new-password"
           placeholder="Nhập lại mật khẩu mới"
           style={{ padding: '12px', borderRadius: '8px' }}
         />

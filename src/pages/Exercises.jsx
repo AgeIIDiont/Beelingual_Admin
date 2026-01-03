@@ -13,11 +13,14 @@ import {
   deleteExercise,
   fetchExercises,
   updateExercise,
+  bulkDeleteExercises,
   fetchGrammar,
   fetchGrammarExercises,
   createGrammarExercise,
   updateGrammarExercise,
   deleteGrammarExercise,
+  bulkDeleteGrammarExercises,
+  fetchMixedExercises
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
 
@@ -1009,103 +1012,19 @@ const Exercises = () => {
       };
     }
 
-    // TRƯỜNG HỢP 3: Không chọn skill nào (Tất cả kỹ năng) -> Merge cả 2 nguồn
+    // TRƯỜNG HỢP 3: Không chọn skill nào (Tất cả kỹ năng) -> Gọi API Unified Pagination từ Server
     try {
-      const filteredParams = { ...params };
-      delete filteredParams.grammarId;
-      delete filteredParams.grammarCategoryId;
-
-      // Chạy song song 2 request
-      // Khi merge 2 nguồn, ta buộc phải lấy HẾT dữ liệu (không phân trang server)
-      // sau đó merge lại rồi mới phân trang client-side để đảm bảo sort đúng.
-      const noPaginationParams = { ...filteredParams };
-      delete noPaginationParams.page;
-      delete noPaginationParams.limit;
-
-      // Phải gửi grammarCategoryId nếu có để backend filter ngay từ đầu (giảm tải client)
-      if (params.grammarCategoryId) noPaginationParams.grammarCategoryId = params.grammarCategoryId;
-
-      // Only fetch grammar exercises if mode is NOT 'pvp' (since grammar is always practice)
-      const shouldFetchGrammar = !params.topicId && (!params.mode || params.mode === 'practice');
-
-      const [regularRes, grammarRes] = await Promise.all([
-        fetchExercises(noPaginationParams),
-        shouldFetchGrammar ? fetchGrammarExercises('', noPaginationParams) : Promise.resolve({ data: [] })
-      ]);
-
-      const regularExercises = regularRes.data || regularRes.items || [];
-
-      // Xử lý grammar exercises
-      let grammarExercises = grammarRes.data || [];
-      const currentGrammars = grammarsRef.current; // Snapshot for mapping
-
-      // Nếu có search, phải filter grammar exercises client-side (vì API grammar chưa support search text)
-      if (params.search) {
-        const searchLower = params.search.toLowerCase();
-        grammarExercises = grammarExercises.filter(item =>
-          (item.question && item.question.toLowerCase().includes(searchLower)) ||
-          (item.explanation && item.explanation.toLowerCase().includes(searchLower))
-        );
-      }
-
-      const mappedGrammarExercises = grammarExercises.map((item) => {
-        const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
-        const typeValue = (item.options && item.options.length > 0) ? 'multiple_choice' : 'fill_in_blank';
-        const grammarIdStr = item.grammarId?._id || item.grammarId;
-        const populatedTitle = item.grammarId?.title;
-        const populatedLevel = item.grammarId?.level;
-        const grammar = currentGrammars.find(g => String(g._id) === String(grammarIdStr));
-
-        return {
-          ...item,
-          skill: 'grammar',
-          questionText: item.question,
-          grammarTitle: populatedTitle || grammar?.title || 'Unknown Grammar',
-          level: populatedLevel || grammar?.level || 'A1',
-          type: computedType,
-          typeValue: typeValue,
-          createdAt: item.createdAt // Ensure date for sorting
-        };
-      });
-
-      // Apply client-side filtering for Type and Level for grammar exercises in mixed view
-      let filteredGrammarExercises = mappedGrammarExercises;
-      if (params.type) {
-        filteredGrammarExercises = filteredGrammarExercises.filter(item => item.typeValue === params.type);
-      }
-      if (params.level) {
-        filteredGrammarExercises = filteredGrammarExercises.filter(item => item.level === params.level);
-      }
-
-      // Merge and sort
-      let allExercises = [...regularExercises, ...filteredGrammarExercises];
-
-      // Sort by createdAt desc
-      allExercises.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-      // Slice data to respect limit for standard pagination view
-      const limit = params.limit ? parseInt(params.limit) : 10;
-      // Note: We only slice if we have more than limit, simulating a page. 
-      // This is imperfect for page 2+ logic in a merged list without full fetch, but solves the "Show 10 but get 20" UI bug.
-      if (allExercises.length > limit) {
-        allExercises = allExercises.slice(0, limit);
-      }
+      const res = await fetchMixedExercises(params);
 
       return {
-        data: allExercises,
-        items: allExercises,
-        total: (regularRes.total || 0) + mappedGrammarExercises.length,
-        count: allExercises.length,
-        // Quan trọng: Trả về page/limit mà Client yêu cầu để ResourceManager biết mà cắt trang (Client-side slicing)
-        page: params.page ? parseInt(params.page) : 1,
-        limit: params.limit ? parseInt(params.limit) : 10,
-        totalPages: Math.ceil(allExercises.length / (params.limit || 10))
+        data: res.data || [],
+        total: res.total || 0,
+        page: res.page || params.page || 1,
+        limit: res.limit || params.limit || 10
       };
-
     } catch (err) {
-      console.error('Error fetching combined exercises:', err);
-      // Fallback to just regular exercises if grammar fetch fails
-      return fetchExercises(params);
+      console.error('Error fetching unified exercises:', err);
+      return { data: [], total: 0, page: 1, limit: 10 };
     }
   }, []);
 
@@ -1137,6 +1056,22 @@ const Exercises = () => {
     return deleteExercise(id);
   }, []);
 
+  const mixedBulkDeleteWrapper = React.useCallback(async (ids) => {
+    console.log('--- MIXED BULK DELETE CALLED ---', ids);
+    // Gọi song song cả 2 API để đảm bảo xóa được hết cả GrammarExercise lẫn Exercise thường
+    // (Bất kể backend có logic mixed hay không, làm thế này ở FE là chắc chắn nhất)
+    try {
+      await Promise.allSettled([
+        bulkDeleteExercises(ids),
+        bulkDeleteGrammarExercises(ids)
+      ]);
+      return { message: 'Đã xóa các mục đã chọn.' };
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  }, []);
+
   return (
     <div className="d-flex flex-column gap-3 h-100">
       <div className="flex-grow-1">
@@ -1150,6 +1085,7 @@ const Exercises = () => {
           createApi={createApiWrapper}
           updateApi={updateApiWrapper}
           deleteApi={deleteApiWrapper}
+          bulkDeleteApi={mixedBulkDeleteWrapper}
           mapItemToForm={mapExerciseToForm}
           buildPayload={buildPayload}
           hideHeader={true}

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState, useImperativeHandle, forwardRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useImperativeHandle, forwardRef, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import Swal from 'sweetalert2';
 import './styles/resource-manager.scss';
@@ -33,6 +33,7 @@ const ResourceManager = forwardRef(({
   createApi,
   updateApi,
   deleteApi,
+  bulkDeleteApi,
   defaultLimit = 10,
   limitOptions = [10, 20, 50],
   primaryKey = '_id',
@@ -85,6 +86,29 @@ const ResourceManager = forwardRef(({
   const [saving, setSaving] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [refreshIndex, setRefreshIndex] = useState(0);
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [isSelectionMode, setIsSelectionMode] = useState(false); // New state for selection mode toggle
+
+  // Hover Hint State
+  const [hintRowId, setHintRowId] = useState(null);
+  const hoverTimeoutRef = useRef(null);
+
+  const handleRowMouseEnter = (id) => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    if (!isSelectionMode && deleteApi) {
+      hoverTimeoutRef.current = setTimeout(() => {
+        setHintRowId(id);
+      }, 1000); // 2 seconds delay
+    }
+  };
+
+  const handleRowMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setHintRowId(null);
+  };
 
   const baseQueryString = JSON.stringify(baseQuery || {});
 
@@ -346,6 +370,128 @@ const ResourceManager = forwardRef(({
     }
   };
 
+  // ========== BULK ACTIONS ==========
+
+  // Toggle select all items on current page
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedIds([]);
+      setSelectAll(false);
+    } else {
+      const allIds = records.map(item => item[primaryKey]);
+      setSelectedIds(allIds);
+      setSelectAll(true);
+    }
+  };
+
+  // Toggle select individual item
+  const handleSelectItem = (id) => {
+    setSelectedIds(prev => {
+      if (prev.includes(id)) {
+        const newSelected = prev.filter(itemId => itemId !== id);
+        if (newSelected.length === 0) setSelectAll(false);
+        return newSelected;
+      } else {
+        const newSelected = [...prev, id];
+        if (newSelected.length === records.length) setSelectAll(true);
+        return newSelected;
+      }
+    });
+  };
+
+  // Clear selection
+  const handleClearSelection = () => {
+    setSelectedIds([]);
+    setSelectAll(false);
+    setIsSelectionMode(false); // Exit selection mode
+  };
+
+  // Bulk delete selected items
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa hàng loạt',
+      html: `Bạn có chắc chắn muốn xóa <strong>${selectedIds.length}</strong> ${resourceName}?<br><small class="text-muted">Hành động này không thể hoàn tác!</small>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: `Xóa ${selectedIds.length} mục`,
+      cancelButtonText: 'Hủy',
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setSaving(true);
+
+      // OPTION 1: Use Bulk Delete API if available
+      if (bulkDeleteApi) {
+        try {
+          await bulkDeleteApi(selectedIds);
+          setFeedback({ type: 'success', message: `Đã xóa thành công ${selectedIds.length} ${resourceName}!` });
+          Swal.fire('Đã xóa!', `Đã xóa ${selectedIds.length} mục thành công.`, 'success');
+          handleClearSelection();
+          refresh();
+          return;
+        } catch (e) {
+          console.error("Bulk Delete Failed", e);
+          throw e; // Let catch block handle it
+        } finally {
+          setSaving(false);
+        }
+      }
+
+      // OPTION 2: Fallback to One-by-One
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const id of selectedIds) {
+        try {
+          await deleteApi(id);
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to delete ${id}:`, err);
+          failCount++;
+        }
+      }
+
+      // Show result
+      if (failCount === 0) {
+        setFeedback({
+          type: 'success',
+          message: `Đã xóa thành công ${successCount} ${resourceName}!`
+        });
+      } else {
+        setFeedback({
+          type: 'warning',
+          message: `Đã xóa ${successCount} ${resourceName}. ${failCount} mục không thể xóa.`
+        });
+      }
+
+      // Clear selection and refresh
+      handleClearSelection();
+      setRefreshIndex(prev => prev + 1);
+
+    } catch (err) {
+      console.error('Bulk delete error:', err);
+      setFeedback({
+        type: 'danger',
+        message: 'Có lỗi xảy ra khi xóa hàng loạt!'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Clear selection when filters change (but keep on page change)
+  useEffect(() => {
+    handleClearSelection();
+  }, [appliedFilters, refreshIndex]);
+
+
   const renderFilterInput = (filter) => {
     const value = filterInputs[filter.name] ?? '';
     const commonProps = {
@@ -355,6 +501,7 @@ const ResourceManager = forwardRef(({
       value,
       onChange: (e) => handleFilterInputChange(e, filter),
       placeholder: filter.placeholder,
+      autoComplete: 'off', // Tắt gợi ý trình duyệt
     };
 
     if (filter.type === 'select' && Array.isArray(filter.options)) {
@@ -392,6 +539,7 @@ const ResourceManager = forwardRef(({
       placeholder: field.placeholder,
       required: field.required && !(field.onlyCreate && editingItem),
       disabled,
+      autoComplete: field.type === 'password' ? 'new-password' : 'off', // Tắt gợi ý trình duyệt
     };
 
     if (field.type === 'textarea') {
@@ -484,7 +632,34 @@ const ResourceManager = forwardRef(({
             }
           }}
           onDragEnd={handleDragEnd}
+          onMouseEnter={() => handleRowMouseEnter(item[primaryKey])}
+          onMouseLeave={handleRowMouseLeave}
+          onDoubleClick={(e) => {
+
+            e.preventDefault();
+            if (deleteApi) {
+              setIsSelectionMode(true);
+              if (!selectedIds.includes(item[primaryKey])) {
+                handleSelectItem(item[primaryKey]);
+              }
+            } else if (updateApi && !isSelectionMode) {
+              openEditForm(item);
+            }
+          }}
+          style={{ cursor: (deleteApi || updateApi) ? 'pointer' : 'default' }}
         >
+          {/* Bulk selection checkbox */}
+          {/* Bulk selection checkbox */}
+          {deleteApi && isSelectionMode && (
+            <td className="text-center">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                checked={selectedIds.includes(item[primaryKey])}
+                onChange={() => handleSelectItem(item[primaryKey])}
+              />
+            </td>
+          )}
           {enableReorder && (
             <td className="text-center text-muted" style={{ width: '40px', cursor: isFiltering ? 'not-allowed' : 'grab' }}>
               {isFiltering ? (
@@ -494,8 +669,16 @@ const ResourceManager = forwardRef(({
               )}
             </td>
           )}
-          {columns.map((col) => (
-            <td key={col.key} className={col.className}>
+          {columns.map((col, index) => (
+            <td key={col.key} className={col.className} style={{ position: 'relative' }}>
+              {index === 0 && hintRowId === item[primaryKey] && !isSelectionMode && (
+                <div className="position-absolute bg-dark text-white px-2 py-1 rounded small shadow top-0 start-0 translate-middle-y ms-2 mt-n2 animate__animated animate__fadeIn"
+                  style={{ zIndex: 1000, whiteSpace: 'nowrap', pointerEvents: 'none' }}>
+                  Double click để chọn
+                  <div className="position-absolute bg-dark"
+                    style={{ bottom: '-4px', left: '10px', width: '8px', height: '8px', transform: 'rotate(45deg)' }}></div>
+                </div>
+              )}
               {col.render ? col.render(item) : (
                 <span className="fw-medium text-dark">{item[col.key] ?? '—'}</span>
               )}
@@ -563,6 +746,7 @@ const ResourceManager = forwardRef(({
                   Thêm mới
                 </button>
               )}
+
             </div>
           </div>
 
@@ -578,7 +762,8 @@ const ResourceManager = forwardRef(({
             </div>
           )}
         </div>
-      )}
+      )
+      }
 
       {hideHeader && feedback && (
         <div className={`alert alert-${feedback.type} mb-4 shadow-sm border-0 rounded-3`} role="alert">
@@ -592,36 +777,38 @@ const ResourceManager = forwardRef(({
       )}
 
       {/* FILTER SECTION */}
-      {filters.length > 0 && (
-        <div className="rm-card p-4 mb-4 fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <form onSubmit={handleApplyFilters}>
-            <div className="row g-3">
-              {filters.map((filter) => {
-                // Check visibility condition
-                if (filter.hideCondition && filter.hideCondition(filterInputs)) {
-                  return null;
-                }
-                return (
-                  <div className={`col-md-${filter.col || 4}`} key={filter.name}>
-                    <label htmlFor={filter.name} className="form-label text-secondary fw-bold small text-uppercase">
-                      {filter.label}
-                    </label>
-                    {renderFilterInput(filter)}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="d-flex gap-2 mt-4 pt-2 border-top">
-              <button type="submit" className="btn btn-dark px-4 fw-medium">
-                <i className="fas fa-filter me-2"></i> Áp dụng
-              </button>
-              <button type="button" className="btn btn-link text-decoration-none text-secondary" onClick={handleResetFilters}>
-                Xóa bộ lọc
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      {
+        filters.length > 0 && (
+          <div className="rm-card p-4 mb-4 fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <form onSubmit={handleApplyFilters}>
+              <div className="row g-3">
+                {filters.map((filter) => {
+                  // Check visibility condition
+                  if (filter.hideCondition && filter.hideCondition(filterInputs)) {
+                    return null;
+                  }
+                  return (
+                    <div className={`col-md-${filter.col || 4}`} key={filter.name}>
+                      <label htmlFor={filter.name} className="form-label text-secondary fw-bold small text-uppercase">
+                        {filter.label}
+                      </label>
+                      {renderFilterInput(filter)}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="d-flex gap-2 mt-4 pt-2 border-top">
+                <button type="submit" className="btn btn-dark px-4 fw-medium">
+                  <i className="fas fa-filter me-2"></i> Áp dụng
+                </button>
+                <button type="button" className="btn btn-link text-decoration-none text-secondary" onClick={handleResetFilters}>
+                  Xóa bộ lọc
+                </button>
+              </div>
+            </form>
+          </div>
+        )
+      }
 
       {/* TABLE SECTION */}
       <div className="rm-card p-0 overflow-hidden fade-in-up" style={{ animationDelay: '0.2s' }}>
@@ -631,10 +818,50 @@ const ResourceManager = forwardRef(({
           </div>
         )}
 
+        {/* BULK ACTION TOOLBAR */}
+        {(selectedIds.length > 0 || isSelectionMode) && (
+          <div className="alert alert-info d-flex align-items-center justify-content-between mb-0 rounded-0 border-start-0 border-end-0" style={{ borderTop: '2px solid #0dcaf0' }}>
+            <div className="d-flex align-items-center gap-2">
+              <i className="fas fa-check-circle"></i>
+              <span className="fw-bold">Đã chọn {selectedIds.length} mục</span>
+            </div>
+            <div className="d-flex gap-2">
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={handleClearSelection}
+              >
+                <i className="fas fa-times me-1"></i>
+                Bỏ chọn
+              </button>
+              <button
+                className="btn btn-sm btn-danger"
+                onClick={handleBulkDelete}
+                disabled={saving}
+              >
+                <i className="fas fa-trash me-1"></i>
+                {saving ? 'Đang xóa...' : `Xóa ${selectedIds.length} mục`}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="table-responsive">
           <table className="table mb-0">
             <thead className="rm-table-header">
               <tr>
+                {/* Bulk selection checkbox */}
+                {/* Bulk selection checkbox */}
+                {deleteApi && isSelectionMode && (
+                  <th style={{ width: '50px' }} className="text-center">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      disabled={records.length === 0}
+                    />
+                  </th>
+                )}
                 {/* {enableReorder && <th style={{ width: '40px' }}></th>} */}
                 {columns.map((col) => (
                   <th key={col.key} style={{ minWidth: col.minWidth || 'auto' }} className={col.className}>
@@ -693,80 +920,82 @@ const ResourceManager = forwardRef(({
       </div>
 
       {/* MODAL FORM */}
-      {showForm && (
-        <>
-          <div className="modal fade show d-block modal-blur" tabIndex="-1" role="dialog">
-            <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
-              <div className="modal-content border-0 shadow-lg overflow-hidden rounded-4 fade-in-up">
-                <div className="modal-header bg-light border-bottom-0 p-4">
-                  <div>
-                    <h5 className="modal-title fw-bold text-dark">
-                      {editingItem ? 'Chỉnh sửa' : 'Thêm mới'} {resourceName}
-                    </h5>
-                    <p className="text-muted small mb-0">Điền thông tin chi tiết bên dưới</p>
+      {
+        showForm && (
+          <>
+            <div className="modal fade show d-block modal-blur" tabIndex="-1" role="dialog">
+              <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
+                <div className="modal-content border-0 shadow-lg overflow-hidden rounded-4 fade-in-up">
+                  <div className="modal-header bg-light border-bottom-0 p-4">
+                    <div>
+                      <h5 className="modal-title fw-bold text-dark">
+                        {editingItem ? 'Chỉnh sửa' : 'Thêm mới'} {resourceName}
+                      </h5>
+                      <p className="text-muted small mb-0">Điền thông tin chi tiết bên dưới</p>
+                    </div>
+                    <button type="button" className="btn-close" onClick={closeForm}></button>
                   </div>
-                  <button type="button" className="btn-close" onClick={closeForm}></button>
-                </div>
-                <form onSubmit={handleSubmit}>
-                  <div className="modal-body p-4">
-                    {formError && (
-                      <div className="alert alert-danger rounded-3" role="alert">
-                        {formError}
-                      </div>
-                    )}
-                    {customFormRenderer ? (
-                      customFormRenderer({
-                        formState,
-                        setFormState,
-                        editingItem,
-                        handleFormChange,
-                        renderFormField,
-                      })
-                    ) : (
-                      <div className="row g-3">
-                        {formFields.map((field) => (
-                          <div className={`col-md-${field.col || 12}`} key={field.name}>
-                            <label htmlFor={field.name} className="form-label fw-bold text-secondary small text-uppercase">
-                              {field.label} {field.required && <span className="text-danger">*</span>}
-                            </label>
-                            {renderFormField(field)}
-                            {field.helper && <small className="text-muted d-block mt-1 fst-italic">{field.helper}</small>}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="modal-footer border-top-0 p-4 pt-0">
-                    <button
-                      type="button"
-                      className="btn btn-light text-secondary fw-medium"
-                      onClick={closeForm}
-                      disabled={saving}
-                    >
-                      Hủy bỏ
-                    </button>
-                    <button type="submit" className="btn rm-btn-primary fw-bold px-4 rounded-pill" disabled={saving}>
-                      {saving ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                          Đang lưu...
-                        </>
-                      ) : (
-                        <>
-                          <i className="fas fa-save me-2" />
-                          Lưu lại
-                        </>
+                  <form onSubmit={handleSubmit}>
+                    <div className="modal-body p-4">
+                      {formError && (
+                        <div className="alert alert-danger rounded-3" role="alert">
+                          {formError}
+                        </div>
                       )}
-                    </button>
-                  </div>
-                </form>
+                      {customFormRenderer ? (
+                        customFormRenderer({
+                          formState,
+                          setFormState,
+                          editingItem,
+                          handleFormChange,
+                          renderFormField,
+                        })
+                      ) : (
+                        <div className="row g-3">
+                          {formFields.map((field) => (
+                            <div className={`col-md-${field.col || 12}`} key={field.name}>
+                              <label htmlFor={field.name} className="form-label fw-bold text-secondary small text-uppercase">
+                                {field.label} {field.required && <span className="text-danger">*</span>}
+                              </label>
+                              {renderFormField(field)}
+                              {field.helper && <small className="text-muted d-block mt-1 fst-italic">{field.helper}</small>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="modal-footer border-top-0 p-4 pt-0">
+                      <button
+                        type="button"
+                        className="btn btn-light text-secondary fw-medium"
+                        onClick={closeForm}
+                        disabled={saving}
+                      >
+                        Hủy bỏ
+                      </button>
+                      <button type="submit" className="btn rm-btn-primary fw-bold px-4 rounded-pill" disabled={saving}>
+                        {saving ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                            Đang lưu...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-save me-2" />
+                            Lưu lại
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="modal-backdrop fade show" style={{ opacity: 0.5 }}></div>
-        </>
-      )}
-    </div>
+            <div className="modal-backdrop fade show" style={{ opacity: 0.5 }}></div>
+          </>
+        )
+      }
+    </div >
   );
 });
 

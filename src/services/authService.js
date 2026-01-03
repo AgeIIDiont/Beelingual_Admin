@@ -225,10 +225,12 @@ api.interceptors.response.use(
           confirmButtonColor: '#fbbf24',
           allowOutsideClick: false,
           allowEscapeKey: false
-        }).then(() => {
-          showingSessionAlert = false;
-          clearAuth();
-          window.location.href = '/login';
+        }).then((result) => {
+          if (result.isConfirmed) {
+            showingSessionAlert = false;
+            clearAuth();
+            window.location.href = '/login';
+          }
         });
         return new Promise(() => { });
       }
@@ -245,10 +247,12 @@ api.interceptors.response.use(
           confirmButtonColor: '#3085d6',
           allowOutsideClick: false,
           allowEscapeKey: false
-        }).then(() => {
-          showingSessionAlert = false;
-          clearAuth();
-          window.location.href = '/login';
+        }).then((result) => {
+          if (result.isConfirmed) {
+            showingSessionAlert = false;
+            clearAuth();
+            window.location.href = '/login';
+          }
         });
         return new Promise(() => { });
       }
@@ -302,63 +306,49 @@ api.interceptors.response.use(
         failedQueue = [];
         isRefreshing = false;
 
-        // Check if specific error code exists to show alert instead of blind logout
-        const refreshErrorCode = refreshError.code;
+        console.log('Refresh failed completely. Error:', refreshError);
 
-        if (refreshErrorCode === 'REFRESH_TOKEN_EXPIRED') {
-          showingSessionAlert = true;
-          Swal.fire({
-            title: 'Hết phiên đăng nhập',
-            text: 'Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.',
-            icon: 'info',
-            confirmButtonText: 'Đăng nhập lại',
-            confirmButtonColor: '#3085d6',
-            allowOutsideClick: false,
-            allowEscapeKey: false
-          }).then(() => {
-            showingSessionAlert = false;
-            clearAuth();
-            window.location.href = '/login';
-          });
+        // Prevent duplicate alerts in catch block
+        if (showingSessionAlert) {
           return new Promise(() => { });
         }
 
-        if (refreshErrorCode === 'SESSION_EXPIRED') {
-          showingSessionAlert = true;
-          Swal.fire({
-            title: 'Cảnh báo đăng nhập',
-            text: 'Tài khoản của bạn đã được đăng nhập ở một thiết bị khác. Vui lòng đăng nhập lại.',
-            icon: 'warning',
-            confirmButtonText: 'Đăng nhập lại',
-            confirmButtonColor: '#fbbf24',
-            allowOutsideClick: false,
-            allowEscapeKey: false
-          }).then(() => {
-            showingSessionAlert = false;
-            clearAuth();
-            window.location.href = '/login';
-          });
-          return new Promise(() => { });
-        }
-
-        // catch-all: Nếu refresh thất bại vì bất cứ lý do nào khác (hết hạn, lỗi mạng...)
-        // Hiện alert thay vì logout luôn
+        // ALWAYS show alert regardless of error code to prevent immediate redirect
         showingSessionAlert = true;
+
+        let alertTitle = 'Hết phiên đăng nhập';
+        let alertText = 'Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.';
+        let alertIcon = 'info';
+
+        // Customise message if specific code
+        if (refreshError?.code === 'SESSION_EXPIRED' || refreshError?.message?.includes('thiết bị khác')) {
+          alertTitle = 'Cảnh báo đăng nhập';
+          alertText = 'Tài khoản của bạn đã được đăng nhập ở một thiết bị khác. Vui lòng đăng nhập lại.';
+          alertIcon = 'warning';
+        }
+
+        /* 
+           QUAN TRỌNG: Trả về một Promise treo (không bao giờ resolve/reject) 
+           để ngăn chặn các logic khác (như redirect tự động) chạy đè lên Alert. 
+           Việc redirect sẽ được thực hiện thủ công trong Swal.then() 
+        */
         Swal.fire({
-          title: 'Hết phiên đăng nhập',
-          text: 'Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.',
-          icon: 'info',
+          title: alertTitle,
+          text: alertText,
+          icon: alertIcon,
           confirmButtonText: 'Đăng nhập lại',
-          confirmButtonColor: '#fbbf24',
+          confirmButtonColor: '#3085d6',
           allowOutsideClick: false,
           allowEscapeKey: false
-        }).then(() => {
-          showingSessionAlert = false;
-          clearAuth();
-          window.location.href = '/login';
+        }).then((result) => {
+          if (result.isConfirmed) {
+            showingSessionAlert = false;
+            clearAuth();
+            window.location.href = '/login';
+          }
         });
 
-        return new Promise(() => { });
+        return new Promise(() => { }); // Treo request vô hạn cho đến khi user bấm nút
       }
     }
 

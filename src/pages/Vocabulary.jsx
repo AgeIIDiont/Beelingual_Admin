@@ -7,6 +7,9 @@ import {
   createVocabulary,
   updateVocabulary,
   deleteVocabulary,
+  bulkDeleteVocabulary,
+  fetchVocabularyTypes,
+  fetchTopics,
 } from '../services/adminService';
 
 const levelOptions = [
@@ -401,6 +404,7 @@ const Vocabularys = () => {
         createApi={createVocabulary}
         updateApi={updateVocabulary}
         deleteApi={deleteVocabulary}
+        bulkDeleteApi={bulkDeleteVocabulary}
         hideHeader={true}
         mapItemToForm={(item) => ({
           ...item,

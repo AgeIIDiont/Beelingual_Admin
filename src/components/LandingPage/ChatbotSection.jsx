@@ -12,7 +12,7 @@ const ChatbotSection = ({ chatConfig, setChatConfig, onSave, saving }) => {
   };
 
   const addQuestion = () => {
-    const newQuestion = { text: '', response: '' };
+    const newQuestion = { text: '', response: '', label: '' };
     setChatConfig(prev => ({
       ...prev,
       suggestedQuestions: [...(prev.suggestedQuestions || []), newQuestion]
@@ -44,6 +44,7 @@ const ChatbotSection = ({ chatConfig, setChatConfig, onSave, saving }) => {
               value={chatConfig.botName || ''}
               onChange={(e) => updateConfig('botName', e.target.value)}
               placeholder="Bee Assistant"
+              autoComplete="off"
             />
           </div>
         </div>
@@ -57,6 +58,7 @@ const ChatbotSection = ({ chatConfig, setChatConfig, onSave, saving }) => {
               value={chatConfig.personality || ''}
               onChange={(e) => updateConfig('personality', e.target.value)}
               placeholder="Thân thiện, nhiệt tình..."
+              autoComplete="off"
             />
           </div>
         </div>
@@ -78,6 +80,7 @@ const ChatbotSection = ({ chatConfig, setChatConfig, onSave, saving }) => {
               value={chatConfig.errorMessage || ''}
               onChange={(e) => updateConfig('errorMessage', e.target.value)}
               placeholder="Xin lỗi, đã có lỗi xảy ra..."
+              autoComplete="off"
             />
           </div>
         </div>
@@ -91,6 +94,7 @@ const ChatbotSection = ({ chatConfig, setChatConfig, onSave, saving }) => {
               value={chatConfig.rateLimitMessage || ''}
               onChange={(e) => updateConfig('rateLimitMessage', e.target.value)}
               placeholder="Bạn đang gửi quá nhanh..."
+              autoComplete="off"
             />
           </div>
         </div>
@@ -104,6 +108,7 @@ const ChatbotSection = ({ chatConfig, setChatConfig, onSave, saving }) => {
               value={chatConfig.modelNotFoundMessage || ''}
               onChange={(e) => updateConfig('modelNotFoundMessage', e.target.value)}
               placeholder="Không thể kết nối AI..."
+              autoComplete="off"
             />
           </div>
         </div>
@@ -143,13 +148,26 @@ const ChatbotSection = ({ chatConfig, setChatConfig, onSave, saving }) => {
           </div>
 
           <div className="lp-form-group mb-3">
-            <label className="lp-label">Câu hỏi</label>
+            <label className="lp-label">Nhãn hiển thị (Label)</label>
+            <input
+              type="text"
+              className="lp-input"
+              value={q.label || ''}
+              onChange={(e) => updateQuestion(idx, 'label', e.target.value)}
+              placeholder="VD: Khám phá app"
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="lp-form-group mb-3">
+            <label className="lp-label">Câu hỏi đầy đủ (Prompt)</label>
             <input
               type="text"
               className="lp-input"
               value={q.text || ''}
               onChange={(e) => updateQuestion(idx, 'text', e.target.value)}
               placeholder="Người dùng có thể hỏi gì?"
+              autoComplete="off"
             />
           </div>
 

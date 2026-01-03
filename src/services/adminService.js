@@ -26,6 +26,7 @@ export const fetchVocabulary = (params = {}) => unwrap(api.get('/api/vocab', { p
 export const createVocabulary = (payload) => unwrap(api.post('/api/vocab', payload));
 export const updateVocabulary = (id, payload) => unwrap(api.put(`/api/vocab/${id}`, payload));
 export const deleteVocabulary = (id) => unwrap(api.delete(`/api/vocab/${id}`));
+export const bulkDeleteVocabulary = (ids) => unwrap(api.post('/api/vocab/bulk-delete', { ids }));
 export const fetchVocabularyTypes = () => unwrap(api.get('/api/vocab/types'));
 
 // ===== Grammar =====
@@ -33,6 +34,7 @@ export const fetchGrammar = (params = {}) => unwrap(api.get('/api/grammar', { pa
 export const createGrammar = (payload) => unwrap(api.post('/api/add_grammar', payload));
 export const updateGrammar = (id, payload) => unwrap(api.put(`/api/edit_grammar/${id}`, payload));
 export const deleteGrammar = (id) => unwrap(api.delete(`/api/delet_grammar/${id}`));
+export const bulkDeleteGrammar = (ids) => unwrap(api.post('/api/grammar/bulk-delete', { ids }));
 
 // ===== Grammar_categories =====
 export const fetchGrammarCategories = (params = {}) => unwrap(api.get('/api/grammar-categories', { params }));
@@ -44,6 +46,7 @@ export const fetchTopics = (params = {}) => unwrap(api.get('/api/topics', { para
 export const createTopic = (payload) => unwrap(api.post('/api/topics', payload));
 export const updateTopic = (id, payload) => unwrap(api.put(`/api/edit_topic/${id}`, payload));
 export const deleteTopic = (id) => unwrap(api.delete(`/api/delet_topic/${id}`));
+export const bulkDeleteTopics = (ids) => unwrap(api.post('/api/topics/bulk-delete', { ids }));
 
 // ===== Questions (Competition) =====
 export const fetchQuestions = (params = {}) => unwrap(api.get('/api/questions', { params }));
@@ -56,6 +59,9 @@ export const fetchExercises = (params = {}) => unwrap(api.get('/api/exercises', 
 export const createExercise = (payload) => unwrap(api.post('/api/exercises', payload));
 export const updateExercise = (id, payload) => unwrap(api.put(`/api/edit_exercise/${id}`, payload));
 export const deleteExercise = (id) => unwrap(api.delete(`/api/delet_exercise/${id}`));
+export const bulkDeleteExercises = (ids) => unwrap(api.post('/api/exercises/bulk-delete', { ids }));
+export const fetchMixedExercises = (params = {}) => unwrap(api.get('/api/exercises/mixed', { params }));
+
 
 // ===== Grammar Exercises =====
 export const fetchGrammarExercises = (grammarIdOrParams, params = {}) => {
@@ -78,6 +84,8 @@ export const fetchGrammarExercises = (grammarIdOrParams, params = {}) => {
 export const createGrammarExercise = (payload) => unwrap(api.post('/api/grammar-exercises/create', payload));
 export const updateGrammarExercise = (id, payload) => unwrap(api.put(`/api/grammar-exercises/update/${id}`, payload));
 export const deleteGrammarExercise = (id) => unwrap(api.delete(`/api/grammar-exercises/delete/${id}`));
+export const bulkDeleteGrammarExercises = (ids) => unwrap(api.post('/api/grammar-exercises/bulk-delete', { ids }));
+
 
 // ===== Profile / Settings =====
 export const fetchProfile = async () => {

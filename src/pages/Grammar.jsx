@@ -6,9 +6,10 @@ import { fetchGrammarCategoriesAction, selectGrammarCategories } from '../store/
 import ResourceManager from '../components/ui/ResourceManager';
 import {
   createGrammar,
+  updateGrammar,
   deleteGrammar,
   fetchGrammar,
-  updateGrammar,
+  bulkDeleteGrammar,
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
 
@@ -172,14 +173,14 @@ const Grammar = () => {
         render: (item) => (
           <div className="d-flex gap-2 justify-content-end">
             <button
-              className="btn btn-sm btn-light text-primary"
+              className="btn btn-sm btn-outline-primary"
               onClick={() => resourceManagerRef.current?.openEditForm(item)}
               title="Chỉnh sửa"
             >
               <i className="fas fa-pen"></i>
             </button>
             <button
-              className="btn btn-sm btn-light text-danger"
+              className="btn btn-sm btn-outline-danger"
               onClick={() => handleDelete(item._id)}
               title="Xóa"
             >
@@ -332,6 +333,7 @@ const Grammar = () => {
       createApi={createGrammar}
       updateApi={updateGrammar}
       deleteApi={deleteGrammar}
+      bulkDeleteApi={bulkDeleteGrammar}
       buildPayload={buildPayload}
       mapItemToForm={mapItemToForm}
       hideHeader={true}

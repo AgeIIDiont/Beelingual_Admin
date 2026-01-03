@@ -6,6 +6,7 @@ import {
   createTopic,
   updateTopic,
   deleteTopic,
+  bulkDeleteTopics,
 } from '../services/adminService';
 import { usePage } from '../contexts/PageContext';
 
@@ -290,6 +291,9 @@ const Topics = () => {
         }}
         deleteApi={async (id) => {
           return deleteTopic(id);
+        }}
+        bulkDeleteApi={async (ids) => {
+          return bulkDeleteTopics(ids);
         }}
         buildPayload={buildPayload}
         hideHeader={true}

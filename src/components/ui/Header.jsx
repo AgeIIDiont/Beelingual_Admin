@@ -54,10 +54,10 @@ const Header = () => {
 
   return (
     <header className="header-container">
-      <div className="d-flex justify-content-between align-items-center h-100 px-4 px-lg-5">
+      <div className="d-flex justify-content-between align-items-center h-100 px-3 px-lg-4">
 
         {/* Logo */}
-        <div className="header-logo me-4">
+        <div className="header-logo me-3">
           <img
             src={LogoHome}
             alt="Beelingual"
@@ -120,7 +120,7 @@ const Header = () => {
               {/* Avatar with Ring */}
               <div className="avatar-ring">
                 <img
-                  src={profile?.avatarUrl || 'https://ui-avatars.com/api/?name=Admin&background=FFD700&color=fff'}
+                  src={profile?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.fullname || 'Admin')}&background=FFD700&color=fff`}
                   alt="User"
                   className="rounded-circle"
                   width={40}
