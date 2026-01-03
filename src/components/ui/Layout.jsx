@@ -1,14 +1,12 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import SessionMonitor from '../SessionMonitor';
 import { PageProvider } from '../../contexts/PageContext';
 import './styles/layout.scss';
 
 const Layout = ({ children }) => {
   return (
     <PageProvider>
-      <SessionMonitor />
       <div className="layout-container d-flex">
         {/* Sidebar */}
         <Sidebar />
