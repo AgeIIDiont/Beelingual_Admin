@@ -125,7 +125,7 @@ const Exercises = () => {
     };
 
     setPageInfo({
-      title: 'Bài tập & Đề thi',
+      title: 'Câu hỏi & Bài tập',
       description: 'Xây dựng ngân hàng câu hỏi cho từng kỹ năng và cấp độ.',
       actions: (
         <>
@@ -139,7 +139,7 @@ const Exercises = () => {
           </button>
           <button className="btn btn-warning text-dark fw-bold" onClick={handleCreate}>
             <i className="fas fa-plus me-2" />
-            Thêm bài tập
+            Thêm câu hỏi
           </button>
         </>
       ),
@@ -156,7 +156,7 @@ const Exercises = () => {
           const question = item.questionText || item.question || '';
           const ref = item.skill === 'grammar'
             ? (item.grammarId?.title || item.grammarTitle || 'Không có grammar')
-            : (item.topicId?.name || 'Không có topic');
+            : (item.topicId?.name || item.topicName || 'Không có topic');
           return (
             <div>
               <div
@@ -447,18 +447,60 @@ const Exercises = () => {
 
     return (
       <div className="row">
+        {/* Mode field - Render first with custom change handler */}
+        <div className="col-md-12 mb-3">
+          <label htmlFor="mode" className="form-label fw-medium text-muted">
+            Chế độ <span className="text-danger">*</span>
+          </label>
+          <select
+            className="form-control form-select"
+            id="mode"
+            name="mode"
+            value={formState.mode || 'practice'}
+            onChange={(e) => {
+              const newMode = e.target.value;
+              const updates = { mode: newMode };
+
+              // If switching to PVP, force Reading and Multiple Choice
+              if (newMode === 'pvp') {
+                updates.skill = 'reading';
+                updates.type = 'multiple_choice';
+                // Also clear topic as PVP doesn't usually use specific topics (optional)
+                // updates.topicId = ''; 
+              }
+
+              setFormState(prev => ({ ...prev, ...updates }));
+            }}
+            required
+          >
+            <option value="practice">Luyện tập</option>
+            <option value="pvp">Thi đấu</option>
+          </select>
+        </div>
+
         {/* Basic fields - hide level and type for grammar exercises */}
         {formFields.map((field) => {
+          // Skip mode as we rendered it manually
+          if (field.name === 'mode') return null;
+
           // Hide level for grammar, but allow type to be selected
           if (currentSkill === 'grammar' && field.name === 'level') {
             return null;
           }
+
+          // Lock Skill and Type if Mode is PVP
+          const isLocked = currentMode === 'pvp' && (field.name === 'skill' || field.name === 'type');
+
           return (
             <div className={`col-md-${field.col || 12} mb-3`} key={field.name}>
               <label htmlFor={field.name} className="form-label fw-medium text-muted">
                 {field.label}
               </label>
-              {renderFormField(field)}
+              {renderFormField({
+                ...field,
+                disabled: isLocked || field.disabled // Push disabled prop
+              })}
+              {isLocked && <small className="text-muted d-block fst-italic">Mặc định cho chế độ Thi đấu</small>}
             </div>
           );
         })}
@@ -591,7 +633,8 @@ const Exercises = () => {
             </small>
             {['A', 'B', 'C', 'D'].map((letter, index) => {
               const options = formState.options || ['', '', '', ''];
-              const currentOption = options[index] || '';
+              // FIX: Ensure currentOption is always a string (handle numbers/nulls from API)
+              const currentOption = options[index] != null ? String(options[index]) : '';
               const isSelected = formState.correctAnswer === currentOption && currentOption !== '';
 
               return (
@@ -827,13 +870,17 @@ const Exercises = () => {
   };
 
   const mapExerciseToForm = (item) => {
-    // Check if this is a grammar exercise
-    // We explicitly set skill='grammar' in listApiWrapper, or check for grammarId
-    const isGrammarExercise = item.skill === 'grammar' || (item.grammarId && item.question);
+    // Check if this is a LEGACY/LESSON grammar exercise (linked to context Grammar lesson)
+    // Use _source from Unified API, or heuristics
+    const isGrammarLesson =
+      item._source === 'grammar' ||
+      (item.skill === 'grammar' && item.grammarId && typeof item.options?.[0] === 'string');
 
-    if (isGrammarExercise) {
+    if (isGrammarLesson) {
       // Extract grammarId and find the corresponding grammar to get categoryId
       const grammarIdValue = item.grammarId ? String(item.grammarId._id || item.grammarId) : '';
+
+      // Map item to form
 
       // Try to find category ID from item properties
       let categoryIdValue = '';
@@ -854,12 +901,13 @@ const Exercises = () => {
 
       const formData = {
         skill: 'grammar',
-        questionText: item.question || '',
+        questionText: item.question || item.questionText || '', // Unify
         grammarId: grammarIdValue,
         grammarCategoryId: categoryIdValue,
         explanation: item.explanation || '',
         correctAnswer: item.correctAnswer || '',
-        type: item.type || (item.options && item.options.length > 0 ? 'multiple_choice' : 'fill_in_blank'),
+        type: item.typeValue || item.type || (item.options && item.options.length > 0 ? 'multiple_choice' : 'fill_in_blank'),
+        mode: 'practice' // Lesson exercises always practice
       };
 
       // Map options from array of strings to form format
@@ -873,18 +921,10 @@ const Exercises = () => {
         formData.options = ['', '', '', ''];
       }
 
-      // Set default answers for compatibility
-      formData.answers = [
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false },
-      ];
-
       return formData;
     }
 
-    // Handle regular exercises
+    // Handle regular exercises (Vocab, Listening, Reading AND Generic Grammar/PVP)
     const formData = {
       skill: item.skill || 'reading',
       type: item.type || 'multiple_choice',
@@ -930,92 +970,11 @@ const Exercises = () => {
 
   // Wrapper functions to handle grammar exercises
   const listApiWrapper = React.useCallback(async (params = {}) => {
-    // TRƯỜNG HỢP 1: Lọc theo Skill = Grammar HOẶC đang chọn cụ thể 1 bài Grammar (hoặc category)
-    if (params.skill === 'grammar' || params.grammarId || params.grammarCategoryId) {
-      // Grammar exercises are always 'practice' mode.
-      // If user filters for 'pvp', return empty immediately.
-      if (params.mode === 'pvp') {
-        return { data: [], items: [], total: 0, count: 0, page: 1, limit: 10 };
-      }
-
-      try {
-        // Prepare params for grammar exercises API
-        // Pass page, limit, search directly to backend
-        const grammarParams = { ...params };
-        if (params.grammarId) grammarParams.grammarId = params.grammarId;
-        if (params.grammarCategoryId) grammarParams.grammarCategoryId = params.grammarCategoryId;
-
-        // Backend now supports search, page, limit
-        const res = await fetchGrammarExercises(params.grammarId || '', grammarParams);
-
-        // Backend returns: { success: true, count, total, page, limit, totalPages, data: [...] }
-        const items = res.data || [];
-        const total = res.total || items.length;
-
-        // Map grammar exercises to match UI format
-        const currentGrammars = grammarsRef.current;
-
-        const mappedData = items.map((item) => {
-          // Logic: Options empty -> 'fill_in_blank', else 'multiple_choice'
-          const computedType = (item.options && item.options.length > 0) ? 'Trắc nghiệm' : 'Điền từ';
-          const typeValue = (item.options && item.options.length > 0) ? 'multiple_choice' : 'fill_in_blank';
-
-          const grammarIdStr = item.grammarId?._id || item.grammarId;
-          const populatedTitle = item.grammarId?.title;
-          const populatedLevel = item.grammarId?.level;
-
-          const grammar = currentGrammars.find(g => String(g._id) === String(grammarIdStr));
-
-          return {
-            ...item,
-            skill: 'grammar',
-            questionText: item.question,
-            grammarTitle: populatedTitle || grammar?.title || 'Unknown Grammar',
-            level: populatedLevel || grammar?.level || 'A1',
-            type: computedType,
-            typeValue: typeValue, // Keep for filtering
-            grammarId: item.grammarId // Keep the object or string
-          };
-        });
-
-        // Search is now handled by backend, so we don't filter search client-side
-
-        // Return structured data for ResourceManager
-        return {
-          data: mappedData,
-          items: mappedData, // Legacy support
-          total: total,
-          count: mappedData.length,
-          // If backend didn't return page info (old API), these might be missing, but we assume updated API
-          page: res.page || (params.page ? parseInt(params.page) : 1),
-          limit: res.limit || (params.limit ? parseInt(params.limit) : 10),
-        };
-      } catch (err) {
-        console.error('Error fetching grammar exercises:', err);
-        return { data: [], items: [], total: 0, count: 0 };
-      }
-    }
-
-    // TRƯỜNG HỢP 2: Lọc theo Skill khác (Vocab, Listening, Reading)
-    if (params.skill && params.skill !== 'grammar') {
-      const filteredParams = { ...params };
-      delete filteredParams.grammarId;
-      delete filteredParams.grammarCategoryId;
-
-      const res = await fetchExercises(filteredParams);
-      // Ensure backend returns total for pagination
-      return {
-        data: res.data || res.items || [],
-        total: res.total || 0,
-        page: res.page || params.page || 1,
-        limit: res.limit || params.limit || 10
-      };
-    }
-
-    // TRƯỜNG HỢP 3: Không chọn skill nào (Tất cả kỹ năng) -> Gọi API Unified Pagination từ Server
+    // Use Unified API for ALL cases to ensure consistent pagination and support for all filters (including PVP Grammar)
     try {
       const res = await fetchMixedExercises(params);
 
+      // The Unified API returns normalized data, so we can pass it directly
       return {
         data: res.data || [],
         total: res.total || 0,
@@ -1023,7 +982,7 @@ const Exercises = () => {
         limit: res.limit || params.limit || 10
       };
     } catch (err) {
-      console.error('Error fetching unified exercises:', err);
+      console.error('Error fetching exercises:', err);
       return { data: [], total: 0, page: 1, limit: 10 };
     }
   }, []);

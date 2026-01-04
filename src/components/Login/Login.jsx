@@ -138,7 +138,11 @@ const Login = () => {
 
   // Render Login Form
   const renderLoginForm = () => (
+
     <form onSubmit={handleSubmit} autoComplete="off">
+      {/* Hack: Dummy inputs to trick browser autofill */}
+      <input type="text" style={{ display: 'none' }} name="fake_username_to_prevent_autofill" />
+      <input type="password" style={{ display: 'none' }} name="fake_password_to_prevent_autofill" />
       {/* Username */}
       <div className="mb-4">
         <label htmlFor="username" className="form-label fw-semibold" style={{ color: '#334155', fontSize: '14px', marginBottom: '8px' }}>Tên đăng nhập</label>
@@ -147,7 +151,7 @@ const Login = () => {
             <i className="fas fa-user" style={{ color: '#94a3b8' }}></i>
           </span>
           <input
-            type="text" className="form-control" id="username" name="username"
+            type="text" className="form-control" id="login-username" name="username"
             value={formData.username} onChange={handleChange}
             placeholder="Nhập tên đăng nhập" required disabled={loading}
             readOnly={isUsernameReadOnly}
@@ -167,13 +171,22 @@ const Login = () => {
             <i className="fas fa-lock" style={{ color: '#94a3b8' }}></i>
           </span>
           <input
-            type={showPassword ? "text" : "password"} className="form-control" id="password" name="password"
-            value={formData.password} onChange={handleChange}
+            type={showPassword ? "text" : (isPasswordReadOnly ? "text" : "password")} // FIX: Init as text to fool browser
+            className="form-control" id="login-password" name="user_pwd_field_random" // FIX: Obfuscated name
+            value={formData.password}
+            onChange={(e) => {
+              // Must handle the fact name changed
+              handleChange({ target: { name: 'password', value: e.target.value } });
+            }}
             placeholder="Nhập mật khẩu" required disabled={loading}
             readOnly={isPasswordReadOnly}
             autoComplete="new-password"
             style={{ border: '2px solid #e2e8f0', borderLeft: 'none', borderRight: 'none', fontSize: '15px', padding: '12px 16px', transition: 'all 0.2s' }}
-            onFocus={(e) => { setIsPasswordReadOnly(false); e.target.style.borderColor = '#fbbf24'; e.target.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.1)'; e.target.previousSibling.style.borderColor = '#fbbf24'; e.target.parentElement.querySelector('.password-toggle').style.borderColor = '#fbbf24'; }}
+            onFocus={(e) => {
+              setIsPasswordReadOnly(false);
+              e.target.type = showPassword ? "text" : "password"; // Switch to password on focus
+              e.target.style.borderColor = '#fbbf24'; e.target.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.1)'; e.target.previousSibling.style.borderColor = '#fbbf24'; e.target.parentElement.querySelector('.password-toggle').style.borderColor = '#fbbf24';
+            }}
             onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; e.target.previousSibling.style.borderColor = '#e2e8f0'; e.target.parentElement.querySelector('.password-toggle').style.borderColor = '#e2e8f0'; }}
           />
           <button

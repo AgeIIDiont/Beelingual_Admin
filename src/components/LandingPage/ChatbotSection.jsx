@@ -114,6 +114,41 @@ const ChatbotSection = ({ chatConfig, setChatConfig, onSave, saving }) => {
         </div>
       </div>
 
+      {/* Messages */}
+      <h6 className="fw-bold text-secondary mb-3">
+        <i className="fas fa-comment-dots me-2"></i>
+        Lời chào & Mời gọi
+      </h6>
+
+      <div className="row g-3 mb-4">
+        <div className="col-12">
+          <div className="lp-form-group mb-0">
+            <label className="lp-label">Lời chào mở đầu (Welcome Message)</label>
+            <textarea
+              className="lp-textarea"
+              value={chatConfig.welcomeMessage || ''}
+              onChange={(e) => updateConfig('welcomeMessage', e.target.value)}
+              placeholder="VD: Chào bạn, tôi có thể giúp gì?"
+              rows={2}
+            />
+          </div>
+        </div>
+
+        <div className="col-12">
+          <div className="lp-form-group mb-0">
+            <label className="lp-label">Câu mời gọi (Invitation - Sau 5s)</label>
+            <input
+              type="text"
+              className="lp-input"
+              value={chatConfig.invitationMessage || ''}
+              onChange={(e) => updateConfig('invitationMessage', e.target.value)}
+              placeholder="VD: Bạn cần giúp gì không?"
+              autoComplete="off"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Suggested Questions */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h6 className="fw-bold text-secondary mb-0">

@@ -434,7 +434,7 @@ const ResourceManager = forwardRef(({
           setFeedback({ type: 'success', message: `Đã xóa thành công ${selectedIds.length} ${resourceName}!` });
           Swal.fire('Đã xóa!', `Đã xóa ${selectedIds.length} mục thành công.`, 'success');
           handleClearSelection();
-          refresh();
+          setRefreshIndex((prev) => prev + 1);
           return;
         } catch (e) {
           console.error("Bulk Delete Failed", e);

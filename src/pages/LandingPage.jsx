@@ -68,8 +68,8 @@ const LandingPage = () => {
 
     useEffect(() => {
         setPageInfo({
-            title: 'Quản Lý Landing Page',
-            description: 'Chỉnh sửa nội dung và giao diện trang Landing Page',
+            title: 'Quản Lý Trang Giới Thiệu',
+            description: 'Chỉnh sửa nội dung và giao diện Trang Giới Thiệu',
             actions: (
                 <button
                     className="btn btn-outline-secondary"

@@ -13,10 +13,8 @@ const routeTitles = {
   '/vocabulary': 'Quản lý Từ vựng',
   '/grammar': 'Quản lý Ngữ pháp',
   '/topics': 'Chủ đề học',
-  '/exercises': 'Bài tập & Đề thi',
-  '/users': 'Người dùng',
-  '/stats': 'Thống kê',
-  '/settings': 'Cài đặt',
+  '/landing-page': 'Trang giới thiệu',
+
 };
 
 const Header = () => {

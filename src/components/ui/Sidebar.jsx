@@ -7,10 +7,10 @@ const menu = [
   { icon: 'fa-book', label: 'Quản lý Từ vựng', path: '/vocabulary' },
   { icon: 'fa-spell-check', label: 'Quản lý Ngữ pháp', path: '/grammar' },
   { icon: 'fa-tags', label: 'Chủ đề học', path: '/topics' },
-  { icon: 'fa-file-alt', label: 'Bài tập & Đề thi', path: '/exercises' },
+  { icon: 'fa-file-alt', label: 'Câu hỏi & Bài tập', path: '/exercises' },
   { icon: 'fa-users', label: 'Người dùng', path: '/users' },
   { icon: 'fa-chart-bar', label: 'Hoạt động Admin', path: '/admin-activity' },
-  { icon: 'fa-globe', label: 'Landing Page', path: '/landing-page' },
+  { icon: 'fa-globe', label: 'Trang giới thiệu', path: '/landing-page' },
 ];
 
 const Sidebar = () => {

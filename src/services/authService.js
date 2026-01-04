@@ -236,7 +236,8 @@ api.interceptors.response.use(
       }
 
       // Kiểm tra REFRESH_TOKEN_EXPIRED qua code hoặc message
-      if (errorCode === 'REFRESH_TOKEN_EXPIRED' || errorMessage.includes('hết hạn') || errorMessage.includes('expired')) {
+      // UPDATE: Loại trừ TOKEN_EXPIRED (Access Token hết hạn) để cho phép nó lọt xuống logic auto-refresh bên dưới
+      if (errorCode === 'REFRESH_TOKEN_EXPIRED' || ((errorMessage.includes('hết hạn') || errorMessage.includes('expired')) && errorCode !== 'TOKEN_EXPIRED')) {
         // Đánh dấu đang hiển thị alert
         showingSessionAlert = true;
         Swal.fire({

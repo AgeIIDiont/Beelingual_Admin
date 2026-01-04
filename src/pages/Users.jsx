@@ -198,6 +198,7 @@ const Users = () => {
         type: 'number',
         defaultValue: 0,
         col: 3,
+        disabledOnEdit: true,
       },
       {
         name: 'gems',
@@ -205,6 +206,7 @@ const Users = () => {
         type: 'number',
         defaultValue: 0,
         col: 3,
+        disabledOnEdit: true,
       },
       {
         name: 'avatarUrl',

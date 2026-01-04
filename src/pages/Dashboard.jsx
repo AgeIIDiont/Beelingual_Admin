@@ -134,7 +134,7 @@ const Dashboard = () => {
               <StatsCard title="Chủ đề" number={stats.topics} subtitle="Topics & Units" icon="fa-tags" />
             </div>
             <div className="col-6 col-md-3">
-              <StatsCard title="Bài tập" number={stats.exercises} subtitle="Đề thi & bài tập" icon="fa-file-alt" />
+              <StatsCard title="Câu hỏi" number={stats.exercises} subtitle="Câu hỏi & Bài tập" icon="fa-file-alt" />
             </div>
           </div>
 
