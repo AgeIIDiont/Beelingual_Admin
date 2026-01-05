@@ -252,17 +252,9 @@ const Settings = () => {
                     <label className="form-label fw-semibold text-secondary">Tên người dùng</label>
                     <input type="text" className={`form-control ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.fullname} onChange={(e) => setProfileForm({ ...profileForm, fullname: e.target.value })} disabled={!isEditing} />
                   </div>
-                  <div className="col-md-6">
+                  <div className="col-12">
                     <label className="form-label fw-semibold text-secondary">Email</label>
                     <input type="email" className={`form-control ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.email} onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })} disabled={!isEditing} />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold text-secondary">Cấp độ</label>
-                    <select className={`form-select ${isEditing ? 'bg-white' : 'bg-light'}`} value={profileForm.level} onChange={(e) => setProfileForm({ ...profileForm, level: e.target.value })} disabled={!isEditing}>
-                      <option value="A">Sơ cấp (A)</option>
-                      <option value="B">Trung cấp (B)</option>
-                      <option value="C">Cao cấp (C)</option>
-                    </select>
                   </div>
                   <div className="col-12">
                     <label className="form-label fw-semibold text-secondary">Avatar URL</label>
