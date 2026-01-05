@@ -199,6 +199,7 @@ const Users = () => {
         defaultValue: 0,
         col: 3,
         disabledOnEdit: true,
+        onlyEdit: true, // Chỉ hiện khi chỉnh sửa (để xem), ẩn khi tạo mới
       },
       {
         name: 'gems',
@@ -207,6 +208,7 @@ const Users = () => {
         defaultValue: 0,
         col: 3,
         disabledOnEdit: true,
+        onlyEdit: true, // Chỉ hiện khi chỉnh sửa (để xem), ẩn khi tạo mới
       },
       {
         name: 'avatarUrl',
