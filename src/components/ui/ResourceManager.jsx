@@ -952,15 +952,21 @@ const ResourceManager = forwardRef(({
                         })
                       ) : (
                         <div className="row g-3">
-                          {formFields.map((field) => (
-                            <div className={`col-md-${field.col || 12}`} key={field.name}>
-                              <label htmlFor={field.name} className="form-label fw-bold text-secondary small text-uppercase">
-                                {field.label} {field.required && <span className="text-danger">*</span>}
-                              </label>
-                              {renderFormField(field)}
-                              {field.helper && <small className="text-muted d-block mt-1 fst-italic">{field.helper}</small>}
-                            </div>
-                          ))}
+                          {formFields.map((field) => {
+                            // Check visibility before rendering anything
+                            if (field.onlyCreate && editingItem) return null;
+                            if (field.onlyEdit && !editingItem) return null;
+
+                            return (
+                              <div className={`col-md-${field.col || 12}`} key={field.name}>
+                                <label htmlFor={field.name} className="form-label fw-bold text-secondary small text-uppercase">
+                                  {field.label} {field.required && <span className="text-danger">*</span>}
+                                </label>
+                                {renderFormField(field)}
+                                {field.helper && <small className="text-muted d-block mt-1 fst-italic">{field.helper}</small>}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
