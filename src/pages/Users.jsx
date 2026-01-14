@@ -23,7 +23,8 @@ const levelOptions = [
 
 const roleOptions = [
   { value: '', label: 'Tất cả' },
-  { value: 'admin', label: 'Admin' },
+  { value: 'admin', label: 'Quản trị viên hệ thống' },
+  { value: 'super_admin', label: 'Super Admin' },
   { value: 'student', label: 'Học viên' },
 ];
 
@@ -86,13 +87,22 @@ const Users = () => {
         ),
       },
       {
-        key: 'role',
-        label: 'Vai trò',
-        render: (item) => (
-          <span className={`badge ${item.role === 'admin' ? 'bg-warning text-dark' : 'bg-light text-dark'}`}>
-            {item.role === 'admin' ? 'Admin' : 'Học viên'}
-          </span>
-        ),
+        render: (item) => {
+          let badgeClass = 'bg-light text-dark';
+          let label = 'Học viên';
+          if (item.role === 'super_admin') {
+            badgeClass = 'bg-danger text-white';
+            label = 'Super Admin';
+          } else if (item.role === 'admin') {
+            badgeClass = 'bg-warning text-dark';
+            label = 'Quản trị viên';
+          }
+          return (
+            <span className={`badge ${badgeClass}`}>
+              {label}
+            </span>
+          );
+        },
       },
       {
         key: 'level',
@@ -185,7 +195,34 @@ const Users = () => {
         options: roleOptions.slice(1),
         defaultValue: 'student',
         col: 3,
-        disabled: (item) => item && currentUser && (item.id === currentUser.id || item.username === currentUser.username || item._id === currentUser._id),
+        disabled: (item) => {
+          // 1. Tạo mới: Chỉ Super Admin mới được tạo Admin/Super Admin
+          if (!item) {
+            // Nếu là admin thường -> chỉ được tạo student -> Disable field này và auto set student?
+            // Hoặc disable các option admin/super_admin trong dropdown (phức tạp hơn với cấu trúc hiện tại).
+            // Tạm thời: Logic hiện tại là disable field nếu muốn lock.
+            // Nếu admin thường đang tạo mới -> ko cho chọn role -> mặc định student.
+            if (currentUser && currentUser.role !== 'super_admin') return true;
+            return false;
+          }
+
+          // 2. Edit:
+          if (!currentUser) return true;
+
+          // Không sửa chính mình
+          if (item.id === currentUser.id || item.username === currentUser.username || item._id === currentUser._id) {
+            return true;
+          }
+
+          // Nếu mình là Super Admin -> Full quyền (trừ sửa chính mình đã check trên)
+          if (currentUser.role === 'super_admin') return false;
+
+          // Nếu mình là Admin thường:
+          // - Không được sửa Admin khác hoặc Super Admin
+          if (item.role === 'admin' || item.role === 'super_admin') return true;
+
+          return false;
+        },
       },
       {
         name: 'level',
@@ -298,7 +335,7 @@ const Users = () => {
             </div>
             <div className="col-md-4 col-sm-6">
               <StatsCard
-                title="Quản trị viên"
+                title="Quản trị viên hệ thống"
                 number={userStats?.adminsCount || 0}
                 subtitle="Có quyền quản trị"
                 icon="fa-user-shield"
