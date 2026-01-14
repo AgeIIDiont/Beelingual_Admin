@@ -310,9 +310,10 @@ const ResourceManager = forwardRef(({
       );
       setRefreshIndex((prev) => prev + 1);
     } catch (err) {
+      const message = err.response?.data?.message || err.message || 'Không thể xóa bản ghi.';
       Swal.fire(
         'Lỗi!',
-        err.message || 'Không thể xóa bản ghi.',
+        message,
         'error'
       );
     }

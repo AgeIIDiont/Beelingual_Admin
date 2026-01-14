@@ -198,10 +198,6 @@ const Users = () => {
         disabled: (item) => {
           // 1. Tạo mới: Chỉ Super Admin mới được tạo Admin/Super Admin
           if (!item) {
-            // Nếu là admin thường -> chỉ được tạo student -> Disable field này và auto set student?
-            // Hoặc disable các option admin/super_admin trong dropdown (phức tạp hơn với cấu trúc hiện tại).
-            // Tạm thời: Logic hiện tại là disable field nếu muốn lock.
-            // Nếu admin thường đang tạo mới -> ko cho chọn role -> mặc định student.
             if (currentUser && currentUser.role !== 'super_admin') return true;
             return false;
           }
@@ -210,16 +206,12 @@ const Users = () => {
           if (!currentUser) return true;
 
           // Không sửa chính mình
-          if (item.id === currentUser.id || item.username === currentUser.username || item._id === currentUser._id) {
+          if (item._id === currentUser.id || item.username === currentUser.username || item._id === currentUser._id) {
             return true;
           }
 
-          // Nếu mình là Super Admin -> Full quyền (trừ sửa chính mình đã check trên)
-          if (currentUser.role === 'super_admin') return false;
-
-          // Nếu mình là Admin thường:
-          // - Không được sửa Admin khác hoặc Super Admin
-          if (item.role === 'admin' || item.role === 'super_admin') return true;
+          // Chỉ Super Admin mới được quyền đổi Role của người khác (kể cả Student)
+          if (currentUser.role !== 'super_admin') return true;
 
           return false;
         },
