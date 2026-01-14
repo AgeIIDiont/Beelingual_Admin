@@ -48,7 +48,7 @@ const Login = () => {
         if (Array.isArray(role)) {
           isAdmin = role.includes('admin') || role.includes('ADMIN');
         } else {
-          isAdmin = role === 'admin' || role === 'ADMIN';
+          isAdmin = role === 'admin' || role === 'ADMIN' || role === 'super_admin' || role === 'SUPER_ADMIN';
         }
 
         if (!isAdmin) {
