@@ -23,8 +23,8 @@ const levelOptions = [
 
 const roleOptions = [
   { value: '', label: 'Tất cả' },
-  { value: 'admin', label: 'Quản trị viên hệ thống' },
-  { value: 'super_admin', label: 'Super Admin' },
+  { value: 'admin', label: 'Quản trị viên' },
+  { value: 'super_admin', label: 'Quản trị viên hệ thống' },
   { value: 'student', label: 'Học viên' },
 ];
 
@@ -92,7 +92,7 @@ const Users = () => {
           let label = 'Học viên';
           if (item.role === 'super_admin') {
             badgeClass = 'bg-danger text-white';
-            label = 'Super Admin';
+            label = 'Quản trị viên hệ thống';
           } else if (item.role === 'admin') {
             badgeClass = 'bg-warning text-dark';
             label = 'Quản trị viên';
@@ -335,7 +335,7 @@ const Users = () => {
             </div>
             <div className="col-md-4 col-sm-6">
               <StatsCard
-                title="Quản trị viên hệ thống"
+                title="Quản trị viên"
                 number={userStats?.adminsCount || 0}
                 subtitle="Có quyền quản trị"
                 icon="fa-user-shield"
