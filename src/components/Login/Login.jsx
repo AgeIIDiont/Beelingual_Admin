@@ -55,7 +55,7 @@ const Login = () => {
           setError('Bạn không có quyền truy cập hệ thống quản trị. Chỉ dành cho Admin.');
 
           // QUAN TRỌNG: Gọi API logout ngay lập tức để xóa cookie vừa nhận
-          await logout();
+          await logout(false);
           return;
         }
 

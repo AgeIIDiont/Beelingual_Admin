@@ -104,7 +104,7 @@ export const resetPassword = async (username, otp, newPassword) => {
 };
 
 // ====================== ĐĂNG XUẤT ======================
-export const logout = async () => {
+export const logout = async (redirect = true) => {
   try {
     // Ask backend to clear auth cookie if endpoint exists
     await api.post('/api/logout').catch(() => { });
@@ -113,7 +113,9 @@ export const logout = async () => {
   }
   clearAuth();
   // Full reload to ensure protected routes redirect
-  window.location.href = '/login';
+  if (redirect) {
+    window.location.href = '/login';
+  }
 };
 
 // ====================== REFRESH TOKEN ======================
