@@ -529,7 +529,11 @@ const ResourceManager = forwardRef(({
     if (field.onlyEdit && !editingItem) return null;
 
     const value = formState[field.name] ?? '';
-    const disabled = field.disabled || (field.disabledOnEdit && editingItem);
+    let disabled = field.disabled;
+    if (typeof disabled === 'function') {
+      disabled = disabled(editingItem);
+    }
+    disabled = disabled || (field.disabledOnEdit && editingItem);
     const commonProps = {
       className: 'form-control rm-input-modern', // NEW CLASS
       id: field.name,
@@ -568,7 +572,9 @@ const ResourceManager = forwardRef(({
         ? 'number'
         : field.type === 'password'
           ? 'password'
-          : 'text';
+          : field.type === 'email'
+            ? 'email'
+            : 'text';
 
     // Thêm min/max cho input number
     const numberProps = field.type === 'number' ? {

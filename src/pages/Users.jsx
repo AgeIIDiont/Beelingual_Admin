@@ -7,6 +7,7 @@ import {
   updateUser,
   fetchUserStats,
 } from '../services/adminService';
+import { getUser } from '../services/authService';
 import StatsCard from '../components/ui/StatsCard';
 import { usePage } from '../contexts/PageContext';
 
@@ -34,6 +35,7 @@ const formatDate = (value) => {
 const Users = () => {
   const { setPageInfo } = usePage();
   const resourceManagerRef = useRef(null);
+  const currentUser = getUser();
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -163,7 +165,7 @@ const Users = () => {
       {
         name: 'email',
         label: 'Email',
-        type: 'text',
+        type: 'email',
         placeholder: 'admin@beelingual.app',
         col: 6,
       },
@@ -183,6 +185,7 @@ const Users = () => {
         options: roleOptions.slice(1),
         defaultValue: 'student',
         col: 3,
+        disabled: (item) => item && currentUser && (item.id === currentUser.id || item.username === currentUser.username || item._id === currentUser._id),
       },
       {
         name: 'level',
